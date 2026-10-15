@@ -1,0 +1,45 @@
+@use '@ionic/angular/css/core.css';
+@use '@ionic/angular/css/normalize.css';
+@use '@ionic/angular/css/structure.css';
+@use '@ionic/angular/css/typography.css';
+@use '@ionic/angular/css/padding.css';
+@use '@ionic/angular/css/flex-utils.css';
+@use '@ionic/angular/css/display.css';
+@use '@ionic/angular/css/palettes/dark.system.css';
+
+:root {
+  --ion-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --ion-color-primary: #7c3aed;
+  --ion-color-primary-rgb: 124, 58, 237;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #6d33d1;
+  --ion-color-primary-tint: #894eef;
+
+  --ion-color-secondary: #ec4899;
+  --ion-color-secondary-rgb: 236, 72, 153;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #d03f87;
+  --ion-color-secondary-tint: #ee5aa3;
+
+  --gurtu-gradient: linear-gradient(120deg, #7c3aed 0%, #ec4899 55%, #f97316 100%);
+}
+
+.gradient-text {
+  background: var(--gurtu-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+ion-button.gradient {
+  --background: var(--gurtu-gradient);
+  --border-radius: 999px;
+  --box-shadow: 0 10px 24px -10px rgb(124 58 237 / 0.6);
+  font-weight: 600;
+  text-transform: none;
+}

@@ -1,0 +1,8 @@
+# Repo-wide extras. server/ and client/ (and the Capacitor android project) carry their own .gitignore.
+.vs/
+*.user
+.env
+.env.*
+!.env.example
+Thumbs.db
+.DS_Store

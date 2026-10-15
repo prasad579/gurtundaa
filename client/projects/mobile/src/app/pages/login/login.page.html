@@ -1,0 +1,58 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="hero">
+      <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+      <h1 class="gradient-text">{{ brand.name }}</h1>
+      <p>{{ brand.tagline }}</p>
+    </header>
+
+    <ion-segment [value]="mode()" (ionChange)="setMode($event.detail.value)">
+      <ion-segment-button value="login"><ion-label>sign in</ion-label></ion-segment-button>
+      <ion-segment-button value="register"><ion-label>new here</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <ion-list lines="none">
+        @if (mode() === 'register') {
+          <ion-item>
+            <ion-input
+              label="what do we call you?"
+              labelPlacement="stacked"
+              formControlName="displayName"
+              autocomplete="nickname"
+              placeholder="e.g. prasad"
+            />
+          </ion-item>
+        }
+        <ion-item>
+          <ion-input
+            label="email"
+            labelPlacement="stacked"
+            type="email"
+            inputmode="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="you@email.com"
+          />
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="password"
+            labelPlacement="stacked"
+            type="password"
+            formControlName="password"
+            placeholder="8+ characters"
+          />
+        </ion-item>
+      </ion-list>
+
+      @if (error(); as message) {
+        <ion-text color="danger"><p class="error" role="alert">{{ message }}</p></ion-text>
+      }
+
+      <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
+        {{ busy() ? 'one sec…' : mode() === 'login' ? "let's go" : 'create account ✨' }}
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

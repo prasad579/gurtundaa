@@ -1,0 +1,55 @@
+ion-content {
+  --background: radial-gradient(circle at 15% 10%, rgb(124 58 237 / 0.2), transparent 50%),
+    radial-gradient(circle at 85% 90%, rgb(236 72 153 / 0.18), transparent 50%), var(--ion-background-color);
+}
+
+.wrap {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  padding-top: env(safe-area-inset-top);
+}
+
+.hero {
+  text-align: center;
+
+  .emoji {
+    font-size: 3.2rem;
+  }
+
+  h1 {
+    font-size: 2.8rem;
+    margin: 0.25rem 0;
+  }
+
+  p {
+    margin: 0;
+    color: var(--ion-color-medium);
+    font-size: 1.05rem;
+  }
+}
+
+ion-list {
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+ion-item {
+  --border-radius: 16px;
+  --background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+}
+
+.error {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+ion-button {
+  margin-top: 0.75rem;
+}

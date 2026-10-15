@@ -1,0 +1,55 @@
+<main class="auth">
+  <section class="hero">
+    <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+    <h1 class="brand gradient-text">{{ brand.name }}</h1>
+    <p class="tagline">{{ brand.tagline }}. we remember so you don't have to.</p>
+    <ul class="perks">
+      <li>🔔 nudges before it's too late</li>
+      <li>📱 same list on web + phone</li>
+      <li>💅 zero stress, all vibes</li>
+    </ul>
+  </section>
+
+  <form class="card panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h2>{{ mode() === 'login' ? 'welcome back 👋' : "let's get you set up ✨" }}</h2>
+
+    @if (mode() === 'register') {
+      <div class="field">
+        <label for="displayName">what do we call you?</label>
+        <input id="displayName" class="input" formControlName="displayName" autocomplete="nickname" placeholder="e.g. prasad" />
+      </div>
+    }
+
+    <div class="field">
+      <label for="email">email</label>
+      <input id="email" class="input" type="email" formControlName="email" autocomplete="email" placeholder="you@email.com" />
+    </div>
+
+    <div class="field">
+      <label for="password">password</label>
+      <input
+        id="password"
+        class="input"
+        type="password"
+        formControlName="password"
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        placeholder="8+ characters"
+      />
+    </div>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+
+    <button class="btn btn-primary" type="submit" [disabled]="busy()">
+      {{ busy() ? 'one sec…' : mode() === 'login' ? 'sign in' : 'create account' }}
+    </button>
+
+    <p class="switch">
+      {{ mode() === 'login' ? 'new here?' : 'already a bestie?' }}
+      <button type="button" class="link" (click)="switchMode()">
+        {{ mode() === 'login' ? 'make an account' : 'sign in' }}
+      </button>
+    </p>
+  </form>
+</main>

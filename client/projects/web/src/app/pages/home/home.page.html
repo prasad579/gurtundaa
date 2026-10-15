@@ -1,0 +1,143 @@
+<header class="topbar">
+  <div class="logo">
+    <span aria-hidden="true">{{ brand.emoji }}</span>
+    <span class="brand gradient-text">{{ brand.name }}</span>
+  </div>
+  <div class="me">
+    <span class="muted">{{ user()?.email }}</span>
+    <button class="btn btn-ghost" type="button" (click)="logout()">log out</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="intro">
+    <h1>{{ hello() }}</h1>
+    @if (stats(); as s) {
+      <div class="stats">
+        <div class="stat card">
+          <strong>{{ s.upcoming }}</strong>
+          <span>coming up</span>
+        </div>
+        <div class="stat card" [class.hot]="s.overdue > 0">
+          <strong>{{ s.overdue }}</strong>
+          <span>{{ s.overdue > 0 ? 'overdue 👀' : 'overdue' }}</span>
+        </div>
+        <div class="stat card">
+          <strong>{{ s.doneToday }}</strong>
+          <span>done today</span>
+        </div>
+        <div class="stat card">
+          <strong>{{ s.done }}</strong>
+          <span>all-time W's</span>
+        </div>
+      </div>
+    }
+  </section>
+
+  <form class="card composer" [formGroup]="form" (ngSubmit)="save()">
+    <h2>{{ editingId() ? 'edit reminder ✍️' : 'what are we not forgetting? 💭' }}</h2>
+
+    <div class="field">
+      <label for="title" class="sr-only">title</label>
+      <input id="title" class="input big" formControlName="title" placeholder="call amma, pay wifi bill, drink water…" />
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="dueAt">when?</label>
+        <input id="dueAt" class="input" type="datetime-local" formControlName="dueAt" />
+      </div>
+
+      <div class="field">
+        <label>how urgent?</label>
+        <div class="chips" role="radiogroup" aria-label="priority">
+          @for (p of priorities; track p) {
+            <button
+              type="button"
+              class="chip"
+              role="radio"
+              [attr.aria-checked]="form.controls.priority.value === p"
+              [class.active]="form.controls.priority.value === p"
+              (click)="form.controls.priority.setValue(p)"
+            >
+              {{ priorityLabels[p] }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="notes">notes (optional)</label>
+      <textarea id="notes" class="input" rows="2" formControlName="notes" placeholder="any extra context?"></textarea>
+    </div>
+
+    <div class="actions">
+      @if (editingId()) {
+        <button class="btn btn-ghost" type="button" (click)="cancelEdit()">cancel</button>
+      }
+      <button class="btn btn-primary" type="submit" [disabled]="saving() || form.invalid">
+        {{ saving() ? 'saving…' : editingId() ? 'save changes' : 'remember this' }}
+      </button>
+    </div>
+  </form>
+
+  <section class="list-section">
+    <nav class="tabs" aria-label="filter reminders">
+      @for (f of filters; track f.value) {
+        <button type="button" class="tab" [class.active]="filter() === f.value" (click)="setFilter(f.value)">
+          {{ f.label }}
+        </button>
+      }
+    </nav>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+
+    @if (loading() && reminders().length === 0) {
+      <p class="muted center">loading your stuff…</p>
+    } @else if (reminders().length === 0) {
+      <div class="empty card">
+        <span aria-hidden="true">🫧</span>
+        <p>{{ emptyLine() }}</p>
+      </div>
+    } @else {
+      <ul class="list">
+        @for (r of reminders(); track r.id) {
+          <li class="item card" [class.done]="r.isDone" [class.overdue]="isOverdue(r)">
+            <button
+              type="button"
+              class="check"
+              [attr.aria-label]="r.isDone ? 'mark not done' : 'mark done'"
+              [attr.aria-pressed]="r.isDone"
+              (click)="toggleDone(r)"
+            >
+              {{ r.isDone ? '✓' : '' }}
+            </button>
+
+            <div class="body">
+              <p class="title">{{ r.title }}</p>
+              @if (r.notes) {
+                <p class="notes">{{ r.notes }}</p>
+              }
+              <p class="meta">
+                <span class="pill" [attr.data-priority]="r.priority">{{ priorityLabels[r.priority] }}</span>
+                <span [title]="r.dueAt ? (r.dueAt | date: 'medium') : ''">{{ dueLabel(r) }}</span>
+              </p>
+            </div>
+
+            <div class="item-actions">
+              <button type="button" class="icon" aria-label="edit" (click)="edit(r)">✏️</button>
+              <button type="button" class="icon" aria-label="delete" (click)="remove(r)">🗑️</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</main>
+
+@if (toast(); as message) {
+  <div class="toast" role="status">{{ message }}</div>
+}

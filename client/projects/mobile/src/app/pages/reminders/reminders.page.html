@@ -1,0 +1,90 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title><span class="gradient-text">{{ brand.name }}</span> {{ brand.emoji }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button aria-label="account" (click)="openAccount()">
+        <ion-icon slot="icon-only" name="log-out-outline" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  <section class="hello ion-padding">
+    <h1>{{ hello() }}</h1>
+    @if (stats(); as s) {
+      <div class="stats">
+        <div class="stat"><strong>{{ s.upcoming }}</strong><span>coming up</span></div>
+        <div class="stat" [class.hot]="s.overdue > 0"><strong>{{ s.overdue }}</strong><span>overdue</span></div>
+        <div class="stat"><strong>{{ s.doneToday }}</strong><span>done today</span></div>
+      </div>
+    }
+  </section>
+
+  <ion-segment class="filters" [value]="filter()" (ionChange)="setFilter($event.detail.value)" [scrollable]="true">
+    <ion-segment-button value="Upcoming"><ion-label>upcoming</ion-label></ion-segment-button>
+    <ion-segment-button value="Overdue"><ion-label>overdue</ion-label></ion-segment-button>
+    <ion-segment-button value="Done"><ion-label>done</ion-label></ion-segment-button>
+    <ion-segment-button value="All"><ion-label>all</ion-label></ion-segment-button>
+  </ion-segment>
+
+  @if (loading() && reminders().length === 0) {
+    <ion-list>
+      @for (i of [1, 2, 3]; track i) {
+        <ion-item><ion-label><ion-skeleton-text [animated]="true" style="width: 70%" /></ion-label></ion-item>
+      }
+    </ion-list>
+  } @else if (reminders().length === 0) {
+    <div class="empty">
+      <span aria-hidden="true">🫧</span>
+      <p>{{ emptyLine() }}</p>
+    </div>
+  } @else {
+    <ion-list [inset]="true" class="list">
+      @for (r of reminders(); track r.id) {
+        <ion-item-sliding #sliding>
+          <ion-item [class.done]="r.isDone" [class.overdue]="isOverdue(r)" [button]="true" [detail]="false" (click)="openEditor(r, sliding)">
+            <ion-checkbox
+              slot="start"
+              [checked]="r.isDone"
+              aria-label="mark done"
+              (click)="$event.stopPropagation()"
+              (ionChange)="toggleDone(r)"
+            />
+            <ion-label>
+              <h2>{{ r.title }}</h2>
+              @if (r.notes) {
+                <p>{{ r.notes }}</p>
+              }
+            </ion-label>
+            <ion-note slot="end" class="meta">
+              <span class="due">{{ dueLabel(r) }}</span>
+              @if (r.priority !== 'Normal') {
+                <span class="prio">{{ priorityLabels[r.priority] }}</span>
+              }
+            </ion-note>
+          </ion-item>
+
+          <ion-item-options side="end">
+            <ion-item-option color="primary" (click)="openEditor(r, sliding)">
+              <ion-icon slot="icon-only" name="pencil" />
+            </ion-item-option>
+            <ion-item-option color="danger" expandable="true" (click)="remove(r, sliding)">
+              <ion-icon slot="icon-only" name="trash" />
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      }
+    </ion-list>
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button class="fab" aria-label="new reminder" (click)="openEditor()">
+      <ion-icon name="add" />
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
