@@ -1,24 +1,17 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService, BRAND } from '@gurtundaa/shared';
-import {
-  IonButton,
-  IonContent,
-  IonInput,
-  IonItem,
-  IonList,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
-  IonText,
-} from '@ionic/angular';
+import { IonButton, IonContent, IonInput, IonItem, IonList, IonText } from '@ionic/angular';
 
-type Mode = 'login' | 'register';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^\+?[0-9\s-]{7,15}$/;
+
+type IdentifierKind = 'email' | 'phone' | 'unknown';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, IonContent, IonList, IonItem, IonInput, IonButton, IonSegment, IonSegmentButton, IonLabel, IonText],
+  imports: [ReactiveFormsModule, RouterLink, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
@@ -27,40 +20,52 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly brand = BRAND;
-  protected readonly mode = signal<Mode>('login');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
   protected readonly form = new FormGroup({
-    displayName: new FormControl('', { nonNullable: true }),
-    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
+    identifier: new FormControl('', { nonNullable: true }),
+    password: new FormControl('', { nonNullable: true }),
   });
 
-  protected setMode(value: unknown): void {
-    this.mode.set(value === 'register' ? 'register' : 'login');
-    this.error.set(null);
+  private readonly identifier = signal('');
+
+  protected readonly identifierKind = computed<IdentifierKind>(() => {
+    const value = this.identifier().trim();
+    if (!value) return 'unknown';
+    if (EMAIL_PATTERN.test(value)) return 'email';
+    if (PHONE_PATTERN.test(value)) return 'phone';
+    return 'unknown';
+  });
+
+  protected onIdentifierInput(value: string | null | undefined): void {
+    this.identifier.set(value ?? '');
   }
 
   protected async submit(): Promise<void> {
-    const isRegister = this.mode() === 'register';
-    const { displayName, email, password } = this.form.getRawValue();
+    const identifier = this.identifier().trim();
+    const kind = this.identifierKind();
+    const password = this.form.controls.password.value;
 
-    if (this.form.invalid || (isRegister && !displayName.trim())) {
-      this.form.markAllAsTouched();
-      this.error.set(isRegister && !displayName.trim() ? 'what should we call you? 👀' : 'check your email + password (8+ chars)');
+    if (kind === 'unknown') {
+      this.error.set('enter a valid email or mobile number');
+      return;
+    }
+    if (kind === 'email' && password.length < 8) {
+      this.error.set('enter your password (8+ chars)');
       return;
     }
 
     this.busy.set(true);
     this.error.set(null);
     try {
-      if (isRegister) {
-        await this.auth.register({ displayName, email, password });
+      if (kind === 'phone') {
+        await this.auth.requestPhoneOtp(identifier);
+        await this.router.navigate(['/otp'], { queryParams: { phone: identifier } });
       } else {
-        await this.auth.login({ email, password });
+        await this.auth.login({ email: identifier, password });
+        await this.router.navigateByUrl('/', { replaceUrl: true });
       }
-      await this.router.navigateByUrl('/', { replaceUrl: true });
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {

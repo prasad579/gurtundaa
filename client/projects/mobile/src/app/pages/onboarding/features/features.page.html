@@ -1,0 +1,28 @@
+<app-onboarding-shell
+  [step]="3"
+  title="which features do you want to use?"
+  subtitle="you can enable or disable features anytime"
+  (back)="back()"
+  (continueClick)="continue()"
+  (skip)="skip()"
+>
+  <div class="grid">
+    @for (option of options; track option.key) {
+      <button
+        type="button"
+        class="feature"
+        [class.selected]="state.enabledFeatures().has(option.key)"
+        (click)="toggle(option.key)"
+      >
+        <span class="top">
+          <span class="icon" aria-hidden="true">{{ option.icon }}</span>
+          <span class="check" [class.checked]="state.enabledFeatures().has(option.key)">
+            @if (state.enabledFeatures().has(option.key)) { ✓ }
+          </span>
+        </span>
+        <strong>{{ option.label }}</strong>
+        <span class="hint">{{ option.hint }}</span>
+      </button>
+    }
+  </div>
+</app-onboarding-shell>

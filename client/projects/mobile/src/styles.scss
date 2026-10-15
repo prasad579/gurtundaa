@@ -25,6 +25,7 @@
   --ion-color-secondary-tint: #ee5aa3;
 
   --gurtu-gradient: linear-gradient(120deg, #7c3aed 0%, #ec4899 55%, #f97316 100%);
+  --gurtu-blue: #2563eb;
 }
 
 .gradient-text {
@@ -37,9 +38,24 @@
 }
 
 ion-button.gradient {
-  --background: var(--gurtu-gradient);
+  --background: var(--gurtu-blue);
+  --background-activated: #1d4ed8;
   --border-radius: 999px;
-  --box-shadow: 0 10px 24px -10px rgb(124 58 237 / 0.6);
+  --box-shadow: 0 10px 24px -10px rgb(37 99 235 / 0.6);
   font-weight: 600;
   text-transform: none;
+}
+
+// Match the mockup's light, regular-weight, non-italic hint text instead of Ionic's bolder/italic default.
+ion-input::part(label),
+ion-input::part(placeholder) {
+  color: var(--ion-color-medium);
+  font-weight: 400;
+  font-style: normal;
+  opacity: 1;
+}
+
+// The mockup has no valid/invalid indicator, so drop Ionic's automatic green/red underline.
+ion-input {
+  --highlight-height: 0;
 }

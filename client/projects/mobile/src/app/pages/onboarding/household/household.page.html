@@ -1,0 +1,43 @@
+<app-onboarding-shell
+  [step]="2"
+  title="tell us about your household"
+  subtitle="you can always change this later"
+  (back)="back()"
+  (continueClick)="continue()"
+  (skip)="skip()"
+>
+  <div class="counter-card">
+    <div class="label">
+      <span class="icon" aria-hidden="true">🧑‍🤝‍🧑</span>
+      <span>
+        <strong>adults</strong>
+        <span class="hint">people ages 18 and above</span>
+      </span>
+    </div>
+    <div class="stepper">
+      <button type="button" (click)="adjustAdults(-1)" aria-label="decrease adults">−</button>
+      <span class="count">{{ state.adults() }}</span>
+      <button type="button" (click)="adjustAdults(1)" aria-label="increase adults">+</button>
+    </div>
+  </div>
+
+  <div class="counter-card">
+    <div class="label">
+      <span class="icon" aria-hidden="true">🧒</span>
+      <span>
+        <strong>children</strong>
+        <span class="hint">people below 18 years</span>
+      </span>
+    </div>
+    <div class="stepper">
+      <button type="button" (click)="adjustChildren(-1)" aria-label="decrease children">−</button>
+      <span class="count">{{ state.children() }}</span>
+      <button type="button" (click)="adjustChildren(1)" aria-label="increase children">+</button>
+    </div>
+  </div>
+
+  <p class="note">
+    <span aria-hidden="true">🛡️</span>
+    we use this info to create better reminders and suggestions for your family.
+  </p>
+</app-onboarding-shell>

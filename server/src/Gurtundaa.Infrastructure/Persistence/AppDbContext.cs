@@ -12,6 +12,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<PhoneOtp> PhoneOtps => Set<PhoneOtp>();
+
+    public DbSet<HouseholdProfile> HouseholdProfiles => Set<HouseholdProfile>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

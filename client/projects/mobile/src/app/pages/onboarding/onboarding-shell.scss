@@ -1,0 +1,80 @@
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 1rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .back {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--ion-color-dark);
+    padding: 0.25rem 0.5rem 0.25rem 0;
+  }
+
+  .spacer {
+    display: inline-block;
+    width: 1.5rem;
+  }
+
+  .step {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+.progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ion-color-step-100, rgb(124 58 237 / 0.12));
+  overflow: hidden;
+
+  .bar {
+    height: 100%;
+    background: var(--gurtu-blue);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+  }
+}
+
+h1 {
+  margin: 0.25rem 0 0;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ion-color-medium);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+ion-button {
+  margin-top: 0.5rem;
+}
+
+.skip {
+  background: none;
+  border: none;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 0.25rem;
+}

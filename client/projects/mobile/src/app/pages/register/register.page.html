@@ -1,0 +1,80 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="hero">
+      <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+      <h1 class="gradient-text">{{ brand.name }}</h1>
+      <p>{{ brand.tagline }}</p>
+    </header>
+
+    <h2>create account</h2>
+    <p class="subtitle">let's get started with your account</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-input
+            label="full name"
+            labelPlacement="floating"
+            formControlName="displayName"
+            autocomplete="name"
+          />
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="email address"
+            labelPlacement="floating"
+            type="email"
+            inputmode="email"
+            formControlName="email"
+            autocomplete="email"
+          />
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="mobile number"
+            labelPlacement="floating"
+            type="tel"
+            inputmode="tel"
+            formControlName="phoneNumber"
+            autocomplete="tel"
+          />
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="create password"
+            labelPlacement="floating"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+          />
+        </ion-item>
+        <ion-item>
+          <ion-input
+            label="confirm password"
+            labelPlacement="floating"
+            type="password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+          />
+        </ion-item>
+      </ion-list>
+
+      <label class="terms">
+        <ion-checkbox (ionChange)="setAgreed($event.detail.checked)" />
+        <span>i agree to the Terms of Service and Privacy Policy</span>
+      </label>
+
+      @if (error(); as message) {
+        <ion-text color="danger"><p class="error" role="alert">{{ message }}</p></ion-text>
+      }
+
+      <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
+        {{ busy() ? 'one sec…' : 'create account ✨' }}
+      </ion-button>
+    </form>
+
+    <p class="switch">
+      already have an account? <a routerLink="/login">sign in</a>
+    </p>
+  </div>
+</ion-content>

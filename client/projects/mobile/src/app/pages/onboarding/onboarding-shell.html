@@ -1,0 +1,31 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="nav">
+      @if (showBack()) {
+        <button class="back" type="button" (click)="back.emit()" aria-label="back">‹</button>
+      } @else {
+        <span class="spacer"></span>
+      }
+      <span class="step">step {{ step() }} of {{ totalSteps() }}</span>
+    </header>
+
+    <div class="progress">
+      <div class="bar" [style.width.%]="(step() / totalSteps()) * 100"></div>
+    </div>
+
+    <h1>{{ title() }}</h1>
+    @if (subtitle(); as text) {
+      <p class="subtitle">{{ text }}</p>
+    }
+
+    <div class="body">
+      <ng-content />
+    </div>
+
+    <ion-button class="gradient" expand="block" [disabled]="continueDisabled()" (click)="continueClick.emit()">
+      {{ continueLabel() }}
+    </ion-button>
+
+    <button class="skip" type="button" (click)="skip.emit()">i'll do this later</button>
+  </div>
+</ion-content>

@@ -1,7 +1,9 @@
 using Gurtundaa.Application.Auth;
+using Gurtundaa.Application.Household;
 using Gurtundaa.Application.Reminders;
 using Gurtundaa.Domain.Entities;
 using Gurtundaa.Infrastructure.Auth;
+using Gurtundaa.Infrastructure.Household;
 using Gurtundaa.Infrastructure.Persistence;
 using Gurtundaa.Infrastructure.Reminders;
 using Microsoft.AspNetCore.Identity;
@@ -39,7 +41,9 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IOtpSender, ConsoleOtpSender>();
         services.AddScoped<IReminderService, ReminderService>();
+        services.AddScoped<IHouseholdProfileService, HouseholdProfileService>();
 
         return services;
     }

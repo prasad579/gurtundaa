@@ -1,0 +1,42 @@
+<app-onboarding-shell
+  [step]="5"
+  title="you're all set! 🎉"
+  subtitle="here's a quick summary of your setup"
+  continueLabel="start using gurtundaa"
+  [continueDisabled]="busy()"
+  (back)="back()"
+  (continueClick)="finish()"
+  (skip)="skip()"
+>
+  <div class="summary">
+    <div class="row">
+      <span>account type</span>
+      <strong>{{ accountTypeLabel() }}</strong>
+    </div>
+    <div class="row">
+      <span>adults</span>
+      <strong>{{ state.adults() }}</strong>
+    </div>
+    <div class="row">
+      <span>children</span>
+      <strong>{{ state.children() }}</strong>
+    </div>
+    <div class="row">
+      <span>location</span>
+      <strong>{{ state.city() || 'not set' }}</strong>
+    </div>
+    <div class="row">
+      <span>enabled features</span>
+      <strong>{{ featureCount() }} features</strong>
+    </div>
+  </div>
+
+  <p class="note">
+    <span aria-hidden="true">🛡️</span>
+    don't worry, you can update all of these anytime in settings.
+  </p>
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+</app-onboarding-shell>

@@ -2,7 +2,14 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { GURTUNDAA_API_URL } from '../api/api-config';
-import { AuthResponse, LoginRequest, RegisterRequest, User } from '../api/models';
+import {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  RequestOtpResponse,
+  User,
+  VerifyOtpRequest,
+} from '../api/models';
 import { TOKEN_STORE } from './token-store';
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +39,18 @@ export class AuthService {
 
   register(request: RegisterRequest): Promise<User> {
     return this.authenticate(this.http.post<AuthResponse>(`${this.url}/register`, request));
+  }
+
+  async requestPhoneOtp(phoneNumber: string): Promise<RequestOtpResponse> {
+    return firstValueFrom(
+      this.http
+        .post<RequestOtpResponse>(`${this.url}/otp/request`, { phoneNumber })
+        .pipe(catchError((e) => throwError(() => toFriendlyError(e)))),
+    );
+  }
+
+  verifyPhoneOtp(request: VerifyOtpRequest): Promise<User> {
+    return this.authenticate(this.http.post<AuthResponse>(`${this.url}/otp/verify`, request));
   }
 
   async logout(): Promise<void> {

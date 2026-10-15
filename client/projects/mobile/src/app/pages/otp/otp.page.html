@@ -1,0 +1,43 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="hero">
+      <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+      <h1 class="gradient-text">{{ brand.name }}</h1>
+    </header>
+
+    <h2>verify your number</h2>
+    <p class="subtitle">enter the code we sent to {{ phone() }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="verify()" novalidate>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-input
+            label="6-digit code"
+            labelPlacement="floating"
+            type="tel"
+            inputmode="numeric"
+            maxlength="6"
+            formControlName="code"
+            autocomplete="one-time-code"
+          />
+        </ion-item>
+      </ion-list>
+
+      @if (error(); as message) {
+        <ion-text color="danger"><p class="error" role="alert">{{ message }}</p></ion-text>
+      }
+
+      <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
+        {{ busy() ? 'one sec…' : 'verify & continue' }}
+      </ion-button>
+    </form>
+
+    <p class="switch">
+      @if (resendCooldown() > 0) {
+        resend code in {{ resendCooldown() }}s
+      } @else {
+        didn't get it? <a (click)="resend()">resend code</a>
+      }
+    </p>
+  </div>
+</ion-content>

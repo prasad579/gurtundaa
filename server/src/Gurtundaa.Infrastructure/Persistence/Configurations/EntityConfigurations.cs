@@ -48,3 +48,34 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class HouseholdProfileConfiguration : IEntityTypeConfiguration<HouseholdProfile>
+{
+    public void Configure(EntityTypeBuilder<HouseholdProfile> builder)
+    {
+        builder.ToTable("HouseholdProfiles");
+        builder.HasKey(p => p.UserId);
+        builder.Property(p => p.AccountType).HasMaxLength(30).IsRequired();
+        builder.Property(p => p.City).HasMaxLength(100);
+        builder.Property(p => p.EnabledFeatures).HasMaxLength(500).IsRequired();
+
+        builder.HasOne(p => p.User)
+            .WithOne()
+            .HasForeignKey<HouseholdProfile>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class PhoneOtpConfiguration : IEntityTypeConfiguration<PhoneOtp>
+{
+    public void Configure(EntityTypeBuilder<PhoneOtp> builder)
+    {
+        builder.ToTable("PhoneOtps");
+        builder.HasKey(o => o.Id);
+        builder.Property(o => o.PhoneNumber).HasMaxLength(20).IsRequired();
+        builder.Property(o => o.CodeHash).HasMaxLength(64).IsRequired();
+
+        // Looking up the newest active code for a phone number is the hot path.
+        builder.HasIndex(o => new { o.PhoneNumber, o.ConsumedAt, o.ExpiresAt });
+    }
+}

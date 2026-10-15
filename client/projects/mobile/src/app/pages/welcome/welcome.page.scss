@@ -1,0 +1,80 @@
+ion-content {
+  --background: radial-gradient(circle at 15% 10%, rgb(124 58 237 / 0.2), transparent 50%),
+    radial-gradient(circle at 85% 90%, rgb(236 72 153 / 0.18), transparent 50%), var(--ion-background-color);
+}
+
+.wrap {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-top: env(safe-area-inset-top);
+}
+
+.hero {
+  text-align: center;
+
+  .emoji {
+    font-size: 3.2rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin: 0.25rem 0;
+  }
+
+  p {
+    margin: 0;
+    color: var(--ion-color-medium);
+    font-size: 1rem;
+  }
+}
+
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .dot {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgb(124 58 237 / 0.15);
+    color: var(--ion-color-primary);
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+  }
+
+  p {
+    margin: 0.1rem 0 0;
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+}
+
+.later {
+  background: none;
+  border: none;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}

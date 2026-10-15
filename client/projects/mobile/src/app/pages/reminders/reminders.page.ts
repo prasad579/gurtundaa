@@ -45,7 +45,7 @@ import {
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, logOutOutline, pencil, trash } from 'ionicons/icons';
+import { add, homeOutline, logOutOutline, pencil, trash } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { ReminderNotifications } from '../../services/reminder-notifications';
 import { ReminderEditorComponent } from './reminder-editor.component';
@@ -101,7 +101,7 @@ export class RemindersPage implements ViewWillEnter {
   protected readonly isOverdue = isOverdue;
 
   constructor() {
-    addIcons({ add, logOutOutline, pencil, trash });
+    addIcons({ add, logOutOutline, homeOutline, pencil, trash });
   }
 
   ionViewWillEnter(): void {
@@ -159,6 +159,7 @@ export class RemindersPage implements ViewWillEnter {
     const sheet = await this.sheets.create({
       header: this.auth.user()?.email,
       buttons: [
+        { text: 'household profile', icon: 'home-outline', data: 'profile' },
         { text: 'log out', role: 'destructive', icon: 'log-out-outline', data: 'logout' },
         { text: 'nvm', role: 'cancel' },
       ],
@@ -168,6 +169,8 @@ export class RemindersPage implements ViewWillEnter {
     if (data === 'logout') {
       await this.auth.logout();
       await this.router.navigateByUrl('/login', { replaceUrl: true });
+    } else if (data === 'profile') {
+      await this.router.navigateByUrl('/profile');
     }
   }
 

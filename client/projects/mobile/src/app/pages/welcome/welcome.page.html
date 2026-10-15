@@ -1,0 +1,38 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="hero">
+      <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+      <h1>
+        welcome to <span class="gradient-text">{{ brand.name }}</span>
+      </h1>
+      <p>{{ brand.tagline }} — your all-in-one app to manage your home, family and daily life.</p>
+    </header>
+
+    <ul class="features">
+      <li>
+        <span class="dot">✓</span>
+        <div>
+          <strong>organize everything</strong>
+          <p>bills, documents, medicines, events & more</p>
+        </div>
+      </li>
+      <li>
+        <span class="dot">✓</span>
+        <div>
+          <strong>get notified</strong>
+          <p>never miss important things again</p>
+        </div>
+      </li>
+      <li>
+        <span class="dot">✓</span>
+        <div>
+          <strong>secure & private</strong>
+          <p>your data is always safe with us</p>
+        </div>
+      </li>
+    </ul>
+
+    <ion-button class="gradient" expand="block" (click)="getStarted()">get started</ion-button>
+    <button class="later" type="button" (click)="later()">i'll do this later</button>
+  </div>
+</ion-content>

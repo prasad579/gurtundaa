@@ -12,5 +12,9 @@ public interface IAuthService
 
     Task RevokeAsync(string refreshToken, CancellationToken ct);
 
+    Task<Result<RequestOtpResponse>> RequestPhoneOtpAsync(string phoneNumber, CancellationToken ct);
+
+    Task<Result<AuthResponse>> VerifyPhoneOtpAsync(VerifyOtpRequest request, CancellationToken ct);
+
     Task<UserDto?> GetUserAsync(Guid userId, CancellationToken ct);
 }

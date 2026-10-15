@@ -53,3 +53,26 @@ ion-item {
 ion-button {
   margin-top: 0.75rem;
 }
+
+h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0;
+  text-align: center;
+  color: var(--ion-color-medium);
+}
+
+.switch {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  color: var(--ion-color-medium);
+
+  a {
+    color: var(--ion-color-primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+}

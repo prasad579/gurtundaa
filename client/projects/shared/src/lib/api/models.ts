@@ -35,6 +35,7 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
+  phoneNumber: string | null;
 }
 
 export interface AuthResponse {
@@ -51,4 +52,29 @@ export interface LoginRequest {
 
 export interface RegisterRequest extends LoginRequest {
   displayName: string;
+  phoneNumber: string;
 }
+
+export interface RequestOtpRequest {
+  phoneNumber: string;
+}
+
+export interface RequestOtpResponse {
+  sent: boolean;
+  devCode: string | null;
+}
+
+export interface VerifyOtpRequest {
+  phoneNumber: string;
+  code: string;
+}
+
+export interface HouseholdProfile {
+  accountType: string;
+  adults: number;
+  children: number;
+  city: string | null;
+  enabledFeatures: string[];
+}
+
+export type SaveHouseholdProfileRequest = HouseholdProfile;

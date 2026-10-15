@@ -1,0 +1,27 @@
+<app-onboarding-shell
+  [step]="4"
+  title="where do you live?"
+  subtitle="we use this for local weather alerts, holidays and better reminders"
+  (back)="back()"
+  (continueClick)="continue()"
+  (skip)="skip()"
+>
+  <label class="city-field">
+    <span>city</span>
+    <input
+      type="text"
+      [value]="state.city()"
+      placeholder="e.g. chennai, tamil nadu"
+      (input)="onCityInput($any($event.target).value)"
+    />
+  </label>
+
+  <div class="why">
+    <strong>why we need your location?</strong>
+    <ul>
+      <li>accurate weather alerts & smart reminders</li>
+      <li>local holidays & important updates</li>
+      <li>relevant suggestions for your area</li>
+    </ul>
+  </div>
+</app-onboarding-shell>

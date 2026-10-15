@@ -1,0 +1,36 @@
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  border: 2px solid var(--ion-color-step-150, rgb(0 0 0 / 0.08));
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  background: var(--ion-background-color);
+
+  &.selected {
+    border-color: var(--gurtu-blue);
+    background: rgb(37 99 235 / 0.06);
+  }
+
+  .icon {
+    font-size: 1.8rem;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .hint {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+  }
+}
