@@ -59,6 +59,14 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
+  border-top: 3px solid transparent;
+  border-image: var(--gradient) 1;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -14px rgb(124 58 237 / 0.35);
+  }
 
   strong {
     font-family: 'Space Grotesk', sans-serif;
@@ -71,8 +79,14 @@
     font-size: 0.85rem;
   }
 
-  &.hot strong {
-    color: var(--warn);
+  &.hot {
+    border-image: none;
+    border-top-color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+
+    strong {
+      color: var(--warn);
+    }
   }
 }
 

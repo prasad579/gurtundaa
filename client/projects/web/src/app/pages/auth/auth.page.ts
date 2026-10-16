@@ -23,6 +23,7 @@ export class AuthPage {
   protected readonly form = new FormGroup({
     displayName: new FormControl('', { nonNullable: true }),
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    phoneNumber: new FormControl('', { nonNullable: true }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
   });
 
@@ -33,7 +34,7 @@ export class AuthPage {
 
   protected async submit(): Promise<void> {
     const isRegister = this.mode() === 'register';
-    const { displayName, email, password } = this.form.getRawValue();
+    const { displayName, email, phoneNumber, password } = this.form.getRawValue();
 
     if (this.form.invalid || (isRegister && !displayName.trim())) {
       this.form.markAllAsTouched();
@@ -41,11 +42,16 @@ export class AuthPage {
       return;
     }
 
+    if (isRegister && !phoneNumber.trim()) {
+      this.error.set('add a phone number too 📱');
+      return;
+    }
+
     this.busy.set(true);
     this.error.set(null);
     try {
       if (isRegister) {
-        await this.auth.register({ displayName, email, password });
+        await this.auth.register({ displayName, email, phoneNumber: phoneNumber.trim(), password });
       } else {
         await this.auth.login({ email, password });
       }
