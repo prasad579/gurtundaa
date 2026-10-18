@@ -5,9 +5,25 @@
 @use '@ionic/angular/css/padding.css';
 @use '@ionic/angular/css/flex-utils.css';
 @use '@ionic/angular/css/display.css';
-@use '@ionic/angular/css/palettes/dark.system.css';
 
 :root {
+  // Every screen in this app is designed against the light palette (white cards, purple/pink
+  // accents) — there's no dark theme built. Without this, Ionic's dark palette auto-switches on
+  // `prefers-color-scheme: dark` (and browsers like Edge layer their own "force dark" content
+  // inversion on top), producing low-contrast, half-inverted text nobody designed for.
+  color-scheme: light;
+
+  // Ionic only ships this pair inside its optional dark-palette CSS files — there's no plain
+  // "light" file providing it, because components fall back to their own internal shadow-DOM
+  // defaults when it's unset. But several pages here reference it directly (e.g. a custom
+  // `ion-content { --background: <gradient>, var(--ion-background-color) }`), and `var()` with
+  // no fallback against an unset property poisons the whole declaration to invalid/transparent.
+  // Defining it explicitly fixes every page that depends on it in one place.
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #1f1330;
+  --ion-text-color-rgb: 31, 19, 48;
+
   --ion-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --ion-color-primary: #7c3aed;
@@ -58,4 +74,47 @@ ion-input::part(placeholder) {
 // The mockup has no valid/invalid indicator, so drop Ionic's automatic green/red underline.
 ion-input {
   --highlight-height: 0;
+}
+
+// Alerts escape their `message` as plain text by default (good — it may contain free-text the
+// user typed), so multi-line messages need an explicit opt-in to render \n as real line breaks.
+.day-detail-alert .alert-message {
+  white-space: pre-line;
+}
+
+// ion-tabs clones the <ion-router-outlet> it's given into its own tab-stack wrapper and leaves
+// the original element behind, empty, full-size, and still capturing pointer events — which
+// silently swallows every click/tap on the active tab's content underneath it. An outlet with
+// no activated route never legitimately needs to receive input, so just let clicks pass through.
+ion-router-outlet:empty {
+  pointer-events: none;
+}
+
+// This is a phone app with no responsive breakpoints, so a wide desktop browser window stretches
+// everything (e.g. square calendar cells blow up to ~200px). Pin it to a phone-sized column and
+// center it so `ng serve` previews look right without reaching for devtools' device toolbar.
+@media (min-width: 520px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background: #15101f;
+  }
+
+  ion-app {
+    width: 430px;
+    max-width: 430px;
+    height: 100vh;
+    max-height: 932px;
+    margin: auto;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 30px 60px -20px rgb(0 0 0 / 0.6);
+  }
+
+  // ion-modal/alert/toast are appended to <body>, not <ion-app>, so they're not constrained by
+  // the rule above — without this they render (and position their buttons) at full viewport
+  // width while only *looking* clipped to the narrow frame, making controls near the right edge
+  // literally unclickable in this desktop preview (never an issue on an actual phone-width screen).
+  ion-modal, ion-alert, ion-action-sheet, ion-toast, ion-picker, ion-loading {
+    --width: 430px;
+    --max-width: 430px;
+  }
 }

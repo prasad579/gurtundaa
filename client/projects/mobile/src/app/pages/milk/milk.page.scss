@@ -1,0 +1,399 @@
+.card {
+  margin: 12px 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--ion-color-medium);
+  span { font-size: 2.4rem; display: block; margin-bottom: 8px; }
+  p { margin-bottom: 16px; }
+}
+
+.muted { color: var(--ion-color-medium); font-size: 13px; margin: 4px 0; }
+.calendar-hint { font-size: 11px; margin: 0 0 8px; }
+
+// ---------- Milkman card ----------
+
+.mk-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgb(45 211 111 / 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  flex-shrink: 0;
+}
+
+.mk-info {
+  flex: 1;
+  min-width: 0;
+
+  .nm {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .mt {
+    font-size: 11px;
+    color: var(--ion-color-medium);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    ion-icon { font-size: 11px; }
+  }
+}
+
+.badge-blue {
+  background: #e8f0fe;
+  color: #1a56a0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.mk-acts {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.ic-btn, .icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ion-color-step-100, #e8e8e8);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ion-color-primary);
+  font-size: 15px;
+
+  &.whatsapp { color: #25d366; }
+}
+
+.stats4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: 12px;
+  background: var(--ion-color-step-100, #eee);
+  border: 1px solid var(--ion-color-step-100, #eee);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.s4i {
+  background: #fff;
+  padding: 7px 4px;
+  text-align: center;
+
+  .lbl { font-size: 8.5px; color: var(--ion-color-medium); }
+  .val { font-size: 12px; font-weight: 700; margin-top: 2px; }
+  .val.small { font-size: 10px; }
+}
+
+// ---------- Today's Delivery + Paused ----------
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 16px 12px;
+
+  .card { margin: 0; }
+
+  &.full { grid-template-columns: 1fr; }
+}
+
+.del-inner {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.del-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+  color: #fff;
+
+  &.delivered { background: #2dd36f; }
+  &.missed { background: #eb445a; }
+}
+
+.dt {
+  .dtt { font-size: 10.5px; font-weight: 700; color: var(--ion-color-medium); }
+  .dtq { font-size: 17px; font-weight: 800; line-height: 1.2; }
+  .dta { font-size: 10px; color: var(--ion-color-medium); }
+}
+
+.today-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.mbtn {
+  background: #fff;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 9.5px;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+
+  ion-icon { font-size: 11px; }
+}
+
+.ontrack {
+  background: rgb(45 211 111 / 0.12);
+  border-radius: 7px;
+  padding: 6px 9px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+
+  h3 { margin: 0; }
+}
+
+.manage-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  text-decoration: none;
+}
+
+.pause-card .pause-box {
+  background: rgb(255 196 9 / 0.14);
+  border: 1px solid rgb(255 196 9 / 0.4);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.pb-range { font-size: 11.5px; font-weight: 700; color: #e65100; }
+.pb-reason { font-size: 10.5px; color: #795548; margin-top: 2px; }
+.pb-resume { font-size: 10.5px; color: #388e3c; font-weight: 700; margin-top: 6px; }
+
+.pb-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-wa, .btn-edit {
+  flex: 1;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+
+  ion-icon { font-size: 12px; }
+}
+
+.btn-wa { background: #25d366; color: #fff; }
+.btn-edit { background: #fff; color: #e65100; border: 1px solid #ffb74d; }
+
+// ---------- Calendar card ----------
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  h3 { margin: 0; }
+  .icon-btn { width: 28px; height: 28px; font-size: 13px; }
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.sg-item {
+  background: var(--ion-color-step-50, #f7f8fb);
+  border-radius: 9px;
+  padding: 8px;
+  text-align: center;
+
+  .sgl { font-size: 10px; color: var(--ion-color-medium); }
+  .sgv { font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .sgv.g { color: #2e7d32; }
+  .sgv.o { color: #f57c00; }
+  .sgv.r { color: #c62828; }
+}
+
+// ---------- Upcoming horizontal scroll ----------
+
+.uc-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  margin: 0 -2px;
+}
+
+.uc-item {
+  position: relative;
+  background: var(--ion-color-step-50, #f7f8fb);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 118px;
+  flex-shrink: 0;
+  border: 1px solid var(--ion-color-step-100, #e8eaee);
+
+  &.ex { border-color: #c8e6c9; }
+  &.ps { border-color: #ffcc80; cursor: pointer; }
+  &.qc { border-color: rgb(124 58 237 / 0.35); cursor: pointer; }
+}
+
+.uc-tp {
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 3px;
+
+  ion-icon { font-size: 12px; }
+  &.ex { color: #2e7d32; }
+  &.ps { color: #e65100; }
+  &.qc { color: var(--ion-color-primary, #7c3aed); }
+}
+
+.uc-dt { font-size: 10px; color: var(--ion-color-medium); margin-bottom: 2px; }
+.uc-qty { font-size: 13px; font-weight: 700; }
+.uc-rsn { font-size: 10px; color: var(--ion-color-medium); }
+
+.uc-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--ion-color-medium);
+  font-size: 13px;
+  padding: 2px;
+
+  &:first-of-type:nth-last-of-type(2) {
+    right: 26px;
+  }
+}
+
+.add-uc {
+  min-width: 82px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgb(124 58 237 / 0.06);
+  border: 1.5px dashed rgb(124 58 237 / 0.35);
+  border-radius: 10px;
+  padding: 10px;
+  flex-shrink: 0;
+  color: var(--ion-color-primary);
+  text-align: center;
+
+  ion-icon { font-size: 18px; }
+  span { font-size: 9.5px; font-weight: 600; }
+}
+
+// ---------- Recent activity ----------
+
+.act-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.act-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ion-color-step-50, #f3f3f3);
+
+  &:last-child { border-bottom: none; }
+}
+
+.act-ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 13px;
+
+  &.delivered { background: rgb(45 211 111 / 0.15); color: #2e7d32; }
+  &.missed { background: rgb(235 68 90 / 0.15); color: #c62828; }
+  &.extraadded { background: #e3f2fd; color: #1976d2; }
+  &.paused { background: rgb(255 196 9 / 0.2); color: #e65100; }
+}
+
+.act-txt {
+  flex: 1;
+  min-width: 0;
+
+  .att { font-size: 11.5px; font-weight: 700; }
+  .ats { font-size: 10px; color: var(--ion-color-medium); }
+}
+
+.act-qty { font-size: 11px; font-weight: 700; color: var(--ion-color-medium); flex-shrink: 0; }

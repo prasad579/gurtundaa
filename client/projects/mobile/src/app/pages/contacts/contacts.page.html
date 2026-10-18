@@ -1,0 +1,54 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/more" />
+    </ion-buttons>
+    <ion-title>Contacts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  @for (cat of categories; track cat.value) {
+    <section class="category">
+      <div class="category-head">
+        <h3>{{ cat.label }}</h3>
+        <ion-button size="small" fill="clear" (click)="openEditor(cat.value)">
+          <ion-icon slot="icon-only" name="add" />
+        </ion-button>
+      </div>
+
+      @let contactsInCategory = byCategory()[cat.value] ?? [];
+      @if (contactsInCategory.length === 0) {
+        <p class="muted">No contacts yet.</p>
+      } @else {
+        <ion-list [inset]="true">
+          @for (c of contactsInCategory; track c.id) {
+            <ion-item-sliding #sliding>
+              <ion-item [button]="true" [detail]="false" (click)="openEditor(cat.value, c, sliding)">
+                <ion-icon slot="start" [name]="c.isDefault ? 'star' : 'star-outline'" [color]="c.isDefault ? 'warning' : 'medium'" />
+                <ion-label>
+                  <h2>{{ c.name }}</h2>
+                  <p>{{ c.phone }}{{ c.address ? ' · ' + c.address : '' }}</p>
+                </ion-label>
+                <a [href]="telLink(c.phone)" class="icon-btn" (click)="$event.stopPropagation()"><ion-icon name="call-outline" /></a>
+                <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="icon-btn whatsapp" (click)="$event.stopPropagation()">
+                  <ion-icon name="logo-whatsapp" />
+                </a>
+              </ion-item>
+              <ion-item-options side="end">
+                @if (!c.isDefault) {
+                  <ion-item-option color="warning" (click)="setDefault(c, sliding)">
+                    <ion-icon slot="icon-only" name="star" />
+                  </ion-item-option>
+                }
+                <ion-item-option color="danger" (click)="remove(c, sliding)">
+                  <ion-icon slot="icon-only" name="trash" />
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
+          }
+        </ion-list>
+      }
+    </section>
+  }
+</ion-content>

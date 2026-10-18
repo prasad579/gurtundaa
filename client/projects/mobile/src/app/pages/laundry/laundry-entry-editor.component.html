@@ -1,0 +1,124 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
+    <ion-title>{{ batch ? 'edit entry' : 'new laundry entry 🧺' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong="true" [disabled]="!hasAnyItem" (click)="save()">save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form">
+    <h3 class="section-title">Service Type</h3>
+    <ion-segment [value]="serviceType()" (ionChange)="serviceType.set($any($event.detail.value))" scrollable>
+      <ion-segment-button value="Ironing">Ironing</ion-segment-button>
+      <ion-segment-button value="WashAndIron">Wash &amp; Iron</ion-segment-button>
+      <ion-segment-button value="DryClean">Dry Clean</ion-segment-button>
+      <ion-segment-button value="Other">Other</ion-segment-button>
+    </ion-segment>
+
+    <ion-list lines="none">
+      <ion-item>
+        <ion-select formControlName="contactId" label="dhobi" labelPlacement="stacked" interface="popover" placeholder="select a dhobi">
+          @for (c of contacts; track c.id) {
+            <ion-select-option [value]="c.id">{{ c.name }}</ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>given on</ion-label>
+        <ion-datetime-button datetime="given-on" />
+      </ion-item>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime id="given-on" formControlName="givenOn" presentation="date" [max]="today" />
+        </ng-template>
+      </ion-modal>
+
+      <ion-item>
+        <ion-label>expected return (optional)</ion-label>
+        <ion-datetime-button datetime="expected-return" />
+      </ion-item>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime id="expected-return" formControlName="expectedReturn" presentation="date" [min]="form.controls.givenOn.value" />
+        </ng-template>
+      </ion-modal>
+    </ion-list>
+
+    <h3 class="section-title">Items</h3>
+    <p class="hint">Enter the price per item as quoted by the dhobi — optional, leave at 0 if not known yet.</p>
+    <div class="item-grid">
+      @for (type of itemTypes; track type.label) {
+        <div class="item-row">
+          <span class="icon">{{ type.icon }}</span>
+          <span class="label">{{ type.label }}</span>
+          <div class="stepper">
+            <button type="button" (click)="adjust(type.label, -1)">−</button>
+            <span class="count">{{ quantity(type.label) }}</span>
+            <button type="button" (click)="adjust(type.label, 1)">+</button>
+          </div>
+          @if (quantity(type.label) > 0) {
+            <div class="price-input">
+              <span class="rs">₹</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                min="0"
+                [value]="price(type.label) || ''"
+                placeholder="0"
+                (input)="setPrice(type.label, $any($event.target).value)"
+              />
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <h3 class="section-title">Other item (optional)</h3>
+    <div class="other-row">
+      <ion-item class="other-input" lines="none">
+        <ion-input formControlName="otherType" placeholder="e.g. Jackets" [maxlength]="50" />
+      </ion-item>
+      <div class="stepper">
+        <button type="button" (click)="adjustOther(-1)">−</button>
+        <span class="count">{{ form.controls.otherQty.value }}</span>
+        <button type="button" (click)="adjustOther(1)">+</button>
+      </div>
+      @if (form.controls.otherQty.value > 0) {
+        <ion-item class="other-price" lines="none">
+          <ion-input
+            formControlName="otherPrice"
+            type="number"
+            inputmode="decimal"
+            placeholder="₹/item"
+          />
+        </ion-item>
+      }
+    </div>
+
+    @if (total() + otherLineTotal(); as grandTotal) {
+      @if (grandTotal > 0) {
+        <div class="total-row">
+          <span>Estimated Total</span>
+          <span class="total-val">₹{{ grandTotal }}</span>
+        </div>
+      }
+    }
+
+    <ion-list lines="none" class="notes-list">
+      <ion-item>
+        <ion-textarea
+          formControlName="notes"
+          label="notes (optional)"
+          labelPlacement="stacked"
+          placeholder="pockets empty, handle with care…"
+          [autoGrow]="true"
+          [maxlength]="200"
+        />
+      </ion-item>
+    </ion-list>
+  </form>
+</ion-content>

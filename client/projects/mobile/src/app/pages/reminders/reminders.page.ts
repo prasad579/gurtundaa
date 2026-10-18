@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import {
   AuthService,
@@ -17,9 +16,6 @@ import {
   randomCheer,
 } from '@gurtundaa/shared';
 import {
-  ActionSheetController,
-  IonButton,
-  IonButtons,
   IonCheckbox,
   IonContent,
   IonFab,
@@ -45,7 +41,7 @@ import {
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, homeOutline, logOutOutline, pencil, trash } from 'ionicons/icons';
+import { add, pencil, trash } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { ReminderNotifications } from '../../services/reminder-notifications';
 import { ReminderEditorComponent } from './reminder-editor.component';
@@ -56,8 +52,6 @@ import { ReminderEditorComponent } from './reminder-editor.component';
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonButtons,
-    IonButton,
     IonIcon,
     IonContent,
     IonRefresher,
@@ -82,10 +76,8 @@ import { ReminderEditorComponent } from './reminder-editor.component';
 export class RemindersPage implements ViewWillEnter {
   private readonly api = inject(RemindersApi);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
-  private readonly sheets = inject(ActionSheetController);
   private readonly notifications = inject(ReminderNotifications);
 
   protected readonly brand = BRAND;
@@ -101,7 +93,7 @@ export class RemindersPage implements ViewWillEnter {
   protected readonly isOverdue = isOverdue;
 
   constructor() {
-    addIcons({ add, logOutOutline, homeOutline, pencil, trash });
+    addIcons({ add, pencil, trash });
   }
 
   ionViewWillEnter(): void {
@@ -153,25 +145,6 @@ export class RemindersPage implements ViewWillEnter {
     await firstValueFrom(this.api.delete(reminder.id));
     await this.toast('gone 🫥');
     await this.load();
-  }
-
-  protected async openAccount(): Promise<void> {
-    const sheet = await this.sheets.create({
-      header: this.auth.user()?.email,
-      buttons: [
-        { text: 'household profile', icon: 'home-outline', data: 'profile' },
-        { text: 'log out', role: 'destructive', icon: 'log-out-outline', data: 'logout' },
-        { text: 'nvm', role: 'cancel' },
-      ],
-    });
-    await sheet.present();
-    const { data } = await sheet.onWillDismiss();
-    if (data === 'logout') {
-      await this.auth.logout();
-      await this.router.navigateByUrl('/login', { replaceUrl: true });
-    } else if (data === 'profile') {
-      await this.router.navigateByUrl('/profile');
-    }
   }
 
   private async load(): Promise<void> {

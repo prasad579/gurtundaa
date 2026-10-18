@@ -1,0 +1,28 @@
+<ion-tabs>
+  <ion-router-outlet [animated]="false"></ion-router-outlet>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="home">
+      <ion-icon name="home-outline" />
+      <ion-label>Home</ion-label>
+    </ion-tab-button>
+
+    @if (enabledFeatures().has('milk')) {
+      <ion-tab-button tab="milk">
+        <ion-icon name="water-outline" />
+        <ion-label>Milk</ion-label>
+      </ion-tab-button>
+    }
+
+    @if (enabledFeatures().has('laundry')) {
+      <ion-tab-button tab="laundry">
+        <ion-icon name="shirt-outline" />
+        <ion-label>Laundry</ion-label>
+      </ion-tab-button>
+    }
+
+    <ion-tab-button tab="more">
+      <ion-icon name="ellipsis-horizontal-outline" />
+      <ion-label>More</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>

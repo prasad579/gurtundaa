@@ -1,0 +1,118 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/milk" />
+    </ion-buttons>
+    <ion-title>Pause / Resume Delivery</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  @if (loading() && pauses().length === 0) {
+    <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+  } @else {
+    <section class="card">
+      <div class="sec-head">
+        <h3>Current Status</h3>
+        @if (activePause()) {
+          <span class="pill active"><ion-icon name="pause-outline" />Paused</span>
+        } @else {
+          <span class="pill ok"><ion-icon name="play-outline" />Active</span>
+        }
+      </div>
+
+      @if (activePause(); as p) {
+        <div class="pause-active">
+          <div class="pa-range">Paused: {{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
+          @if (p.reason) {
+            <div class="pa-detail">Reason: {{ p.reason }}</div>
+          }
+          <div class="pa-resume"><ion-icon name="refresh-outline" /> Resumes {{ resumeDateLabel(p) }}</div>
+          <div class="pa-btns">
+            <button class="b-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
+            <button class="b-edit" (click)="editPause(p)"><ion-icon name="create-outline" />Edit</button>
+            <button class="b-cancel" (click)="cancelPause(p)"><ion-icon name="trash" />Cancel</button>
+          </div>
+        </div>
+      } @else {
+        <p class="muted">Delivery is running as normal — no active pause.</p>
+      }
+    </section>
+
+    <section class="card">
+      <h3>New Pause Request</h3>
+      <p class="label">Reason</p>
+      <div class="reason-chips">
+        @for (r of reasons; track r) {
+          <button class="rchip" [class.sel]="selectedReason() === r" (click)="selectReason(r)">{{ r }}</button>
+        }
+      </div>
+      @if (selectedReason() === 'Other') {
+        <ion-input
+          class="other-input"
+          [value]="customReason()"
+          (ionInput)="customReason.set($any($event.detail.value))"
+          placeholder="describe the reason…"
+          [maxlength]="200"
+        />
+      }
+
+      <div class="date-row">
+        <div class="date-field">
+          <div class="df-lbl">Pause From</div>
+          <ion-datetime-button datetime="pause-from" />
+        </div>
+        <div class="date-field">
+          <div class="df-lbl">Pause Till</div>
+          <ion-datetime-button datetime="pause-till" />
+        </div>
+      </div>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime id="pause-from" presentation="date" [value]="startDate()" [min]="today" (ionChange)="onStartDateChange($any($event.detail.value))" />
+        </ng-template>
+      </ion-modal>
+      <ion-modal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime id="pause-till" presentation="date" [value]="endDate()" [min]="startDate()" (ionChange)="onEndDateChange($any($event.detail.value))" />
+        </ng-template>
+      </ion-modal>
+
+      <div class="dur-row">
+        <span>Duration</span>
+        <span>{{ duration() }} Day{{ duration() === 1 ? '' : 's' }}</span>
+      </div>
+
+      <div class="notify-row">
+        <ion-checkbox [checked]="notifyOnSave()" (ionChange)="notifyOnSave.set($any($event.detail.checked))" />
+        <span>Notify milkman via WhatsApp</span>
+      </div>
+
+      <ion-button expand="block" class="full-btn" [disabled]="saving()" (click)="submitNewPause()">
+        <ion-icon slot="start" name="pause-outline" />{{ saving() ? 'pausing…' : 'Pause Delivery' }}
+      </ion-button>
+    </section>
+
+    <section class="card">
+      <h3>Pause History</h3>
+      @if (history().length === 0) {
+        <p class="muted">No pauses yet.</p>
+      } @else {
+        <div class="hist-list">
+          @for (p of history(); track p.id) {
+            <div class="hist-item" (click)="editPause(p)">
+              <div class="h-dot" [class]="statusOf(p)"></div>
+              <div class="h-txt">
+                <div class="ht">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
+                <div class="hs">{{ durationOf(p) }} Day{{ durationOf(p) === 1 ? '' : 's' }}{{ p.reason ? ' · ' + p.reason : '' }}</div>
+              </div>
+              <span class="pill sm" [class]="statusOf(p)">
+                {{ statusOf(p) === 'active' ? 'Active' : statusOf(p) === 'scheduled' ? 'Scheduled' : 'Ended' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</ion-content>

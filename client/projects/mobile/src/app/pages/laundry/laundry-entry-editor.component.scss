@@ -1,0 +1,130 @@
+.section-title {
+  margin: 18px 4px 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.item-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+
+  .icon {
+    font-size: 18px;
+  }
+
+  .label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: var(--ion-color-primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .count {
+    min-width: 18px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+}
+
+.other-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .other-input {
+    flex: 1;
+    --background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+    border-radius: 12px;
+  }
+
+  .other-price {
+    width: 80px;
+    --background: #fff;
+    --border-radius: 8px;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    border: 1px solid var(--ion-color-step-150, #ddd);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+}
+
+.notes-list {
+  margin-top: 14px;
+}
+
+.hint {
+  font-size: 11.5px;
+  color: var(--ion-color-medium);
+  margin: 0 4px 10px;
+}
+
+.price-input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 8px;
+  padding: 4px 8px;
+  width: 72px;
+  flex-shrink: 0;
+
+  .rs { font-size: 12px; color: var(--ion-color-medium); }
+
+  input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgb(124 58 237 / 0.08);
+  font-size: 13px;
+  font-weight: 700;
+
+  .total-val { font-size: 16px; color: var(--ion-color-primary); }
+}

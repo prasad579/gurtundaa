@@ -1,0 +1,139 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Laundry 🧺</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && active().length === 0 && history().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else {
+    @if (contacts().length === 0) {
+      <div class="card hint-card">
+        <p>No dhobi contacts yet — add one from <strong>More → Contacts</strong> before creating an entry.</p>
+      </div>
+    }
+
+    <section class="card">
+      <div class="section-head">
+        <h3>Active Laundry</h3>
+        <ion-button size="small" fill="solid" (click)="openEntryEditor()">
+          <ion-icon slot="start" name="add" />New Entry
+        </ion-button>
+      </div>
+
+      @if (active().length === 0) {
+        <p class="muted">Nothing out at the moment.</p>
+      } @else {
+        <ion-list [inset]="true">
+          @for (b of active(); track b.id) {
+            <ion-item-sliding #activeSliding>
+              <ion-item [button]="true" [detail]="true" (click)="openEntryEditor(b, activeSliding)">
+                <ion-icon slot="start" name="shirt-outline" />
+                <ion-label>
+                  <h2>
+                    {{ b.contactName ?? 'No dhobi set' }}
+                    <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
+                  </h2>
+                  <p>{{ itemsSummary(b) }}</p>
+                  <p class="dates">
+                    Given {{ shortDateLabel(b.givenOn) }}
+                    @if (b.expectedReturn) {
+                      · Expected {{ shortDateLabel(b.expectedReturn) }}
+                    }
+                  </p>
+                </ion-label>
+                @if (batchAmount(b); as amount) {
+                  <ion-note slot="end">~{{ rupeeLabel(amount) }}</ion-note>
+                }
+              </ion-item>
+              <ion-item-options side="end">
+                <ion-item-option color="success" (click)="markPickedUp(b, activeSliding)">
+                  <ion-icon slot="icon-only" name="checkmark-done-outline" />
+                </ion-item-option>
+                <ion-item-option color="danger" (click)="remove(b, activeSliding)">
+                  <ion-icon slot="icon-only" name="trash" />
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
+          }
+        </ion-list>
+      }
+    </section>
+
+    @if (categoryTotals().length > 0) {
+      <section class="card">
+        <h3>Spend by Category</h3>
+        <div class="cat-totals">
+          @for (c of categoryTotals(); track c.serviceType) {
+            <div class="cat-row">
+              <span class="cat-lbl">{{ serviceTypeLabels[c.serviceType] }}</span>
+              <span class="cat-val">{{ rupeeLabel(c.amount) }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (contacts().length > 0) {
+      <section class="card">
+        <div class="section-head">
+          <h3>Dhobi Contacts</h3>
+          <a routerLink="/contacts" class="manage-link">Manage</a>
+        </div>
+        <ion-list [inset]="true">
+          @for (c of contacts(); track c.id) {
+            <ion-item lines="full">
+              <ion-label>
+                <h2>{{ c.name }}{{ c.isDefault ? ' (default)' : '' }}</h2>
+                <p>{{ c.phone }}</p>
+              </ion-label>
+              <a [href]="telLink(c.phone)" class="icon-btn" slot="end"><ion-icon name="call-outline" /></a>
+              <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="icon-btn whatsapp" slot="end">
+                <ion-icon name="logo-whatsapp" />
+              </a>
+            </ion-item>
+          }
+        </ion-list>
+      </section>
+    }
+
+    <section class="card">
+      <h3>History</h3>
+      @if (history().length === 0) {
+        <p class="muted">No past entries yet.</p>
+      } @else {
+        <ion-list [inset]="true">
+          @for (b of history(); track b.id) {
+            <ion-item lines="full">
+              <ion-label>
+                <h2>
+                  {{ itemsSummary(b) }}
+                  <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
+                </h2>
+                <p>
+                  Given {{ shortDateLabel(b.givenOn) }}
+                  @if (b.pickedUpOn) {
+                    · Picked up {{ shortDateLabel(b.pickedUpOn) }}
+                  }
+                </p>
+                @if (priceBreakdown(b); as breakdown) {
+                  <p class="price-breakdown">{{ breakdown }}</p>
+                }
+              </ion-label>
+              @if (b.amount) {
+                <ion-note slot="end">{{ rupeeLabel(b.amount) }}</ion-note>
+              }
+            </ion-item>
+          }
+        </ion-list>
+      }
+    </section>
+  }
+</ion-content>

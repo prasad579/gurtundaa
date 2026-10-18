@@ -39,18 +39,45 @@ h2 {
   word-break: break-word;
 }
 
-ion-list {
-  background: transparent;
+.otp-label {
+  margin: 0 0 0.6rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ion-color-medium);
 }
 
-ion-item {
-  --border-radius: 16px;
-  --background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+.otp-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
 
-  ion-input {
-    text-align: center;
-    letter-spacing: 0.5rem;
-    font-size: 1.4rem;
+.otp-box {
+  width: 2.75rem;
+  height: 3.25rem;
+  padding: 0;
+  text-align: center;
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+  border: 1.5px solid var(--ion-color-step-150, rgb(124 58 237 / 0.15));
+  border-radius: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:focus {
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 0 0 3px rgb(124 58 237 / 0.15);
   }
 }
 

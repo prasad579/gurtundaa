@@ -1,0 +1,38 @@
+.category {
+  margin-bottom: 18px;
+}
+
+.category-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+  }
+}
+
+.muted {
+  color: var(--ion-color-medium);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-light, #f4f2fb);
+  color: var(--ion-color-primary);
+  margin-left: 6px;
+  flex: none;
+
+  &.whatsapp {
+    color: #25d366;
+  }
+}

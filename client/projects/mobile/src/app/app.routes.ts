@@ -8,7 +8,14 @@ export const routes: Routes = [
     // First-time unauthenticated visitors land on the welcome/onboarding screen;
     // logout and session-expiry still bounce straight to /login (see reminders.page.ts, auth.interceptor.ts).
     canActivate: [() => inject(AuthService).isSignedIn() || inject(Router).createUrlTree(['/welcome'])],
-    loadComponent: () => import('./pages/reminders/reminders.page').then((m) => m.RemindersPage),
+    loadComponent: () => import('./tabs/tabs.page').then((m) => m.TabsPage),
+    children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      { path: 'home', loadComponent: () => import('./pages/reminders/reminders.page').then((m) => m.RemindersPage) },
+      { path: 'milk', loadComponent: () => import('./pages/milk/milk.page').then((m) => m.MilkPage) },
+      { path: 'laundry', loadComponent: () => import('./pages/laundry/laundry.page').then((m) => m.LaundryPage) },
+      { path: 'more', loadComponent: () => import('./pages/more/more.page').then((m) => m.MorePage) },
+    ],
   },
   {
     path: 'welcome',
@@ -34,6 +41,16 @@ export const routes: Routes = [
     path: 'profile',
     canActivate: [signedInGuard],
     loadComponent: () => import('./pages/profile/profile.page').then((m) => m.ProfilePage),
+  },
+  {
+    path: 'contacts',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/contacts/contacts.page').then((m) => m.ContactsPage),
+  },
+  {
+    path: 'milk-pause',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/milk/milk-pause.page').then((m) => m.MilkPausePage),
   },
   {
     path: 'onboarding',

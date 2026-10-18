@@ -1,0 +1,10 @@
+namespace Gurtundaa.Application.Milk;
+
+public interface IMilkDeliveryService
+{
+    Task<MilkMonthDto> GetMonthAsync(int year, int month, CancellationToken ct);
+
+    Task<MilkTodayDto> GetTodayAsync(CancellationToken ct);
+
+    Task<MilkTodayDto> SetOverrideAsync(DateOnly date, SetMilkDeliveryOverrideRequest request, CancellationToken ct);
+}

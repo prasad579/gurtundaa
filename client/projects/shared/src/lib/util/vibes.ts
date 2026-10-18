@@ -1,4 +1,4 @@
-import { Reminder, ReminderPriority } from '../api/models';
+import { LaundryServiceType, MilkCalendarStatus, MilkSlot, Reminder, ReminderPriority } from '../api/models';
 
 /** Brand copy lives here so the web and mobile apps sound the same. */
 export const BRAND = {
@@ -84,3 +84,81 @@ function isTomorrow(date: Date, now: Date): boolean {
   tomorrow.setDate(now.getDate() + 1);
   return date.toDateString() === tomorrow.toDateString();
 }
+
+// ---------- Milk management ----------
+
+export const MILK_STATUS_LABELS: Record<MilkCalendarStatus, string> = {
+  Delivered: 'Delivered ✅',
+  Missed: 'Missed ❌',
+  Paused: 'Paused ⏸️',
+};
+
+export const MILK_SLOT_LABELS: Record<MilkSlot, string> = {
+  Morning: '🌅 Morning',
+  Evening: '🌙 Evening',
+};
+
+export function litresLabel(quantity: number): string {
+  return `${quantity.toFixed(1)} Ltr`;
+}
+
+/** Parses a `DateOnly` string (`yyyy-MM-dd`) as a local calendar date, avoiding UTC off-by-one. */
+export function parseDateOnly(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function shortDateLabel(value: string): string {
+  return parseDateOnly(value).toLocaleDateString(undefined, { day: 'numeric', month: 'short', weekday: 'short' });
+}
+
+/** True for any `DateOnly` string strictly after today — used to tell "planned" from "already happened". */
+export function isFutureDate(value: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return parseDateOnly(value).getTime() > today.getTime();
+}
+
+export function toDateOnlyString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function pauseRangeLabel(startDate: string, endDate: string): string {
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+  const days = Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
+  const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return startDate === endDate ? `${fmt(start)} (1 day)` : `${fmt(start)} – ${fmt(end)} (${days} days)`;
+}
+
+/** Formats a `TimeOnly` string (`HH:mm:ss`) as `6:00 AM`. */
+export function timeLabel(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+export function deliveryWindowLabel(start: string | null, end: string | null): string | null {
+  if (!start && !end) return null;
+  if (start && end) return `${timeLabel(start)} – ${timeLabel(end)} · Daily`;
+  return `${timeLabel((start ?? end)!)} · Daily`;
+}
+
+export function timeOfDayLabel(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+export function rupeeLabel(amount: number): string {
+  return `₹${Math.round(amount)}`;
+}
+
+// ---------- Laundry management ----------
+
+export const LAUNDRY_SERVICE_TYPE_LABELS: Record<LaundryServiceType, string> = {
+  Ironing: '🧺 Ironing',
+  WashAndIron: '🧼 Wash & Iron',
+  DryClean: '✨ Dry Clean',
+  Other: '🧵 Other',
+};

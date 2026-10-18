@@ -16,6 +16,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<HouseholdProfile> HouseholdProfiles => Set<HouseholdProfile>();
 
+    public DbSet<ServiceContact> ServiceContacts => Set<ServiceContact>();
+
+    public DbSet<MilkSubscription> MilkSubscriptions => Set<MilkSubscription>();
+
+    public DbSet<MilkDeliveryOverride> MilkDeliveryOverrides => Set<MilkDeliveryOverride>();
+
+    public DbSet<MilkPause> MilkPauses => Set<MilkPause>();
+
+    public DbSet<MilkExtraRequest> MilkExtraRequests => Set<MilkExtraRequest>();
+
+    public DbSet<LaundryBatch> LaundryBatches => Set<LaundryBatch>();
+
+    public DbSet<MilkQuantityChange> MilkQuantityChanges => Set<MilkQuantityChange>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

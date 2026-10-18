@@ -1,14 +1,14 @@
-import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, QueryList, ViewChildren, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, BRAND } from '@gurtundaa/shared';
-import { IonButton, IonContent, IonInput, IonItem, IonList, IonText } from '@ionic/angular';
+import { IonButton, IonContent, IonText } from '@ionic/angular';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
 @Component({
   selector: 'app-otp',
-  imports: [ReactiveFormsModule, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
+  imports: [ReactiveFormsModule, IonContent, IonButton, IonText],
   templateUrl: './otp.page.html',
   styleUrl: './otp.page.scss',
 })
@@ -18,11 +18,15 @@ export class OtpPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private cooldownHandle?: ReturnType<typeof setInterval>;
 
+  @ViewChildren('digitInput') private digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
+
   protected readonly brand = BRAND;
   protected readonly phone = signal(this.route.snapshot.queryParamMap.get('phone') ?? '');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly resendCooldown = signal(RESEND_COOLDOWN_SECONDS);
+  protected readonly digitIndices = [0, 1, 2, 3, 4, 5];
+  protected readonly boxes = signal<string[]>(['', '', '', '', '', '']);
 
   protected readonly form = new FormGroup({
     code: new FormControl('', { nonNullable: true }),
@@ -30,16 +34,45 @@ export class OtpPage implements OnDestroy {
 
   constructor() {
     this.startCooldown();
-    this.form.controls.code.valueChanges.subscribe((value) => {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 6);
-      if (digitsOnly !== value) {
-        this.form.controls.code.setValue(digitsOnly, { emitEvent: false });
-      }
-    });
   }
 
   ngOnDestroy(): void {
     clearInterval(this.cooldownHandle);
+  }
+
+  protected digitValue(index: number): string {
+    return this.boxes()[index];
+  }
+
+  protected onDigitInput(index: number, rawValue: string): void {
+    const digit = rawValue.replace(/\D/g, '').slice(-1);
+    const next = [...this.boxes()];
+    next[index] = digit;
+    this.boxes.set(next);
+    this.form.controls.code.setValue(next.join(''));
+    this.error.set(null);
+
+    if (digit && index < 5) {
+      this.digitInputs.get(index + 1)?.nativeElement.focus();
+    }
+  }
+
+  protected onDigitKeydown(index: number, event: KeyboardEvent): void {
+    if (event.key === 'Backspace' && !this.boxes()[index] && index > 0) {
+      this.digitInputs.get(index - 1)?.nativeElement.focus();
+    }
+  }
+
+  protected onDigitPaste(event: ClipboardEvent): void {
+    const pasted = event.clipboardData?.getData('text').replace(/\D/g, '').slice(0, 6).split('');
+    if (!pasted?.length) return;
+
+    event.preventDefault();
+    const next = ['', '', '', '', '', ''];
+    pasted.forEach((d, i) => (next[i] = d));
+    this.boxes.set(next);
+    this.form.controls.code.setValue(next.join(''));
+    this.digitInputs.get(Math.min(pasted.length, 6) - 1)?.nativeElement.focus();
   }
 
   protected async verify(): Promise<void> {

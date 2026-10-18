@@ -1,0 +1,236 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Milk 🥛</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && !subscription()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (!subscription()) {
+    <div class="empty ion-padding">
+      <span aria-hidden="true">🥛</span>
+      <p>No milk subscription set up yet.</p>
+      <ion-button (click)="openSubscriptionEditor()">Set up milk delivery</ion-button>
+    </div>
+  } @else {
+    <section class="card contact-card">
+      <div class="mk-row">
+        <div class="avatar">🧑‍🍼</div>
+        <div class="mk-info">
+          <div class="nm">
+            {{ contact()?.name ?? 'No milkman set' }}
+            @if (subscription(); as s) {
+              <span class="badge-blue">{{ s.settlementCycle }}</span>
+            }
+          </div>
+          @if (contact(); as c) {
+            <div class="mt"><ion-icon name="call-outline" /> {{ c.phone }}</div>
+          }
+          @if (morningWindow(); as window) {
+            <div class="mt">🌅 {{ window }}</div>
+          }
+          @if (eveningWindow(); as window) {
+            <div class="mt">🌙 {{ window }}</div>
+          }
+        </div>
+        <div class="mk-acts">
+          @if (contact(); as c) {
+            <a [href]="telLink(c.phone)" class="ic-btn"><ion-icon name="call-outline" /></a>
+            <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="ic-btn whatsapp"><ion-icon name="logo-whatsapp" /></a>
+          }
+          <button class="ic-btn" (click)="openSubscriptionEditor()"><ion-icon name="create-outline" /></button>
+        </div>
+      </div>
+
+      @if (subscription(); as s) {
+        <div class="stats4">
+          <div class="s4i"><div class="lbl">🌅 Morning Qty</div><div class="val">{{ s.morningEnabled ? litresLabel(s.morningQuantityLtr) : 'Off' }}</div></div>
+          <div class="s4i"><div class="lbl">🌙 Evening Qty</div><div class="val">{{ s.eveningEnabled ? litresLabel(s.eveningQuantityLtr) : 'Off' }}</div></div>
+          <div class="s4i"><div class="lbl">Rate / Ltr</div><div class="val">{{ rupeeLabel(s.ratePerLtr) }}</div></div>
+          <div class="s4i"><div class="lbl">Settlement</div><div class="val small">{{ s.settlementCycle }}</div></div>
+        </div>
+      }
+    </section>
+
+    <div class="row2" [class.full]="todayRowCardCount() === 1">
+      @if (today(); as t) {
+        @if (t.morning.enabled) {
+          <section class="card today-card">
+            <div class="today-head">
+              <h3>🌅 Morning Delivery</h3>
+            </div>
+            @if (t.morning.status !== 'Paused') {
+              <div class="del-inner">
+                <div class="del-badge" [class]="t.morning.status.toLowerCase()">
+                  <ion-icon [name]="t.morning.status === 'Delivered' ? 'checkmark' : 'close'" />
+                </div>
+                <div class="dt">
+                  <div class="dtt">{{ statusLabels[t.morning.status] }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtq">{{ litresLabel(t.morning.quantityLtr) }}</div>
+                  <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.morning)) }}</div>
+                </div>
+              </div>
+              <div class="today-actions">
+                @if (t.morning.status === 'Delivered') {
+                  <button class="mbtn" (click)="markNotDelivered('Morning')"><ion-icon name="close" />Not Delivered</button>
+                } @else {
+                  <button class="mbtn" (click)="markDelivered('Morning')"><ion-icon name="checkmark" />Delivered</button>
+                }
+                <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />Edit Qty</button>
+              </div>
+              @if (slotHint(t.morning); as hint) {
+                <div class="ontrack">{{ hint }}</div>
+              }
+            } @else {
+              <p class="muted">Delivery is paused today — see the Paused card.</p>
+            }
+          </section>
+        }
+
+        @if (t.evening.enabled) {
+          <section class="card today-card">
+            <div class="today-head">
+              <h3>🌙 Evening Delivery</h3>
+            </div>
+            @if (t.evening.status !== 'Paused') {
+              <div class="del-inner">
+                <div class="del-badge" [class]="t.evening.status.toLowerCase()">
+                  <ion-icon [name]="t.evening.status === 'Delivered' ? 'checkmark' : 'close'" />
+                </div>
+                <div class="dt">
+                  <div class="dtt">{{ statusLabels[t.evening.status] }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtq">{{ litresLabel(t.evening.quantityLtr) }}</div>
+                  <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.evening)) }}</div>
+                </div>
+              </div>
+              <div class="today-actions">
+                @if (t.evening.status === 'Delivered') {
+                  <button class="mbtn" (click)="markNotDelivered('Evening')"><ion-icon name="close" />Not Delivered</button>
+                } @else {
+                  <button class="mbtn" (click)="markDelivered('Evening')"><ion-icon name="checkmark" />Delivered</button>
+                }
+                <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />Edit Qty</button>
+              </div>
+              @if (slotHint(t.evening); as hint) {
+                <div class="ontrack">{{ hint }}</div>
+              }
+            } @else {
+              <p class="muted">Delivery is paused today — see the Paused card.</p>
+            }
+          </section>
+        }
+      }
+
+      @if (activePause(); as p) {
+        <section class="card pause-card">
+          <div class="sec-head">
+            <h3><ion-icon name="pause-outline" /> Delivery Paused</h3>
+            <a routerLink="/milk-pause" class="manage-link">Manage</a>
+          </div>
+          <div class="pause-box">
+            <div class="pb-range">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
+            @if (p.reason) {
+              <div class="pb-reason">{{ p.reason }}</div>
+            }
+            <div class="pb-resume">Resumes {{ resumeDateLabel(p) }}</div>
+            <div class="pb-btns">
+              <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
+              <button class="btn-edit" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />Edit</button>
+            </div>
+          </div>
+        </section>
+      }
+    </div>
+
+    <section class="card">
+      <div class="month-nav">
+        <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
+        <h3>{{ monthLabel() }}</h3>
+        <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+      </div>
+      <p class="muted calendar-hint">Tap a day to see quantity &amp; extras</p>
+
+      @if (month(); as m) {
+        <app-milk-calendar [days]="m.days" (daySelected)="showDayDetail($event)" />
+        <div class="summary">
+          <div class="sg-item"><div class="sgl">Planned</div><div class="sgv">{{ m.summary.planned }}</div></div>
+          <div class="sg-item"><div class="sgl">Delivered</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
+          <div class="sg-item"><div class="sgl">Paused</div><div class="sgv o">{{ m.summary.paused }}</div></div>
+          <div class="sg-item"><div class="sgl">Missed</div><div class="sgv r">{{ m.summary.missed }}</div></div>
+        </div>
+      }
+    </section>
+
+    <section class="card">
+      <h3>Upcoming Schedule</h3>
+      <div class="uc-scroll">
+        @for (card of upcomingCards(); track card.kind + card.data.id) {
+          @if (card.kind === 'extra') {
+            <div class="uc-item ex">
+              <div class="uc-tp ex"><ion-icon name="add" />Extra Milk ({{ slotLabels[card.data.slot] }})</div>
+              <div class="uc-dt">{{ shortDateLabel(card.data.date) }}</div>
+              <div class="uc-qty">+{{ litresLabel(card.data.quantityLtr) }}</div>
+              @if (card.data.reason) {
+                <div class="uc-rsn">{{ card.data.reason }}</div>
+              }
+              <button class="uc-del" (click)="cancelExtra(card.data)"><ion-icon name="trash" /></button>
+            </div>
+          } @else if (card.kind === 'pause') {
+            <div class="uc-item ps" (click)="openPauseEditor(card.data)">
+              <div class="uc-tp ps"><ion-icon name="pause-outline" />Pause</div>
+              <div class="uc-dt">{{ pauseRangeLabel(card.data.startDate, card.data.endDate) }}</div>
+              @if (card.data.reason) {
+                <div class="uc-rsn">{{ card.data.reason }}</div>
+              }
+              <button class="uc-del" (click)="cancelPause(card.data); $event.stopPropagation()"><ion-icon name="trash" /></button>
+            </div>
+          } @else {
+            <div class="uc-item qc" (click)="openQuantityChangeEditor(card.data)">
+              <div class="uc-tp qc"><ion-icon name="create-outline" />Quantity Change</div>
+              <div class="uc-dt">{{ pauseRangeLabel(card.data.startDate, card.data.endDate) }}</div>
+              <div class="uc-qty">🌅 {{ litresLabel(card.data.morningQuantityLtr) }} · 🌙 {{ litresLabel(card.data.eveningQuantityLtr) }}</div>
+              @if (card.data.reason) {
+                <div class="uc-rsn">{{ card.data.reason }}</div>
+              }
+              <button class="uc-del" (click)="notifyQuantityChange(card.data); $event.stopPropagation()"><ion-icon name="logo-whatsapp" /></button>
+              <button class="uc-del" (click)="cancelQuantityChange(card.data); $event.stopPropagation()"><ion-icon name="trash" /></button>
+            </div>
+          }
+        }
+        <div class="add-uc" (click)="openAddSheet()">
+          <ion-icon name="add" />
+          <span>Add New<br />Extra / Pause</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Recent Activity</h3>
+      @if (activity().length === 0) {
+        <p class="muted">No activity yet.</p>
+      } @else {
+        <div class="act-list">
+          @for (a of activity(); track a.occurredAt) {
+            <div class="act-row">
+              <div class="act-ic" [class]="a.type.toLowerCase()"><ion-icon [name]="activityIcon(a.type)" /></div>
+              <div class="act-txt">
+                <div class="att">{{ a.description }}</div>
+                <div class="ats">{{ shortDateLabel(a.date) }}, {{ timeOfDayLabel(a.occurredAt) }}</div>
+              </div>
+              @if (a.quantityLtr) {
+                <div class="act-qty">+{{ litresLabel(a.quantityLtr) }}</div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</ion-content>

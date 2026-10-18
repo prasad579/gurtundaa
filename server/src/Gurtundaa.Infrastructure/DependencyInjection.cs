@@ -1,11 +1,17 @@
 using Gurtundaa.Application.Auth;
 using Gurtundaa.Application.Household;
+using Gurtundaa.Application.Laundry;
+using Gurtundaa.Application.Milk;
 using Gurtundaa.Application.Reminders;
+using Gurtundaa.Application.ServiceContacts;
 using Gurtundaa.Domain.Entities;
 using Gurtundaa.Infrastructure.Auth;
 using Gurtundaa.Infrastructure.Household;
+using Gurtundaa.Infrastructure.Laundry;
+using Gurtundaa.Infrastructure.Milk;
 using Gurtundaa.Infrastructure.Persistence;
 using Gurtundaa.Infrastructure.Reminders;
+using Gurtundaa.Infrastructure.ServiceContacts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +50,14 @@ public static class DependencyInjection
         services.AddScoped<IOtpSender, ConsoleOtpSender>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IHouseholdProfileService, HouseholdProfileService>();
+        services.AddScoped<IServiceContactService, ServiceContactService>();
+        services.AddScoped<IMilkSubscriptionService, MilkSubscriptionService>();
+        services.AddScoped<IMilkDeliveryService, MilkDeliveryService>();
+        services.AddScoped<IMilkPauseService, MilkPauseService>();
+        services.AddScoped<IMilkExtraRequestService, MilkExtraRequestService>();
+        services.AddScoped<IMilkActivityService, MilkActivityService>();
+        services.AddScoped<ILaundryBatchService, LaundryBatchService>();
+        services.AddScoped<IMilkQuantityChangeService, MilkQuantityChangeService>();
 
         return services;
     }

@@ -9,19 +9,23 @@
     <p class="subtitle">enter the code we sent to {{ phone() }}</p>
 
     <form [formGroup]="form" (ngSubmit)="verify()" novalidate>
-      <ion-list lines="none">
-        <ion-item>
-          <ion-input
-            label="6-digit code"
-            labelPlacement="floating"
+      <p class="otp-label">enter the 6-digit code</p>
+      <div class="otp-boxes">
+        @for (i of digitIndices; track i) {
+          <input
+            #digitInput
+            class="otp-box"
             type="tel"
             inputmode="numeric"
-            maxlength="6"
-            formControlName="code"
+            maxlength="1"
             autocomplete="one-time-code"
+            [value]="digitValue(i)"
+            (input)="onDigitInput(i, $any($event.target).value)"
+            (keydown)="onDigitKeydown(i, $event)"
+            (paste)="onDigitPaste($event)"
           />
-        </ion-item>
-      </ion-list>
+        }
+      </div>
 
       @if (error(); as message) {
         <ion-text color="danger"><p class="error" role="alert">{{ message }}</p></ion-text>
