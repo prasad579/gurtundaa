@@ -96,6 +96,58 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.Bill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<byte>("Category")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("Recurrence")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("ReminderLeadDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "DueDate");
+
+                    b.ToTable("Bills", (string)null);
+                });
+
             modelBuilder.Entity("Gurtundaa.Domain.Entities.HouseholdProfile", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -150,6 +202,9 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("GivenOn")
                         .HasColumnType("date");
 
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ItemsJson")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -158,6 +213,9 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateOnly?>("PickedUpOn")
                         .HasColumnType("date");
@@ -315,6 +373,35 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.ToTable("MilkQuantityChanges", (string)null);
                 });
 
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.MilkSettlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("MilkSettlements", (string)null);
+                });
+
             modelBuilder.Entity("Gurtundaa.Domain.Entities.MilkSubscription", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -352,6 +439,9 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
 
                     b.Property<byte>("SettlementCycle")
                         .HasColumnType("tinyint");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -644,6 +734,17 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.Bill", b =>
+                {
+                    b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Gurtundaa.Domain.Entities.HouseholdProfile", b =>
                 {
                     b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
@@ -707,6 +808,17 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Gurtundaa.Domain.Entities.MilkQuantityChange", b =>
+                {
+                    b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.MilkSettlement", b =>
                 {
                     b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
                         .WithMany()

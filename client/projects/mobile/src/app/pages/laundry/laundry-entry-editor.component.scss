@@ -36,26 +36,41 @@
 .stepper {
   display: flex;
   align-items: center;
-  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
 
   button {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    width: 28px;
+    height: 28px;
     border: none;
-    background: var(--ion-color-primary);
-    color: #fff;
-    font-size: 15px;
+    background: transparent;
+    color: var(--ion-color-primary);
+    font-size: 16px;
     font-weight: 800;
     line-height: 1;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .count {
-    min-width: 18px;
+    width: 32px;
+    border: none;
+    outline: none;
+    background: transparent;
     text-align: center;
     font-weight: 700;
     font-size: 13px;
+    padding: 0;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   }
 }
 

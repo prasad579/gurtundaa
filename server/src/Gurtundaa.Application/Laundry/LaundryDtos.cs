@@ -19,6 +19,8 @@ public sealed record LaundryBatchDto(
     LaundryBatchStatus Status,
     DateOnly? PickedUpOn,
     decimal? Amount,
+    bool IsPaid,
+    DateTimeOffset? PaidAt,
     IReadOnlyList<LaundryItemLine> Items,
     string? Notes,
     DateTimeOffset CreatedAt);
@@ -32,3 +34,5 @@ public sealed record SaveLaundryBatchRequest(
     [MaxLength(200)] string? Notes);
 
 public sealed record MarkPickedUpRequest(decimal? Amount, IReadOnlyList<LaundryItemLine>? Items = null);
+
+public sealed record SetLaundryPaidRequest(bool IsPaid);

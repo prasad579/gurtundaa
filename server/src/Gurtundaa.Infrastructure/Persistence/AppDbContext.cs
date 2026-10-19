@@ -30,6 +30,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<MilkQuantityChange> MilkQuantityChanges => Set<MilkQuantityChange>();
 
+    public DbSet<MilkSettlement> MilkSettlements => Set<MilkSettlement>();
+
+    public DbSet<Bill> Bills => Set<Bill>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

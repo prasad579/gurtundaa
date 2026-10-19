@@ -28,6 +28,10 @@ public class LaundryBatchesController(ILaundryBatchService batches) : Controller
     public async Task<ActionResult<LaundryBatchDto>> MarkPickedUp(Guid id, MarkPickedUpRequest request, CancellationToken ct) =>
         await batches.MarkPickedUpAsync(id, request, ct) is { } batch ? Ok(batch) : NotFound();
 
+    [HttpPatch("{id:guid}/paid")]
+    public async Task<ActionResult<LaundryBatchDto>> SetPaid(Guid id, SetLaundryPaidRequest request, CancellationToken ct) =>
+        await batches.SetPaidAsync(id, request, ct) is { } batch ? Ok(batch) : NotFound();
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
         await batches.DeleteAsync(id, ct) ? NoContent() : NotFound();

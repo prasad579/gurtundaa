@@ -6,6 +6,7 @@ import {
   MilkActivityItem,
   MilkExtraRequestItem,
   MilkMonth,
+  MilkMonthSummary,
   MilkPause,
   MilkQuantityChange,
   MilkSubscription,
@@ -15,6 +16,7 @@ import {
   SaveMilkQuantityChangeRequest,
   SaveMilkSubscriptionRequest,
   SetMilkDeliveryOverrideRequest,
+  SetMilkSettlementPaidRequest,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -101,5 +103,9 @@ export class MilkApi {
 
   deleteQuantityChange(id: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/quantity-changes/${id}`);
+  }
+
+  setSettlementPaid(year: number, month: number, request: SetMilkSettlementPaidRequest): Observable<MilkMonthSummary> {
+    return this.http.patch<MilkMonthSummary>(`${this.url}/settlement/${year}/${month}`, request);
   }
 }

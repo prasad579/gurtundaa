@@ -35,8 +35,12 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             .ToListAsync(ct);
         var extraSlotsByDay = extras.GroupBy(e => e.Date).ToDictionary(g => g.Key, g => g.Select(e => e.Slot).ToHashSet());
 
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().LocalDateTime);
+        var startDate = subscription?.StartDate ?? firstDay;
+
         var days = new List<MilkCalendarDayDto>(daysInMonth);
         int delivered = 0, paused = 0, missed = 0;
+        decimal regularLitres = 0;
 
         for (var date = firstDay; date <= lastDay; date = date.AddDays(1))
         {
@@ -49,15 +53,57 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
 
             days.Add(new MilkCalendarDayDto(date, dayStatus, morning, evening));
 
+            // Only count — and bill for — days that have actually happened: on/after the
+            // subscription's start date (nothing is "delivered" before tracking began) and
+            // on/before today (future days are still just a projection, not a fact yet).
+            if (date < startDate || date > today)
+            {
+                continue;
+            }
+
             switch (dayStatus)
             {
                 case MilkCalendarStatus.Delivered: delivered++; break;
                 case MilkCalendarStatus.Paused: paused++; break;
                 case MilkCalendarStatus.Missed: missed++; break;
             }
+
+            if (morning.Enabled && morning.Status == MilkCalendarStatus.Delivered) regularLitres += morning.QuantityLtr;
+            if (evening.Enabled && evening.Status == MilkCalendarStatus.Delivered) regularLitres += evening.QuantityLtr;
         }
 
-        return new MilkMonthDto(days, new MilkMonthSummaryDto(daysInMonth, delivered, paused, missed));
+        var trackableFrom = startDate > firstDay ? startDate : firstDay;
+        var trackableDays = Math.Max(0, (lastDay.DayNumber - trackableFrom.DayNumber) + 1);
+        var extraLitres = extras.Where(e => e.Date >= startDate && e.Date <= today).Sum(e => e.QuantityLtr);
+        var rate = subscription?.RatePerLtr ?? 0;
+        var settlement = await db.MilkSettlements.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.UserId == userId && s.Year == year && s.Month == month, ct);
+
+        var summary = new MilkMonthSummaryDto(
+            trackableDays, delivered, paused, missed,
+            regularLitres, extraLitres, rate,
+            regularLitres * rate, extraLitres * rate, (regularLitres + extraLitres) * rate,
+            settlement?.IsPaid ?? false, settlement?.PaidAt);
+
+        return new MilkMonthDto(days, summary);
+    }
+
+    public async Task<MilkMonthSummaryDto> SetSettlementPaidAsync(int year, int month, SetMilkSettlementPaidRequest request, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var settlement = await db.MilkSettlements.SingleOrDefaultAsync(s => s.UserId == userId && s.Year == year && s.Month == month, ct);
+        if (settlement is null)
+        {
+            settlement = new MilkSettlement { UserId = userId, Year = year, Month = month };
+            db.MilkSettlements.Add(settlement);
+        }
+
+        settlement.IsPaid = request.IsPaid;
+        settlement.PaidAt = request.IsPaid ? clock.GetUtcNow() : null;
+        await db.SaveChangesAsync(ct);
+
+        var monthDto = await GetMonthAsync(year, month, ct);
+        return monthDto.Summary;
     }
 
     public async Task<MilkTodayDto> GetTodayAsync(CancellationToken ct)

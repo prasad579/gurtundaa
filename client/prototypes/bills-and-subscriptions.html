@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Bills & Subscriptions — Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0f0a1a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  h1 { color: #e9e4f5; font-size: 20px; width: 100%; margin: 0 0 4px; }
+  .sub { color: #a89dc4; font-size: 13px; width: 100%; margin: 0 0 20px; }
+  .phone {
+    width: 360px;
+    background: #f7f5fb;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 6px solid #1a1428;
+  }
+  .statusbar { display: flex; justify-content: space-between; padding: 8px 16px 2px; font-size: 11px; font-weight: 600; color: #333; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 10px; }
+  .topbar h2 { font-size: 17px; margin: 0; color: #1f1330; }
+  .topbar .add-btn { background: #7c3aed; color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+  .scroll { padding: 0 14px 16px; max-height: 620px; overflow-y: auto; }
+  .card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #ece7f7; }
+  .summary-card { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none; }
+  .summary-title { font-size: 12px; opacity: 0.85; margin-bottom: 8px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .summary-item .val { font-size: 18px; font-weight: 800; }
+  .summary-item .lbl { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+  .section-title { font-size: 13px; font-weight: 800; color: #1f1330; margin: 14px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .bill-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1eef9; }
+  .bill-row:last-child { border-bottom: none; }
+  .bill-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .bill-info { flex: 1; min-width: 0; }
+  .bill-name { font-size: 13px; font-weight: 700; color: #1f1330; }
+  .bill-meta { font-size: 10.5px; color: #8a7fa3; margin-top: 1px; }
+  .bill-due { font-size: 10px; font-weight: 700; margin-top: 2px; }
+  .due-overdue { color: #c62828; }
+  .due-soon { color: #e65100; }
+  .due-later { color: #2e7d32; }
+  .bill-amt { text-align: right; flex-shrink: 0; }
+  .bill-amt .amt { font-size: 14px; font-weight: 800; color: #1f1330; }
+  .pay-btn { margin-top: 4px; background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 3px 8px; font-size: 9.5px; font-weight: 700; }
+  .paid-chip { margin-top: 4px; background: rgb(45 211 111 / 0.15); color: #2e7d32; border-radius: 6px; padding: 3px 8px; font-size: 9.5px; font-weight: 700; display: inline-block; }
+  .cat-icon-elec { background: #fff3e0; }
+  .cat-icon-water { background: #e3f2fd; }
+  .cat-icon-phone { background: #e8f5e9; }
+  .cat-icon-net { background: #ede7f6; }
+  .cat-icon-card { background: #fce4ec; }
+  .cat-icon-rent { background: #fff8e1; }
+  .cat-icon-ins { background: #e0f2f1; }
+  .cat-icon-sub { background: #ffebee; }
+
+  /* Add bill screen */
+  .label { font-size: 11px; font-weight: 700; color: #8a7fa3; margin: 12px 0 6px; }
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cat-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; background: #f7f5fb; border: 1.5px solid transparent; font-size: 9.5px; font-weight: 600; color: #5a4e75; }
+  .cat-chip.sel { border-color: #7c3aed; background: #ede7fd; color: #7c3aed; }
+  .cat-chip .ic { font-size: 18px; }
+  .field { background: #f7f5fb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #1f1330; margin-bottom: 4px; }
+  .field .fl { font-size: 10px; color: #8a7fa3; margin-bottom: 2px; }
+  .recur-row { display: flex; gap: 6px; margin-top: 6px; }
+  .recur-chip { flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; background: #f7f5fb; font-size: 10.5px; font-weight: 600; color: #5a4e75; }
+  .recur-chip.sel { background: #7c3aed; color: #fff; }
+  .save-btn { width: 100%; background: #7c3aed; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 13px; font-weight: 700; margin-top: 18px; }
+  .future-note { background: #fff8e1; border: 1px dashed #ffcc80; border-radius: 10px; padding: 10px; font-size: 10.5px; color: #8a6d3b; margin-top: 14px; }
+
+  .label-title { color: #00c48c; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+
+  .view-all { text-align: center; padding-top: 8px; }
+  .view-all a { font-size: 11px; font-weight: 700; color: #7c3aed; text-decoration: none; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
+  .section-head .section-title { margin: 0; }
+  .count-chip { background: #f1eef9; color: #7c3aed; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+
+  .filter-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 4px; }
+  .filter-chip { flex-shrink: 0; padding: 6px 12px; border-radius: 16px; background: #f7f5fb; font-size: 10.5px; font-weight: 600; color: #5a4e75; }
+  .filter-chip.sel { background: #7c3aed; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Bills &amp; Subscriptions — Phase 1 Prototype</h1>
+<p class="sub">One flexible tracker for anything recurring with an amount + due date: Electricity, Water, Phone, Internet, Credit Card, Rent, Vehicle Insurance, and OTT subscriptions (Netflix/Prime/Hotstar). Phase 1 = reminders + tracking only — the "switch provider for a discount" idea is noted but deferred.</p>
+
+<!-- SCREEN 1: HOME -->
+<div>
+  <div class="label-title">① Home — all bills at a glance</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Bills &amp; Subscriptions</h2><div class="add-btn">+</div></div>
+    <div class="scroll">
+
+      <div class="card summary-card">
+        <div class="summary-title">October 2026</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="val">₹8,450</div><div class="lbl">Total Due</div></div>
+          <div class="summary-item"><div class="val">2</div><div class="lbl">Overdue</div></div>
+          <div class="summary-item"><div class="val">5</div><div class="lbl">Pending</div></div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">🔴 Overdue <span class="count-chip">3</span></div>
+      </div>
+      <div class="card">
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-card">💳</div>
+          <div class="bill-info">
+            <div class="bill-name">HDFC Credit Card</div>
+            <div class="bill-meta">Monthly · Due 15 Oct</div>
+            <div class="bill-due due-overdue">Overdue by 4 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹12,300</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-elec">⚡</div>
+          <div class="bill-info">
+            <div class="bill-name">Electricity — TSSPDCL</div>
+            <div class="bill-meta">Monthly · Due 17 Oct</div>
+            <div class="bill-due due-overdue">Overdue by 2 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹1,850</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="view-all"><a href="#">View all 3 overdue →</a></div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">🟠 Due Soon <span class="count-chip">4</span></div>
+      </div>
+      <div class="card">
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-rent">🏠</div>
+          <div class="bill-info">
+            <div class="bill-name">House Rent</div>
+            <div class="bill-meta">Monthly · Due 1 Nov</div>
+            <div class="bill-due due-soon">Due in 3 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹18,000</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-net">🌐</div>
+          <div class="bill-info">
+            <div class="bill-name">ACT Fibernet</div>
+            <div class="bill-meta">Monthly · Due 25 Oct</div>
+            <div class="bill-due due-soon">Due in 6 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹999</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="view-all"><a href="#">View all 4 due soon →</a></div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">🟢 Upcoming <span class="count-chip">6</span></div>
+      </div>
+      <div class="card">
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-ins">🛵</div>
+          <div class="bill-info">
+            <div class="bill-name">Bike Insurance — ICICI Lombard</div>
+            <div class="bill-meta">Yearly · Renews 12 Dec</div>
+            <div class="bill-due due-later">Renews in 54 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹3,200</div></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-water">💧</div>
+          <div class="bill-info">
+            <div class="bill-name">Water Bill — HMWSSB</div>
+            <div class="bill-meta">Monthly · Due 5 Nov</div>
+            <div class="bill-due due-later">Due in 17 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹320</div></div>
+        </div>
+        <div class="view-all"><a href="#">View all 6 upcoming →</a></div>
+      </div>
+
+      <div class="view-all" style="margin-top: 4px;"><a href="#">📋 View All Bills</a></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: VIEW ALL (destination of "View All") -->
+<div>
+  <div class="label-title">③ View All — destination for every "View All" link</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>All Bills</h2><div class="add-btn">+</div></div>
+    <div class="scroll">
+
+      <div class="filter-row">
+        <div class="filter-chip sel">All (13)</div>
+        <div class="filter-chip">Overdue (3)</div>
+        <div class="filter-chip">Due Soon (4)</div>
+        <div class="filter-chip">Upcoming (6)</div>
+        <div class="filter-chip">Paid</div>
+      </div>
+
+      <div class="card">
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-card">💳</div>
+          <div class="bill-info">
+            <div class="bill-name">HDFC Credit Card</div>
+            <div class="bill-meta">Monthly · Due 15 Oct</div>
+            <div class="bill-due due-overdue">Overdue by 4 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹12,300</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-elec">⚡</div>
+          <div class="bill-info">
+            <div class="bill-name">Electricity — TSSPDCL</div>
+            <div class="bill-meta">Monthly · Due 17 Oct</div>
+            <div class="bill-due due-overdue">Overdue by 2 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹1,850</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-phone">📱</div>
+          <div class="bill-info">
+            <div class="bill-name">Airtel Broadband</div>
+            <div class="bill-meta">Monthly · Due 16 Oct</div>
+            <div class="bill-due due-overdue">Overdue by 3 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹799</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-rent">🏠</div>
+          <div class="bill-info">
+            <div class="bill-name">House Rent</div>
+            <div class="bill-meta">Monthly · Due 1 Nov</div>
+            <div class="bill-due due-soon">Due in 3 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹18,000</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-net">🌐</div>
+          <div class="bill-info">
+            <div class="bill-name">ACT Fibernet</div>
+            <div class="bill-meta">Monthly · Due 25 Oct</div>
+            <div class="bill-due due-soon">Due in 6 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹999</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+        <div class="bill-row">
+          <div class="bill-icon cat-icon-sub">📺</div>
+          <div class="bill-info">
+            <div class="bill-name">Netflix</div>
+            <div class="bill-meta">Monthly · Renews 28 Oct</div>
+            <div class="bill-due due-soon">Due in 9 days</div>
+          </div>
+          <div class="bill-amt"><div class="amt">₹649</div><button class="pay-btn">Mark Paid</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: ADD BILL -->
+<div>
+  <div class="label-title">② Add Bill / Subscription</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>New Bill</h2><div></div></div>
+    <div class="scroll">
+
+      <div class="label">Category</div>
+      <div class="cat-grid">
+        <div class="cat-chip sel"><span class="ic">⚡</span>Electricity</div>
+        <div class="cat-chip"><span class="ic">💧</span>Water</div>
+        <div class="cat-chip"><span class="ic">📱</span>Phone</div>
+        <div class="cat-chip"><span class="ic">🌐</span>Internet</div>
+        <div class="cat-chip"><span class="ic">💳</span>Credit Card</div>
+        <div class="cat-chip"><span class="ic">🏠</span>Rent</div>
+        <div class="cat-chip"><span class="ic">🛵</span>Insurance</div>
+        <div class="cat-chip"><span class="ic">📺</span>Subscription</div>
+      </div>
+
+      <div class="label">Details</div>
+      <div class="field"><div class="fl">Name / Provider</div>Electricity — TSSPDCL</div>
+      <div class="field"><div class="fl">Amount (₹)</div>1,850 <span style="color:#aaa">· varies monthly, update each time</span></div>
+      <div class="field"><div class="fl">Due Date</div>17 Nov 2026</div>
+
+      <div class="label">Repeats</div>
+      <div class="recur-row">
+        <div class="recur-chip">One-time</div>
+        <div class="recur-chip sel">Monthly</div>
+        <div class="recur-chip">Quarterly</div>
+        <div class="recur-chip">Yearly</div>
+      </div>
+
+      <div class="label">Remind Me</div>
+      <div class="field"><div class="fl">Lead time</div>3 days before due date</div>
+
+      <button class="save-btn">Save Bill</button>
+
+      <div class="future-note">
+        💡 <b>Coming later:</b> compare providers and show potential savings if you switch (e.g. "Switch to Airtel Fiber and save ₹200/month"). Not in this phase — today's goal is just reminders so nothing gets missed.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

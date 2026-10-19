@@ -57,7 +57,14 @@
           <span class="label">{{ type.label }}</span>
           <div class="stepper">
             <button type="button" (click)="adjust(type.label, -1)">−</button>
-            <span class="count">{{ quantity(type.label) }}</span>
+            <input
+              type="number"
+              inputmode="numeric"
+              min="0"
+              class="count"
+              [value]="quantity(type.label)"
+              (input)="setQuantity(type.label, $any($event.target).value)"
+            />
             <button type="button" (click)="adjust(type.label, 1)">+</button>
           </div>
           @if (quantity(type.label) > 0) {
@@ -84,7 +91,14 @@
       </ion-item>
       <div class="stepper">
         <button type="button" (click)="adjustOther(-1)">−</button>
-        <span class="count">{{ form.controls.otherQty.value }}</span>
+        <input
+          type="number"
+          inputmode="numeric"
+          min="0"
+          class="count"
+          [value]="form.controls.otherQty.value"
+          (input)="setOtherQty($any($event.target).value)"
+        />
         <button type="button" (click)="adjustOther(1)">+</button>
       </div>
       @if (form.controls.otherQty.value > 0) {
@@ -119,6 +133,13 @@
           [maxlength]="200"
         />
       </ion-item>
+      @if (!batch) {
+        <ion-item lines="none">
+          <ion-checkbox formControlName="notifyDhobi" labelPlacement="end" justify="start">
+            Send item list to dhobi via WhatsApp
+          </ion-checkbox>
+        </ion-item>
+      }
     </ion-list>
   </form>
 </ion-content>

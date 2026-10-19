@@ -84,6 +84,9 @@
                   <button class="mbtn" (click)="markDelivered('Morning')"><ion-icon name="checkmark" />Delivered</button>
                 }
                 <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />Edit Qty</button>
+                @if (t.morning.status === 'Missed' && contact()) {
+                  <button class="mbtn wa" (click)="notifyMissed('Morning')"><ion-icon name="logo-whatsapp" />Notify</button>
+                }
               </div>
               @if (slotHint(t.morning); as hint) {
                 <div class="ontrack">{{ hint }}</div>
@@ -117,6 +120,9 @@
                   <button class="mbtn" (click)="markDelivered('Evening')"><ion-icon name="checkmark" />Delivered</button>
                 }
                 <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />Edit Qty</button>
+                @if (t.evening.status === 'Missed' && contact()) {
+                  <button class="mbtn wa" (click)="notifyMissed('Evening')"><ion-icon name="logo-whatsapp" />Notify</button>
+                }
               </div>
               @if (slotHint(t.evening); as hint) {
                 <div class="ontrack">{{ hint }}</div>
@@ -158,13 +164,45 @@
       <p class="muted calendar-hint">Tap a day to see quantity &amp; extras</p>
 
       @if (month(); as m) {
-        <app-milk-calendar [days]="m.days" (daySelected)="showDayDetail($event)" />
+        <app-milk-calendar
+          [days]="m.days"
+          [startDate]="subscription()?.startDate"
+          [baseQuantityLtr]="baseQuantityLtr()"
+          (daySelected)="showDayDetail($event)"
+        />
         <div class="summary">
           <div class="sg-item"><div class="sgl">Planned</div><div class="sgv">{{ m.summary.planned }}</div></div>
           <div class="sg-item"><div class="sgl">Delivered</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
           <div class="sg-item"><div class="sgl">Paused</div><div class="sgv o">{{ m.summary.paused }}</div></div>
           <div class="sg-item"><div class="sgl">Missed</div><div class="sgv r">{{ m.summary.missed }}</div></div>
         </div>
+
+        <div class="amt-rows">
+          <div class="amt-row">
+            <div class="ar-lbl">Regular ({{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+            <div class="ar-val">{{ rupeeLabel(m.summary.regularAmount) }}</div>
+          </div>
+          @if (m.summary.extraLitres > 0) {
+            <div class="amt-row">
+              <div class="ar-lbl">Extra ({{ litresLabel(m.summary.extraLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+              <div class="ar-val">{{ rupeeLabel(m.summary.extraAmount) }}</div>
+            </div>
+          }
+          <div class="amt-row total"><div class="ar-lbl">Total Amount</div><div class="ar-val">{{ rupeeLabel(m.summary.totalAmount) }}</div></div>
+        </div>
+
+        <div class="pay-status">
+          <div class="ps-left">
+            <div class="psl">Payment Status</div>
+            <div class="pss" [class.paid]="m.summary.isPaid">{{ m.summary.isPaid ? 'PAID' : 'PENDING' }}</div>
+          </div>
+          <button class="mpaid-btn" [class.pending]="m.summary.isPaid" (click)="toggleSettlementPaid()">
+            {{ m.summary.isPaid ? 'Mark as Pending' : 'Mark as Paid' }}
+          </button>
+        </div>
+        @if (contact()) {
+          <button class="share-wa-btn" (click)="shareSettlement()"><ion-icon name="logo-whatsapp" />Share via WhatsApp</button>
+        }
       }
     </section>
 
@@ -180,6 +218,7 @@
               @if (card.data.reason) {
                 <div class="uc-rsn">{{ card.data.reason }}</div>
               }
+              <button class="uc-del" (click)="notifyExtra(card.data)"><ion-icon name="logo-whatsapp" /></button>
               <button class="uc-del" (click)="cancelExtra(card.data)"><ion-icon name="trash" /></button>
             </div>
           } @else if (card.kind === 'pause') {

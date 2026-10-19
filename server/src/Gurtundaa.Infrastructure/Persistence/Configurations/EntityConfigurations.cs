@@ -210,6 +210,43 @@ public class LaundryBatchConfiguration : IEntityTypeConfiguration<LaundryBatch>
     }
 }
 
+public class BillConfiguration : IEntityTypeConfiguration<Bill>
+{
+    public void Configure(EntityTypeBuilder<Bill> builder)
+    {
+        builder.ToTable("Bills");
+        builder.HasKey(b => b.Id);
+        builder.Property(b => b.Category).HasConversion<byte>();
+        builder.Property(b => b.Recurrence).HasConversion<byte>();
+        builder.Property(b => b.Name).HasMaxLength(100).IsRequired();
+        builder.Property(b => b.Amount).HasColumnType("decimal(10,2)");
+        builder.Property(b => b.Notes).HasMaxLength(200);
+
+        builder.HasOne(b => b.User)
+            .WithMany()
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(b => new { b.UserId, b.DueDate });
+    }
+}
+
+public class MilkSettlementConfiguration : IEntityTypeConfiguration<MilkSettlement>
+{
+    public void Configure(EntityTypeBuilder<MilkSettlement> builder)
+    {
+        builder.ToTable("MilkSettlements");
+        builder.HasKey(s => s.Id);
+
+        builder.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(s => new { s.UserId, s.Year, s.Month }).IsUnique();
+    }
+}
+
 public class MilkQuantityChangeConfiguration : IEntityTypeConfiguration<MilkQuantityChange>
 {
     public void Configure(EntityTypeBuilder<MilkQuantityChange> builder)

@@ -1,14 +1,18 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MilkSubscription, SaveMilkSubscriptionRequest, SaveServiceContactRequest, ServiceContact } from '@gurtundaa/shared';
+import { MilkSubscription, SaveMilkSubscriptionRequest, SaveServiceContactRequest, ServiceContact, toDateOnlyString } from '@gurtundaa/shared';
 import {
   IonButton,
   IonButtons,
   IonContent,
+  IonDatetime,
+  IonDatetimeButton,
   IonHeader,
   IonInput,
   IonItem,
+  IonLabel,
   IonList,
+  IonModal,
   IonTitle,
   IonToggle,
   IonToolbar,
@@ -32,8 +36,12 @@ export interface SaveMilkSubscriptionFormResult {
     IonContent,
     IonList,
     IonItem,
+    IonLabel,
     IonInput,
     IonToggle,
+    IonDatetimeButton,
+    IonModal,
+    IonDatetime,
   ],
   template: `
     <ion-header>
@@ -85,6 +93,18 @@ export interface SaveMilkSubscriptionFormResult {
               placeholder="60"
             />
           </ion-item>
+          <ion-item>
+            <ion-label>
+              tracking starts from
+              <p>Pick an earlier date if you already get milk delivered and want this month billed from day 1.</p>
+            </ion-label>
+            <ion-datetime-button datetime="start-date" slot="end" />
+          </ion-item>
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime id="start-date" formControlName="startDate" presentation="date" [max]="today" />
+            </ng-template>
+          </ion-modal>
         </ion-list>
 
         <h2 class="section-title">🌅 morning delivery</h2>
@@ -141,6 +161,7 @@ export interface SaveMilkSubscriptionFormResult {
   `,
   styles: `
     .section-title { margin: 20px 0 4px; padding: 0 16px; font-size: 13px; font-weight: 700; color: var(--ion-color-medium); }
+    ion-label p { font-size: 10.5px; color: var(--ion-color-medium); white-space: normal; }
   `,
 })
 export class MilkSubscriptionEditorComponent implements OnInit {
@@ -149,11 +170,14 @@ export class MilkSubscriptionEditorComponent implements OnInit {
   @Input() subscription?: MilkSubscription | null;
   @Input() contact?: ServiceContact | null;
 
+  protected readonly today = toDateOnlyString(new Date());
+
   protected readonly form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
     phone: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(20)] }),
     address: new FormControl('', { nonNullable: true }),
     ratePerLtr: new FormControl(60, { nonNullable: true, validators: [Validators.required, Validators.min(0.1)] }),
+    startDate: new FormControl(this.today, { nonNullable: true, validators: [Validators.required] }),
     morningEnabled: new FormControl(true, { nonNullable: true }),
     morningQuantityLtr: new FormControl(2, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
     morningWindowStart: new FormControl('', { nonNullable: true }),
@@ -174,8 +198,12 @@ export class MilkSubscriptionEditorComponent implements OnInit {
     }
     if (this.subscription) {
       const s = this.subscription;
+      // Subscriptions created before start-date tracking existed carry a sentinel (year 0001) —
+      // show today instead of that nonsensical date in the picker.
+      const startDate = s.startDate.startsWith('0001') ? this.today : s.startDate;
       this.form.patchValue({
         ratePerLtr: s.ratePerLtr,
+        startDate,
         morningEnabled: s.morningEnabled,
         morningQuantityLtr: s.morningQuantityLtr,
         morningWindowStart: s.morningWindowStart?.slice(0, 5) ?? '',
@@ -203,6 +231,7 @@ export class MilkSubscriptionEditorComponent implements OnInit {
         isDefault: true,
       },
       subscription: {
+        startDate: v.startDate,
         morningEnabled: v.morningEnabled,
         morningQuantityLtr: Number(v.morningQuantityLtr),
         morningWindowStart: v.morningWindowStart ? `${v.morningWindowStart}:00` : null,

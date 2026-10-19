@@ -88,6 +88,23 @@ public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, Time
         return ToDto(batch, contact);
     }
 
+    public async Task<LaundryBatchDto?> SetPaidAsync(Guid id, SetLaundryPaidRequest request, CancellationToken ct)
+    {
+        var batch = await Mine.SingleOrDefaultAsync(b => b.Id == id, ct);
+        if (batch is null)
+        {
+            return null;
+        }
+
+        batch.IsPaid = request.IsPaid;
+        batch.PaidAt = request.IsPaid ? clock.GetUtcNow() : null;
+        batch.UpdatedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+
+        var contact = await LoadContactAsync(batch.ContactId, ct);
+        return ToDto(batch, contact);
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct) =>
         await Mine.Where(b => b.Id == id).ExecuteDeleteAsync(ct) > 0;
 
@@ -122,6 +139,8 @@ public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, Time
             batch.Status,
             batch.PickedUpOn,
             batch.Amount,
+            batch.IsPaid,
+            batch.PaidAt,
             items,
             batch.Notes,
             batch.CreatedAt);

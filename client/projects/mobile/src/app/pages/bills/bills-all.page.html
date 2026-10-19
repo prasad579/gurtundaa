@@ -1,0 +1,49 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/bills" /></ion-buttons>
+    <ion-title>All Bills</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && bills().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else {
+    <div class="filter-row">
+      <div class="filter-chip" [class.sel]="filter() === 'All'" (click)="setFilter('All')">All ({{ counts().All }})</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Overdue'" (click)="setFilter('Overdue')">Overdue ({{ counts().Overdue }})</div>
+      <div class="filter-chip" [class.sel]="filter() === 'DueSoon'" (click)="setFilter('DueSoon')">Due Soon ({{ counts().DueSoon }})</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Upcoming'" (click)="setFilter('Upcoming')">Upcoming ({{ counts().Upcoming }})</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Paid'" (click)="setFilter('Paid')">Paid ({{ counts().Paid }})</div>
+    </div>
+
+    @if (filtered().length === 0) {
+      <p class="muted ion-padding">No bills in this filter.</p>
+    } @else {
+      <section class="card">
+        @for (b of filtered(); track b.id) {
+          <div class="bill-row">
+            <div class="bill-icon">{{ categoryLabels[b.category].icon }}</div>
+            <div class="bill-info">
+              <div class="bill-name">{{ b.name }}</div>
+              <div class="bill-meta">{{ categoryLabels[b.category].label }}</div>
+              @if (!b.isPaid) {
+                <div class="bill-due" [class]="urgencyClass(b)">{{ billDueLabel(b) }}</div>
+              }
+            </div>
+            <div class="bill-amt">
+              <div class="amt">{{ rupeeLabel(b.amount) }}</div>
+              @if (b.isPaid) {
+                <span class="paid-chip">PAID</span>
+              } @else {
+                <button class="pay-btn" (click)="markPaid(b)">Mark Paid</button>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+  }
+</ion-content>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WhatsApp Bill Format Options</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0b141a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+  }
+  h1 {
+    color: #e9edef;
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  .sub {
+    color: #8696a0;
+    font-size: 13px;
+    margin: 0 0 28px;
+  }
+  .format-row {
+    margin-bottom: 36px;
+  }
+  .format-title {
+    color: #00a884;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .format-title .pick-badge {
+    background: #00a884;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+  .format-desc {
+    color: #8696a0;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+  .phones {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .phone {
+    width: 340px;
+    background: #efeae2;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  .header {
+    background: #075e54;
+    color: #fff;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .chat-area {
+    padding: 14px;
+    min-height: 120px;
+  }
+  .bubble {
+    background: #dcf8c6;
+    border-radius: 8px;
+    padding: 9px 11px;
+    max-width: 94%;
+    margin-left: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #111;
+    white-space: pre-wrap;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  }
+  .bubble b { font-weight: 700; }
+  .bubble code {
+    display: block;
+    background: #f5f2ea;
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 5px 0;
+    line-height: 1.55;
+  }
+  .time {
+    text-align: right;
+    font-size: 10px;
+    color: #667781;
+    margin-top: 3px;
+  }
+  .pending { color: #e65100; font-weight: 700; }
+  .divider { color: #999; }
+</style>
+</head>
+<body>
+
+<h1>WhatsApp Bill Format — 4 Options</h1>
+<p class="sub">Each shows the same Laundry bill (Shirts×6, Pants×4, T-Shirts×4 = ₹270) and Milk bill (38L regular + 2L extra = ₹2,400) in a different style. Reply with the letter you want.</p>
+
+<!-- FORMAT A -->
+<div class="format-row">
+  <div class="format-title">A — Itemized Table <span class="pick-badge">reply "A"</span></div>
+  <div class="format-desc">Per-item qty/rate/amount in a monospace block, like a mini receipt.</div>
+  <div class="phones">
+    <div class="phone">
+      <div class="header">🧺 Srinu Dhobi</div>
+      <div class="chat-area">
+        <div class="bubble">🧺 <b>Laundry Bill</b>
+📅 Mon, 19 Oct 2026
+🧼 Wash &amp; Iron
+
+<code>Item         Qty   Rate   Amt
+Shirts        6   ₹15    ₹90
+Pants         4   ₹20    ₹80
+T-Shirts      4   ₹25   ₹100</code>
+<b>Total: ₹270</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">2:12 pm ✓✓</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="header">🥛 Raju Milkman</div>
+      <div class="chat-area">
+        <div class="bubble">🥛 <b>Milk Bill — October 2026</b>
+
+<code>Type       Qty    Rate      Amt
+Regular   38.0L   ₹60   ₹2,280
+Extra      2.0L   ₹60    ₹120</code>
+<b>Total: ₹2,400</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">6:05 pm ✓✓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMAT B -->
+<div class="format-row">
+  <div class="format-title">B — Bullet List <span class="pick-badge">reply "B"</span></div>
+  <div class="format-desc">No monospace block — plain bullet lines, reads more like a casual chat message.</div>
+  <div class="phones">
+    <div class="phone">
+      <div class="header">🧺 Srinu Dhobi</div>
+      <div class="chat-area">
+        <div class="bubble">🧺 <b>Laundry Bill</b>
+📅 Mon, 19 Oct 2026 · 🧼 Wash &amp; Iron
+
+• Shirts: 6 × ₹15 = ₹90
+• Pants: 4 × ₹20 = ₹80
+• T-Shirts: 4 × ₹25 = ₹100
+
+<b>Total: ₹270</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">2:12 pm ✓✓</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="header">🥛 Raju Milkman</div>
+      <div class="chat-area">
+        <div class="bubble">🥛 <b>Milk Bill — October 2026</b>
+
+• Regular: 38.0 Ltr × ₹60 = ₹2,280
+• Extra: 2.0 Ltr × ₹60 = ₹120
+
+<b>Total: ₹2,400</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">6:05 pm ✓✓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMAT C -->
+<div class="format-row">
+  <div class="format-title">C — Compact Summary <span class="pick-badge">reply "C"</span></div>
+  <div class="format-desc">No line-by-line breakdown — just the headline total. Shortest message.</div>
+  <div class="phones">
+    <div class="phone">
+      <div class="header">🧺 Srinu Dhobi</div>
+      <div class="chat-area">
+        <div class="bubble">🧺 <b>Laundry Bill</b> — Mon, 19 Oct 2026
+🧼 Wash &amp; Iron · 14 items
+
+<b>Total Amount: ₹270</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">2:12 pm ✓✓</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="header">🥛 Raju Milkman</div>
+      <div class="chat-area">
+        <div class="bubble">🥛 <b>Milk Bill</b> — October 2026
+40.0 Ltr total (38.0 regular + 2.0 extra)
+
+<b>Total Amount: ₹2,400</b>
+Status: <span class="pending">🟠 Pending</span>
+
+Thank you! 🙏</div>
+        <div class="time">6:05 pm ✓✓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMAT D -->
+<div class="format-row">
+  <div class="format-title">D — Receipt Style <span class="pick-badge">reply "D"</span></div>
+  <div class="format-desc">Divider lines above/below, all-caps headers — looks most like a formal printed receipt.</div>
+  <div class="phones">
+    <div class="phone">
+      <div class="header">🧺 Srinu Dhobi</div>
+      <div class="chat-area">
+        <div class="bubble">🧺 <b>LAUNDRY BILL</b>
+<span class="divider">──────────────</span>
+📅 Mon, 19 Oct 2026
+🧼 Wash &amp; Iron
+<span class="divider">──────────────</span>
+<code>Shirts      6 × ₹15 = ₹90
+Pants       4 × ₹20 = ₹80
+T-Shirts    4 × ₹25 = ₹100</code>
+<span class="divider">──────────────</span>
+<b>TOTAL: ₹270</b>
+Status: <span class="pending">🟠 PENDING</span>
+<span class="divider">──────────────</span>
+Thank you for choosing us! 🙏</div>
+        <div class="time">2:12 pm ✓✓</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="header">🥛 Raju Milkman</div>
+      <div class="chat-area">
+        <div class="bubble">🥛 <b>MILK BILL</b>
+<span class="divider">──────────────</span>
+📅 October 2026
+<span class="divider">──────────────</span>
+<code>Regular   38.0L × ₹60 = ₹2,280
+Extra      2.0L × ₹60 =  ₹120</code>
+<span class="divider">──────────────</span>
+<b>TOTAL: ₹2,400</b>
+Status: <span class="pending">🟠 PENDING</span>
+<span class="divider">──────────────</span>
+Thank you for choosing us! 🙏</div>
+        <div class="time">6:05 pm ✓✓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

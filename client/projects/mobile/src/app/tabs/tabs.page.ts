@@ -4,7 +4,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { HouseholdApi } from '@gurtundaa/shared';
 import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { ellipsisHorizontalOutline, homeOutline, shirtOutline, waterOutline } from 'ionicons/icons';
+import { ellipsisHorizontalOutline, homeOutline, receiptOutline, shirtOutline, waterOutline } from 'ionicons/icons';
 import { filter, firstValueFrom } from 'rxjs';
 
 @Component({
@@ -18,7 +18,7 @@ export class TabsPage {
   protected readonly enabledFeatures = signal<ReadonlySet<string>>(new Set());
 
   constructor() {
-    addIcons({ homeOutline, waterOutline, shirtOutline, ellipsisHorizontalOutline });
+    addIcons({ homeOutline, waterOutline, shirtOutline, receiptOutline, ellipsisHorizontalOutline });
     void this.loadFeatures();
 
     // The tabs shell stays mounted across navigation (e.g. to/from the Profile page), so a

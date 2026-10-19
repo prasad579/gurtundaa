@@ -111,6 +111,7 @@ export interface MilkSubscription {
   contactId: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  startDate: string;
   morningEnabled: boolean;
   morningQuantityLtr: number;
   morningWindowStart: string | null;
@@ -126,6 +127,7 @@ export interface MilkSubscription {
 
 export interface SaveMilkSubscriptionRequest {
   contactId?: string | null;
+  startDate: string;
   morningEnabled: boolean;
   morningQuantityLtr: number;
   morningWindowStart?: string | null;
@@ -159,11 +161,23 @@ export interface MilkMonthSummary {
   delivered: number;
   paused: number;
   missed: number;
+  regularLitres: number;
+  extraLitres: number;
+  ratePerLtr: number;
+  regularAmount: number;
+  extraAmount: number;
+  totalAmount: number;
+  isPaid: boolean;
+  paidAt: string | null;
 }
 
 export interface MilkMonth {
   days: MilkCalendarDay[];
   summary: MilkMonthSummary;
+}
+
+export interface SetMilkSettlementPaidRequest {
+  isPaid: boolean;
 }
 
 export interface MilkToday {
@@ -263,6 +277,8 @@ export interface LaundryBatch {
   status: LaundryBatchStatus;
   pickedUpOn: string | null;
   amount: number | null;
+  isPaid: boolean;
+  paidAt: string | null;
   items: LaundryItemLine[];
   notes: string | null;
   createdAt: string;
@@ -277,7 +293,54 @@ export interface SaveLaundryBatchRequest {
   notes?: string | null;
 }
 
+export interface SetLaundryPaidRequest {
+  isPaid: boolean;
+}
+
 export interface MarkPickedUpRequest {
   amount?: number | null;
   items?: LaundryItemLine[] | null;
+}
+
+// ---------- Bills & subscriptions ----------
+
+export type BillCategory =
+  | 'Electricity'
+  | 'Water'
+  | 'Phone'
+  | 'Internet'
+  | 'CreditCard'
+  | 'Rent'
+  | 'Insurance'
+  | 'Subscription'
+  | 'Other';
+
+export type BillRecurrence = 'OneTime' | 'Monthly' | 'Quarterly' | 'Yearly';
+
+export interface Bill {
+  id: string;
+  category: BillCategory;
+  name: string;
+  amount: number;
+  dueDate: string;
+  recurrence: BillRecurrence;
+  reminderLeadDays: number;
+  isPaid: boolean;
+  paidAt: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface SaveBillRequest {
+  category: BillCategory;
+  name: string;
+  amount: number;
+  dueDate: string;
+  recurrence: BillRecurrence;
+  reminderLeadDays: number;
+  notes?: string | null;
+}
+
+export interface SetBillPaidRequest {
+  isPaid: boolean;
 }

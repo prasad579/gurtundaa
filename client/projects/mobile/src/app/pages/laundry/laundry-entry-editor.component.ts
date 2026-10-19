@@ -1,9 +1,22 @@
 import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LaundryBatch, LaundryItemLine, LaundryServiceType, SaveLaundryBatchRequest, ServiceContact, toDateOnlyString } from '@gurtundaa/shared';
+import {
+  BillData,
+  LAUNDRY_SERVICE_TYPE_LABELS,
+  LaundryBatch,
+  LaundryItemLine,
+  LaundryServiceType,
+  SaveLaundryBatchRequest,
+  ServiceContact,
+  formatWhatsAppBill,
+  shareOnWhatsApp,
+  shortDateLabel,
+  toDateOnlyString,
+} from '@gurtundaa/shared';
 import {
   IonButton,
   IonButtons,
+  IonCheckbox,
   IonContent,
   IonDatetime,
   IonDatetimeButton,
@@ -42,6 +55,7 @@ import { LAUNDRY_ITEM_TYPES } from './laundry-item-constants';
     IonSelectOption,
     IonSegment,
     IonSegmentButton,
+    IonCheckbox,
     IonDatetimeButton,
     IonModal,
     IonDatetime,
@@ -70,6 +84,7 @@ export class LaundryEntryEditorComponent implements OnInit {
     otherQty: new FormControl(0, { nonNullable: true }),
     otherPrice: new FormControl(0, { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
+    notifyDhobi: new FormControl(true, { nonNullable: true }),
   });
 
   protected readonly total = computed(() => {
@@ -112,6 +127,7 @@ export class LaundryEntryEditorComponent implements OnInit {
         otherQty: other?.quantity ?? 0,
         otherPrice: other?.pricePerItem ?? 0,
         notes: this.batch.notes ?? '',
+        notifyDhobi: false,
       });
     }
   }
@@ -128,6 +144,11 @@ export class LaundryEntryEditorComponent implements OnInit {
     this.quantities.update((q) => ({ ...q, [itemType]: Math.max(0, (q[itemType] ?? 0) + delta) }));
   }
 
+  protected setQuantity(itemType: string, value: string): void {
+    const qty = Math.max(0, Math.floor(Number(value) || 0));
+    this.quantities.update((q) => ({ ...q, [itemType]: qty }));
+  }
+
   protected setPrice(itemType: string, value: string): void {
     const price = Math.max(0, Number(value) || 0);
     this.prices.update((p) => ({ ...p, [itemType]: price }));
@@ -136,6 +157,10 @@ export class LaundryEntryEditorComponent implements OnInit {
   protected adjustOther(delta: number): void {
     const current = this.form.controls.otherQty.value;
     this.form.controls.otherQty.setValue(Math.max(0, current + delta));
+  }
+
+  protected setOtherQty(value: string): void {
+    this.form.controls.otherQty.setValue(Math.max(0, Math.floor(Number(value) || 0)));
   }
 
   protected otherLineTotal(): number {
@@ -172,6 +197,28 @@ export class LaundryEntryEditorComponent implements OnInit {
       items,
       notes: v.notes.trim() || null,
     };
+
+    if (!this.batch && v.notifyDhobi) {
+      const contact = this.contacts.find((c) => c.id === v.contactId);
+      if (contact) this.notifyDhobiOfItems(contact, items);
+    }
+
     return this.modalCtrl.dismiss(request, 'save');
+  }
+
+  private notifyDhobiOfItems(contact: ServiceContact, items: LaundryItemLine[]): void {
+    const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+    const bill: BillData = {
+      icon: '🧺',
+      title: 'New Laundry Entry',
+      subtitleLines: [
+        `📅 ${shortDateLabel(this.form.controls.givenOn.value)}`,
+        LAUNDRY_SERVICE_TYPE_LABELS[this.serviceType()],
+      ],
+      items: items.map((i) => ({ label: i.itemType, qty: String(i.quantity) })),
+      quantitySummary: { label: 'Total Items', value: String(totalItems) },
+      closingLine: 'Thank you! 🙏',
+    };
+    shareOnWhatsApp(contact.phone, formatWhatsAppBill(bill));
   }
 }

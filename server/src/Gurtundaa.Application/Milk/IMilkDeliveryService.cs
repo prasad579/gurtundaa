@@ -7,4 +7,6 @@ public interface IMilkDeliveryService
     Task<MilkTodayDto> GetTodayAsync(CancellationToken ct);
 
     Task<MilkTodayDto> SetOverrideAsync(DateOnly date, SetMilkDeliveryOverrideRequest request, CancellationToken ct);
+
+    Task<MilkMonthSummaryDto> SetSettlementPaidAsync(int year, int month, SetMilkSettlementPaidRequest request, CancellationToken ct);
 }

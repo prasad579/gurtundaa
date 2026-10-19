@@ -7,6 +7,7 @@ public sealed record MilkSubscriptionDto(
     Guid? ContactId,
     string? ContactName,
     string? ContactPhone,
+    DateOnly StartDate,
     bool MorningEnabled,
     decimal MorningQuantityLtr,
     TimeOnly? MorningWindowStart,
@@ -21,6 +22,7 @@ public sealed record MilkSubscriptionDto(
 
 public sealed record SaveMilkSubscriptionRequest(
     Guid? ContactId,
+    [Required] DateOnly StartDate,
     bool MorningEnabled,
     [Range(0, 50)] decimal MorningQuantityLtr,
     TimeOnly? MorningWindowStart,
@@ -43,9 +45,23 @@ public sealed record MilkSlotStateDto(bool Enabled, MilkCalendarStatus Status, d
 
 public sealed record MilkCalendarDayDto(DateOnly Date, MilkCalendarStatus Status, MilkSlotStateDto Morning, MilkSlotStateDto Evening);
 
-public sealed record MilkMonthSummaryDto(int Planned, int Delivered, int Paused, int Missed);
+public sealed record MilkMonthSummaryDto(
+    int Planned,
+    int Delivered,
+    int Paused,
+    int Missed,
+    decimal RegularLitres,
+    decimal ExtraLitres,
+    decimal RatePerLtr,
+    decimal RegularAmount,
+    decimal ExtraAmount,
+    decimal TotalAmount,
+    bool IsPaid,
+    DateTimeOffset? PaidAt);
 
 public sealed record MilkMonthDto(IReadOnlyList<MilkCalendarDayDto> Days, MilkMonthSummaryDto Summary);
+
+public sealed record SetMilkSettlementPaidRequest(bool IsPaid);
 
 public sealed record MilkTodayDto(DateOnly Date, MilkSlotStateDto Morning, MilkSlotStateDto Evening, bool IsAuto);
 

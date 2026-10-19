@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
+  BillData,
+  BillLineItem,
   MILK_SLOT_LABELS,
   MILK_STATUS_LABELS,
   MilkActivityItem,
@@ -19,13 +21,16 @@ import {
   ServiceContact,
   ServiceContactsApi,
   deliveryWindowLabel,
+  formatWhatsAppBill,
   isFutureDate,
   litresLabel,
   pauseRangeLabel,
   rupeeLabel,
+  shareOnWhatsApp,
   shortDateLabel,
   timeOfDayLabel,
   toDateOnlyString,
+  waLink,
 } from '@gurtundaa/shared';
 import {
   ActionSheetController,
@@ -132,6 +137,12 @@ export class MilkPage implements ViewWillEnter {
     return sub ? deliveryWindowLabel(sub.eveningWindowStart, sub.eveningWindowEnd) : null;
   });
 
+  protected readonly baseQuantityLtr = computed(() => {
+    const sub = this.subscription();
+    if (!sub) return 0;
+    return (sub.morningEnabled ? sub.morningQuantityLtr : 0) + (sub.eveningEnabled ? sub.eveningQuantityLtr : 0);
+  });
+
   protected todaySlotAmount(slot: MilkSlotState): number {
     const sub = this.subscription();
     return sub ? slot.quantityLtr * sub.ratePerLtr : 0;
@@ -205,15 +216,28 @@ export class MilkPage implements ViewWillEnter {
     }
   }
 
+  protected readonly waLink = waLink;
+
   protected telLink(phone: string): string {
     return `tel:${phone.replace(/\s+/g, '')}`;
   }
 
-  protected waLink(phone: string): string {
-    return `https://wa.me/${phone.replace(/\D/g, '')}`;
+  private isBeforeStart(date: string): boolean {
+    const startDate = this.subscription()?.startDate;
+    return !!startDate && date < startDate;
   }
 
   protected async showDayDetail(day: MilkCalendarDay): Promise<void> {
+    if (this.isBeforeStart(day.date)) {
+      const alert = await this.alerts.create({
+        header: shortDateLabel(day.date),
+        message: "Tracking hadn't started yet on this day.",
+        buttons: ['OK'],
+      });
+      await alert.present();
+      return;
+    }
+
     const isPlanned = day.status === 'Delivered' && isFutureDate(day.date);
     const statusLabel = isPlanned ? 'Planned 📅' : this.statusLabels[day.status];
 
@@ -236,6 +260,38 @@ export class MilkPage implements ViewWillEnter {
       lines.push(`Extra (${this.slotLabels[extra.slot]}): +${litresLabel(extra.quantityLtr)}${extra.reason ? ` (${extra.reason})` : ''}`);
     }
 
+    // Past (and today's) days get quick toggle buttons per enabled, non-paused slot so you can
+    // correct the default "delivered" assumption — e.g. reconciling days before you started
+    // using the app for a milk delivery that was already ongoing. Future days stay read-only;
+    // nothing has happened on them yet.
+    const slotEntries = ([
+      ['Morning', day.morning],
+      ['Evening', day.evening],
+    ] as const).filter(([, slot]) => slot.enabled && slot.status !== 'Paused');
+
+    // Past (and today's) days get quick toggle buttons per enabled, non-paused slot so you can
+    // correct the default "delivered" assumption — e.g. reconciling days before you started
+    // using the app for a milk delivery that was already ongoing. Future days stay read-only;
+    // nothing has happened on them yet.
+    const toggleButtons = isFutureDate(day.date)
+      ? []
+      : slotEntries.map(([slotName, slot]) => ({
+          text: slot.status === 'Missed' ? `Mark ${slotName} Delivered` : `Mark ${slotName} Missed`,
+          handler: () => void this.toggleDaySlot(day.date, slotName, slot.status),
+        }));
+
+    // A persistent way to (re-)notify the milkman about a missed slot on this day, whenever —
+    // not just the moment it's first marked missed, since that toast disappears.
+    const notifyButtons = this.contact()
+      ? slotEntries
+          .filter(([, slot]) => slot.status === 'Missed')
+          .map(([slotName]) => ({
+            text: `Notify (${slotName})`,
+            icon: 'logo-whatsapp',
+            handler: () => this.notifyMissed(slotName, day.date),
+          }))
+      : [];
+
     // Plain text, not HTML — Ionic's alert escapes the message by default, which is what we want
     // since `reason` is free-text the user typed; `white-space: pre-line` (global styles) turns
     // the \n's into real line breaks without needing any HTML at all.
@@ -244,15 +300,56 @@ export class MilkPage implements ViewWillEnter {
       subHeader: statusLabel,
       message: lines.join('\n'),
       cssClass: 'day-detail-alert',
-      buttons: ['OK'],
+      buttons: [...toggleButtons, ...notifyButtons, 'Close'],
     });
     await alert.present();
+  }
+
+  private async toggleDaySlot(date: string, slot: MilkSlot, currentStatus: MilkSlotState['status']): Promise<void> {
+    const status = currentStatus === 'Missed' ? 'Delivered' : 'Missed';
+    await firstValueFrom(this.milk.setDeliveryOverride(date, { slot, status, quantityLtr: null }));
+    await this.toast(status === 'Missed' ? 'marked as not delivered' : 'marked as delivered ✅');
+    await this.load();
   }
 
   protected async changeMonth(delta: number): Promise<void> {
     const d = this.monthDate();
     this.monthDate.set(new Date(d.getFullYear(), d.getMonth() + delta, 1));
     await this.loadMonth();
+  }
+
+  protected async toggleSettlementPaid(): Promise<void> {
+    const m = this.month();
+    if (!m) return;
+    const d = this.monthDate();
+    const isPaid = !m.summary.isPaid;
+    const summary = await firstValueFrom(this.milk.setSettlementPaid(d.getFullYear(), d.getMonth() + 1, { isPaid }));
+    this.month.set({ ...m, summary });
+    await this.toast(isPaid ? 'marked as paid ✅' : 'marked as pending');
+  }
+
+  protected shareSettlement(): void {
+    const c = this.contact();
+    const m = this.month();
+    if (!c || !m) return;
+    const s = m.summary;
+
+    const items: BillLineItem[] = [
+      { label: 'Regular', qty: litresLabel(s.regularLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.regularAmount) },
+    ];
+    if (s.extraLitres > 0) {
+      items.push({ label: 'Extra', qty: litresLabel(s.extraLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.extraAmount) });
+    }
+
+    const bill: BillData = {
+      icon: '🥛',
+      title: `Milk Bill — ${this.monthLabel()}`,
+      items,
+      quantitySummary: { label: 'Total Liters', value: litresLabel(s.regularLitres + s.extraLitres) },
+      total: { label: 'Total Amount', amount: rupeeLabel(s.totalAmount), isPaid: s.isPaid },
+      closingLine: 'Thank you! 🙏',
+    };
+    shareOnWhatsApp(c.phone, formatWhatsAppBill(bill));
   }
 
   protected async openSubscriptionEditor(): Promise<void> {
@@ -282,8 +379,15 @@ export class MilkPage implements ViewWillEnter {
     const t = this.today();
     if (!t) return;
     await firstValueFrom(this.milk.setDeliveryOverride(t.date, { slot, status: 'Missed' }));
-    await this.toast('marked as not delivered');
     await this.load();
+
+    const toast = await this.toasts.create({
+      message: 'marked as not delivered',
+      duration: 4000,
+      position: 'bottom',
+      buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyMissed(slot) }] : [],
+    });
+    await toast.present();
   }
 
   protected async markDelivered(slot: MilkSlot): Promise<void> {
@@ -348,20 +452,45 @@ export class MilkPage implements ViewWillEnter {
   protected notifyMilkman(pause: MilkPause): void {
     const c = this.contact();
     if (!c) return;
-    const message =
+    shareOnWhatsApp(
+      c.phone,
       `Hi ${c.name}, just a heads up: milk delivery will be paused from ` +
-      `${pause.startDate} to ${pause.endDate}${pause.reason ? ` (${pause.reason})` : ''}. Thank you!`;
-    window.open(`${this.waLink(c.phone)}?text=${encodeURIComponent(message)}`, '_blank');
+        `${pause.startDate} to ${pause.endDate}${pause.reason ? ` (${pause.reason})` : ''}. Thank you!`,
+    );
   }
 
   protected notifyQuantityChange(change: MilkQuantityChange): void {
     const c = this.contact();
     if (!c) return;
-    const message =
+    shareOnWhatsApp(
+      c.phone,
       `Hi ${c.name}, just a heads up: from ${change.startDate} to ${change.endDate}, please deliver ` +
-      `${litresLabel(change.morningQuantityLtr)} in the morning and ${litresLabel(change.eveningQuantityLtr)} in the evening` +
-      `${change.reason ? ` (${change.reason})` : ''}. Thank you!`;
-    window.open(`${this.waLink(c.phone)}?text=${encodeURIComponent(message)}`, '_blank');
+        `${litresLabel(change.morningQuantityLtr)} in the morning and ${litresLabel(change.eveningQuantityLtr)} in the evening` +
+        `${change.reason ? ` (${change.reason})` : ''}. Thank you!`,
+    );
+  }
+
+  protected notifyMissed(slot: MilkSlot, date?: string): void {
+    const c = this.contact();
+    const targetDate = date ?? this.today()?.date;
+    if (!c || !targetDate) return;
+    const isToday = targetDate === this.today()?.date;
+    shareOnWhatsApp(
+      c.phone,
+      `Hi ${c.name}, I noticed ${slot.toLowerCase()} milk wasn't delivered ` +
+        `${isToday ? 'today' : `on ${shortDateLabel(targetDate)}`}. Please let me know if there's an issue. Thank you!`,
+    );
+  }
+
+  protected notifyExtra(extra: MilkExtraRequestItem): void {
+    const c = this.contact();
+    if (!c) return;
+    shareOnWhatsApp(
+      c.phone,
+      `Hi ${c.name}, I need extra milk on ${shortDateLabel(extra.date)}: ` +
+        `+${litresLabel(extra.quantityLtr)} in the ${this.slotLabels[extra.slot].replace(/^\S+\s/, '').toLowerCase()}` +
+        `${extra.reason ? ` (${extra.reason})` : ''}. Thank you!`,
+    );
   }
 
   protected async openExtraEditor(): Promise<void> {
@@ -375,9 +504,16 @@ export class MilkPage implements ViewWillEnter {
     const { data, role } = await modal.onWillDismiss();
     if (role !== 'save' || !data) return;
 
-    await firstValueFrom(this.milk.createExtraRequest(data));
-    await this.toast('extra milk requested 🥛');
+    const created = await firstValueFrom(this.milk.createExtraRequest(data));
     await this.load();
+
+    const toast = await this.toasts.create({
+      message: 'extra milk requested 🥛',
+      duration: 4000,
+      position: 'bottom',
+      buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyExtra(created) }] : [],
+    });
+    await toast.present();
   }
 
   protected async cancelExtra(extra: MilkExtraRequestItem): Promise<void> {

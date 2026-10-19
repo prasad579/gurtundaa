@@ -1,0 +1,109 @@
+.card {
+  margin: 12px 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--ion-color-step-50, rgb(124 58 237 / 0.05));
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+}
+
+.summary-title { font-size: 12px; opacity: 0.85; margin-bottom: 8px; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.summary-item .val { font-size: 17px; font-weight: 800; }
+.summary-item .lbl { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+
+.section-head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px 4px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  margin: 14px 16px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.count-chip {
+  background: var(--ion-color-step-100, #efeaf9);
+  color: var(--ion-color-primary);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.bill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  &:last-child { border-bottom: none; }
+}
+
+.bill-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.bill-info { flex: 1; min-width: 0; cursor: pointer; }
+.bill-name { font-size: 12.5px; font-weight: 700; }
+.bill-due { font-size: 10px; font-weight: 700; margin-top: 2px; }
+.bill-due.overdue { color: #c62828; }
+.bill-due.due-soon { color: #e65100; }
+.bill-due.later { color: #2e7d32; }
+
+.bill-amt { text-align: right; flex-shrink: 0; }
+.bill-amt .amt { font-size: 13px; font-weight: 800; }
+
+.pay-btn {
+  margin-top: 4px;
+  background: var(--ion-color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.paid-chip {
+  display: inline-block;
+  margin-top: 4px;
+  background: rgb(45 211 111 / 0.15);
+  color: #2e7d32;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.view-all {
+  text-align: center;
+  padding-top: 6px;
+
+  a { font-size: 11px; font-weight: 700; color: var(--ion-color-primary); cursor: pointer; }
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--ion-color-medium);
+  span { font-size: 2.4rem; display: block; margin-bottom: 8px; }
+  p { margin-bottom: 16px; }
+}

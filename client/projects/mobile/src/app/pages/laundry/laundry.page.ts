@@ -1,14 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  BillData,
+  BillLineItem,
   LAUNDRY_SERVICE_TYPE_LABELS,
   LaundryApi,
   LaundryBatch,
   LaundryServiceType,
   ServiceContact,
   ServiceContactsApi,
+  formatWhatsAppBill,
+  parseDateOnly,
   rupeeLabel,
+  shareOnWhatsApp,
   shortDateLabel,
+  waLink,
 } from '@gurtundaa/shared';
 import {
   IonButton,
@@ -32,7 +38,19 @@ import {
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, callOutline, checkmarkDoneOutline, logoWhatsapp, pencil, peopleOutline, shirtOutline, trash } from 'ionicons/icons';
+import {
+  add,
+  callOutline,
+  checkmarkDoneOutline,
+  chevronBack,
+  chevronForward,
+  close,
+  logoWhatsapp,
+  pencil,
+  peopleOutline,
+  shirtOutline,
+  trash,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { LaundryEntryEditorComponent } from './laundry-entry-editor.component';
 import { LaundryPickupComponent } from './laundry-pickup.component';
@@ -76,9 +94,22 @@ export class LaundryPage implements ViewWillEnter {
   protected readonly active = signal<LaundryBatch[]>([]);
   protected readonly history = signal<LaundryBatch[]>([]);
 
+  private readonly monthDate = signal(new Date());
+  protected readonly monthLabel = computed(() =>
+    this.monthDate().toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+  );
+
+  private readonly batchesInMonth = computed(() => {
+    const m = this.monthDate();
+    return [...this.active(), ...this.history()].filter((b) => {
+      const given = parseDateOnly(b.givenOn);
+      return given.getFullYear() === m.getFullYear() && given.getMonth() === m.getMonth();
+    });
+  });
+
   protected readonly categoryTotals = computed(() => {
     const totals = new Map<LaundryServiceType, number>();
-    for (const b of [...this.active(), ...this.history()]) {
+    for (const b of this.batchesInMonth()) {
       const amount = this.batchAmount(b);
       if (!amount) continue;
       totals.set(b.serviceType, (totals.get(b.serviceType) ?? 0) + amount);
@@ -86,20 +117,47 @@ export class LaundryPage implements ViewWillEnter {
     return [...totals.entries()].map(([serviceType, amount]) => ({ serviceType, amount }));
   });
 
+  protected readonly monthPaymentSummary = computed(() => {
+    let paid = 0;
+    let pending = 0;
+    for (const b of this.batchesInMonth()) {
+      const amount = this.batchAmount(b);
+      if (!amount) continue;
+      if (b.isPaid) paid += amount;
+      else pending += amount;
+    }
+    return { paid, pending, total: paid + pending };
+  });
+
   constructor() {
-    addIcons({ add, callOutline, logoWhatsapp, pencil, trash, checkmarkDoneOutline, shirtOutline, peopleOutline });
+    addIcons({
+      add,
+      callOutline,
+      logoWhatsapp,
+      pencil,
+      trash,
+      checkmarkDoneOutline,
+      shirtOutline,
+      peopleOutline,
+      chevronBack,
+      chevronForward,
+      close,
+    });
   }
 
   ionViewWillEnter(): void {
     void this.load();
   }
 
+  protected readonly waLink = waLink;
+
   protected telLink(phone: string): string {
     return `tel:${phone.replace(/\s+/g, '')}`;
   }
 
-  protected waLink(phone: string): string {
-    return `https://wa.me/${phone.replace(/\D/g, '')}`;
+  protected changeMonth(delta: number): void {
+    const d = this.monthDate();
+    this.monthDate.set(new Date(d.getFullYear(), d.getMonth() + delta, 1));
   }
 
   protected itemsSummary(batch: LaundryBatch): string {
@@ -155,6 +213,35 @@ export class LaundryPage implements ViewWillEnter {
     await firstValueFrom(this.laundry.markPickedUp(batch.id, data));
     await this.toast('marked as picked up ✅');
     await this.load();
+  }
+
+  protected async setPaid(batch: LaundryBatch, isPaid: boolean, sliding?: IonItemSliding): Promise<void> {
+    await sliding?.close();
+    await firstValueFrom(this.laundry.setPaid(batch.id, { isPaid }));
+    await this.toast(isPaid ? 'marked as paid ✅' : 'marked as pending');
+    await this.load();
+  }
+
+  protected shareBill(batch: LaundryBatch): void {
+    if (!batch.contactPhone) return;
+    const amount = this.batchAmount(batch);
+    const items: BillLineItem[] = batch.items.map((i) => ({
+      label: i.itemType,
+      qty: String(i.quantity),
+      rate: i.pricePerItem ? rupeeLabel(i.pricePerItem) : '',
+      amount: i.pricePerItem ? rupeeLabel(i.pricePerItem * i.quantity) : '',
+    }));
+    const totalItems = batch.items.reduce((sum, i) => sum + i.quantity, 0);
+    const bill: BillData = {
+      icon: '🧺',
+      title: 'Laundry Bill',
+      subtitleLines: [`📅 ${shortDateLabel(batch.givenOn)}`, this.serviceTypeLabels[batch.serviceType]],
+      items,
+      quantitySummary: { label: 'Total Items', value: String(totalItems) },
+      total: amount ? { label: 'Total Amount', amount: rupeeLabel(amount), isPaid: batch.isPaid } : undefined,
+      closingLine: 'Thank you! 🙏',
+    };
+    shareOnWhatsApp(batch.contactPhone, formatWhatsAppBill(bill));
   }
 
   protected async remove(batch: LaundryBatch, sliding: IonItemSliding): Promise<void> {

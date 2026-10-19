@@ -14,6 +14,7 @@ export const routes: Routes = [
       { path: 'home', loadComponent: () => import('./pages/reminders/reminders.page').then((m) => m.RemindersPage) },
       { path: 'milk', loadComponent: () => import('./pages/milk/milk.page').then((m) => m.MilkPage) },
       { path: 'laundry', loadComponent: () => import('./pages/laundry/laundry.page').then((m) => m.LaundryPage) },
+      { path: 'bills', loadComponent: () => import('./pages/bills/bills.page').then((m) => m.BillsPage) },
       { path: 'more', loadComponent: () => import('./pages/more/more.page').then((m) => m.MorePage) },
     ],
   },
@@ -51,6 +52,11 @@ export const routes: Routes = [
     path: 'milk-pause',
     canActivate: [signedInGuard],
     loadComponent: () => import('./pages/milk/milk-pause.page').then((m) => m.MilkPausePage),
+  },
+  {
+    path: 'bills/all',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/bills/bills-all.page').then((m) => m.BillsAllPage),
   },
   {
     path: 'onboarding',

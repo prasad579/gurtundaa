@@ -17,5 +17,7 @@ public interface ILaundryBatchService
 
     Task<LaundryBatchDto?> MarkPickedUpAsync(Guid id, MarkPickedUpRequest request, CancellationToken ct);
 
+    Task<LaundryBatchDto?> SetPaidAsync(Guid id, SetLaundryPaidRequest request, CancellationToken ct);
+
     Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }

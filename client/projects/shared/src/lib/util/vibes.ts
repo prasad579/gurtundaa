@@ -1,4 +1,4 @@
-import { LaundryServiceType, MilkCalendarStatus, MilkSlot, Reminder, ReminderPriority } from '../api/models';
+import { Bill, BillCategory, BillRecurrence, LaundryServiceType, MilkCalendarStatus, MilkSlot, Reminder, ReminderPriority } from '../api/models';
 
 /** Brand copy lives here so the web and mobile apps sound the same. */
 export const BRAND = {
@@ -12,6 +12,17 @@ export const PRIORITY_LABELS: Record<ReminderPriority, string> = {
   Normal: 'normal ✌️',
   Urgent: 'urgent 🔥',
 };
+
+// ---------- WhatsApp sharing (shared across every module — Milk, Laundry, and any future add-on) ----------
+
+export function waLink(phone: string): string {
+  return `https://wa.me/${phone.replace(/\D/g, '')}`;
+}
+
+/** Opens WhatsApp (app or web) with `message` pre-filled for `phone`. */
+export function shareOnWhatsApp(phone: string, message: string): void {
+  window.open(`${waLink(phone)}?text=${encodeURIComponent(message)}`, '_blank');
+}
 
 export function greeting(name: string | undefined, now = new Date()): string {
   const hour = now.getHours();
@@ -162,3 +173,48 @@ export const LAUNDRY_SERVICE_TYPE_LABELS: Record<LaundryServiceType, string> = {
   DryClean: '✨ Dry Clean',
   Other: '🧵 Other',
 };
+
+// ---------- Bills & subscriptions ----------
+
+export const BILL_CATEGORY_LABELS: Record<BillCategory, { icon: string; label: string }> = {
+  Electricity: { icon: '⚡', label: 'Electricity' },
+  Water: { icon: '💧', label: 'Water' },
+  Phone: { icon: '📱', label: 'Phone' },
+  Internet: { icon: '🌐', label: 'Internet' },
+  CreditCard: { icon: '💳', label: 'Credit Card' },
+  Rent: { icon: '🏠', label: 'Rent' },
+  Insurance: { icon: '🛵', label: 'Insurance' },
+  Subscription: { icon: '📺', label: 'Subscription' },
+  Other: { icon: '📄', label: 'Other' },
+};
+
+export const BILL_RECURRENCE_LABELS: Record<BillRecurrence, string> = {
+  OneTime: 'One-time',
+  Monthly: 'Monthly',
+  Quarterly: 'Quarterly',
+  Yearly: 'Yearly',
+};
+
+export type BillUrgency = 'Overdue' | 'DueSoon' | 'Upcoming';
+
+/** "Due Soon" = within a week — matches the grouping shown on the Bills home screen. */
+export function billUrgency(dueDate: string, now = new Date()): BillUrgency {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = parseDateOnly(dueDate);
+  const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+  if (days < 0) return 'Overdue';
+  if (days <= 7) return 'DueSoon';
+  return 'Upcoming';
+}
+
+/** "Overdue by 2 days", "Due today", "Due in 3 days", "Renews in 54 days" (for yearly/quarterly bills). */
+export function billDueLabel(bill: Pick<Bill, 'dueDate' | 'recurrence'>, now = new Date()): string {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = parseDateOnly(bill.dueDate);
+  const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+  const verb = bill.recurrence === 'OneTime' || bill.recurrence === 'Monthly' ? 'Due' : 'Renews';
+
+  if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`;
+  if (days === 0) return `${verb} today`;
+  return `${verb} in ${days} day${days === 1 ? '' : 's'}`;
+}

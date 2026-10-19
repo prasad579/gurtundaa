@@ -24,6 +24,10 @@ public class LaundryBatch
 
     public decimal? Amount { get; set; }
 
+    public bool IsPaid { get; set; }
+
+    public DateTimeOffset? PaidAt { get; set; }
+
     /// <summary>System.Text.Json-serialized <c>List&lt;LaundryItemLine&gt;</c> — always read/written as a whole unit.</summary>
     public string ItemsJson { get; set; } = "[]";
 

@@ -1,4 +1,5 @@
 using Gurtundaa.Application.Auth;
+using Gurtundaa.Application.Bills;
 using Gurtundaa.Application.Household;
 using Gurtundaa.Application.Laundry;
 using Gurtundaa.Application.Milk;
@@ -6,6 +7,7 @@ using Gurtundaa.Application.Reminders;
 using Gurtundaa.Application.ServiceContacts;
 using Gurtundaa.Domain.Entities;
 using Gurtundaa.Infrastructure.Auth;
+using Gurtundaa.Infrastructure.Bills;
 using Gurtundaa.Infrastructure.Household;
 using Gurtundaa.Infrastructure.Laundry;
 using Gurtundaa.Infrastructure.Milk;
@@ -58,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IMilkActivityService, MilkActivityService>();
         services.AddScoped<ILaundryBatchService, LaundryBatchService>();
         services.AddScoped<IMilkQuantityChangeService, MilkQuantityChangeService>();
+        services.AddScoped<IBillService, BillService>();
 
         return services;
     }

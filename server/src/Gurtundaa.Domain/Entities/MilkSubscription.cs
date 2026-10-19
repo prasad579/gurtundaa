@@ -10,6 +10,13 @@ public class MilkSubscription
 
     public ServiceContact? Contact { get; set; }
 
+    /// <summary>
+    /// The first day delivery is actually tracked from. Days before this are excluded from the
+    /// calendar, summary counts, and billed amount entirely — they're neither "delivered" nor
+    /// "missed", they simply predate the household's use of the app (or the subscription itself).
+    /// </summary>
+    public DateOnly StartDate { get; set; }
+
     public bool MorningEnabled { get; set; } = true;
 
     public decimal MorningQuantityLtr { get; set; }

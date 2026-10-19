@@ -81,3 +81,66 @@
   .cat-lbl { font-weight: 600; }
   .cat-val { font-weight: 700; color: var(--ion-color-primary); }
 }
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  h3 { margin: 0; }
+  .icon-btn { width: 28px; height: 28px; font-size: 13px; margin-left: 0; }
+}
+
+.pay-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ion-color-step-100, #efeaf9);
+
+  .psl { font-size: 10.5px; color: var(--ion-color-medium); }
+  .pss { font-size: 13px; font-weight: 800; color: #c62828; margin-top: 2px; }
+  .pss.paid { color: #2e7d32; }
+  .ps-right { text-align: right; }
+}
+
+.item-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.mini-btn {
+  background: #fff;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  ion-icon { font-size: 12px; }
+
+  &.wa { background: #25d366; color: #fff; border-color: #25d366; }
+}
+
+.paid-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgb(235 68 90 / 0.12);
+  color: #c62828;
+  vertical-align: middle;
+
+  &.paid { background: rgb(45 211 111 / 0.15); color: #2e7d32; }
+}

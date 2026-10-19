@@ -48,6 +48,13 @@
                       · Expected {{ shortDateLabel(b.expectedReturn) }}
                     }
                   </p>
+                  @if (b.contactPhone) {
+                    <div class="item-actions">
+                      <button class="mini-btn wa" (click)="shareBill(b); $event.stopPropagation()">
+                        <ion-icon name="logo-whatsapp" />Share
+                      </button>
+                    </div>
+                  }
                 </ion-label>
                 @if (batchAmount(b); as amount) {
                   <ion-note slot="end">~{{ rupeeLabel(amount) }}</ion-note>
@@ -67,9 +74,16 @@
       }
     </section>
 
-    @if (categoryTotals().length > 0) {
-      <section class="card">
-        <h3>Spend by Category</h3>
+    <section class="card">
+      <div class="month-nav">
+        <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
+        <h3>{{ monthLabel() }}</h3>
+        <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+      </div>
+
+      @if (categoryTotals().length === 0) {
+        <p class="muted">No laundry spend this month.</p>
+      } @else {
         <div class="cat-totals">
           @for (c of categoryTotals(); track c.serviceType) {
             <div class="cat-row">
@@ -78,8 +92,19 @@
             </div>
           }
         </div>
-      </section>
-    }
+
+        <div class="pay-status">
+          <div class="ps-left">
+            <div class="psl">Pending</div>
+            <div class="pss">{{ rupeeLabel(monthPaymentSummary().pending) }}</div>
+          </div>
+          <div class="ps-right">
+            <div class="psl">Paid</div>
+            <div class="pss paid">{{ rupeeLabel(monthPaymentSummary().paid) }}</div>
+          </div>
+        </div>
+      }
+    </section>
 
     @if (contacts().length > 0) {
       <section class="card">
@@ -111,26 +136,47 @@
       } @else {
         <ion-list [inset]="true">
           @for (b of history(); track b.id) {
-            <ion-item lines="full">
-              <ion-label>
-                <h2>
-                  {{ itemsSummary(b) }}
-                  <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
-                </h2>
-                <p>
-                  Given {{ shortDateLabel(b.givenOn) }}
-                  @if (b.pickedUpOn) {
-                    · Picked up {{ shortDateLabel(b.pickedUpOn) }}
+            <ion-item-sliding #historySliding>
+              <ion-item lines="full">
+                <ion-label>
+                  <h2>
+                    {{ itemsSummary(b) }}
+                    <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
+                    @if (b.amount) {
+                      <span class="paid-badge" [class.paid]="b.isPaid">{{ b.isPaid ? 'PAID' : 'PENDING' }}</span>
+                    }
+                  </h2>
+                  <p>
+                    Given {{ shortDateLabel(b.givenOn) }}
+                    @if (b.pickedUpOn) {
+                      · Picked up {{ shortDateLabel(b.pickedUpOn) }}
+                    }
+                  </p>
+                  @if (priceBreakdown(b); as breakdown) {
+                    <p class="price-breakdown">{{ breakdown }}</p>
                   }
-                </p>
-                @if (priceBreakdown(b); as breakdown) {
-                  <p class="price-breakdown">{{ breakdown }}</p>
+                  <div class="item-actions">
+                    @if (b.contactPhone) {
+                      <button class="mini-btn wa" (click)="shareBill(b)"><ion-icon name="logo-whatsapp" />Share</button>
+                    }
+                    @if (b.amount) {
+                      <button class="mini-btn" (click)="setPaid(b, !b.isPaid)">
+                        <ion-icon [name]="b.isPaid ? 'close' : 'checkmark-done-outline'" />
+                        {{ b.isPaid ? 'Mark Pending' : 'Mark Paid' }}
+                      </button>
+                    }
+                  </div>
+                </ion-label>
+                @if (b.amount) {
+                  <ion-note slot="end">{{ rupeeLabel(b.amount) }}</ion-note>
                 }
-              </ion-label>
-              @if (b.amount) {
-                <ion-note slot="end">{{ rupeeLabel(b.amount) }}</ion-note>
-              }
-            </ion-item>
+              </ion-item>
+              <ion-item-options side="end">
+                <ion-item-option color="danger" (click)="remove(b, historySliding)">
+                  <ion-icon slot="icon-only" name="trash" />
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
           }
         </ion-list>
       }

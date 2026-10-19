@@ -24,6 +24,7 @@ public class MilkSubscriptionService(AppDbContext db, ICurrentUser currentUser, 
         }
 
         subscription.ContactId = request.ContactId;
+        subscription.StartDate = request.StartDate;
         subscription.MorningEnabled = request.MorningEnabled;
         subscription.MorningQuantityLtr = request.MorningQuantityLtr;
         subscription.MorningWindowStart = request.MorningWindowStart;
@@ -53,6 +54,7 @@ public class MilkSubscriptionService(AppDbContext db, ICurrentUser currentUser, 
             subscription.ContactId,
             contact?.Name,
             contact?.Phone,
+            subscription.StartDate,
             subscription.MorningEnabled,
             subscription.MorningQuantityLtr,
             subscription.MorningWindowStart,
