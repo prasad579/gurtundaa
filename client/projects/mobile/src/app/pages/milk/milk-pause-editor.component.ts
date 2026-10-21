@@ -53,9 +53,15 @@ import {
             <ion-label>from</ion-label>
             <ion-datetime-button datetime="pause-start" />
           </ion-item>
-          <ion-modal [keepContentsMounted]="true">
+          <ion-modal #startModal [keepContentsMounted]="true">
             <ng-template>
-              <ion-datetime id="pause-start" formControlName="startDate" presentation="date" [min]="today" />
+              <ion-datetime
+                id="pause-start"
+                formControlName="startDate"
+                presentation="date"
+                [min]="today"
+                (ionChange)="startModal.dismiss()"
+              />
             </ng-template>
           </ion-modal>
 
@@ -63,9 +69,15 @@ import {
             <ion-label>to</ion-label>
             <ion-datetime-button datetime="pause-end" />
           </ion-item>
-          <ion-modal [keepContentsMounted]="true">
+          <ion-modal #endModal [keepContentsMounted]="true">
             <ng-template>
-              <ion-datetime id="pause-end" formControlName="endDate" presentation="date" [min]="form.controls.startDate.value" />
+              <ion-datetime
+                id="pause-end"
+                formControlName="endDate"
+                presentation="date"
+                [min]="form.controls.startDate.value"
+                (ionChange)="endModal.dismiss()"
+              />
             </ng-template>
           </ion-modal>
 

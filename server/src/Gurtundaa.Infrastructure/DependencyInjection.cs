@@ -1,19 +1,25 @@
 using Gurtundaa.Application.Auth;
 using Gurtundaa.Application.Bills;
+using Gurtundaa.Application.Health;
 using Gurtundaa.Application.Household;
 using Gurtundaa.Application.Laundry;
+using Gurtundaa.Application.Marketplace;
 using Gurtundaa.Application.Milk;
 using Gurtundaa.Application.Reminders;
 using Gurtundaa.Application.ServiceContacts;
+using Gurtundaa.Application.Shop;
 using Gurtundaa.Domain.Entities;
 using Gurtundaa.Infrastructure.Auth;
 using Gurtundaa.Infrastructure.Bills;
+using Gurtundaa.Infrastructure.Health;
 using Gurtundaa.Infrastructure.Household;
 using Gurtundaa.Infrastructure.Laundry;
+using Gurtundaa.Infrastructure.Marketplace;
 using Gurtundaa.Infrastructure.Milk;
 using Gurtundaa.Infrastructure.Persistence;
 using Gurtundaa.Infrastructure.Reminders;
 using Gurtundaa.Infrastructure.ServiceContacts;
+using Gurtundaa.Infrastructure.Shop;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -61,6 +67,14 @@ public static class DependencyInjection
         services.AddScoped<ILaundryBatchService, LaundryBatchService>();
         services.AddScoped<IMilkQuantityChangeService, MilkQuantityChangeService>();
         services.AddScoped<IBillService, BillService>();
+        services.AddScoped<IShopProfileService, ShopProfileService>();
+        services.AddScoped<IShopPriceListService, ShopPriceListService>();
+        services.AddScoped<IQuoteService, QuoteService>();
+        services.AddScoped<IQuotationRequestService, QuotationRequestService>();
+        services.AddScoped<IHouseholdMemberService, HouseholdMemberService>();
+        services.AddScoped<IMedicineService, MedicineService>();
+        services.AddScoped<IDoseLogService, DoseLogService>();
+        services.AddScoped<IPrescriptionService, PrescriptionService>();
 
         return services;
     }

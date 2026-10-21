@@ -10,6 +10,7 @@ import {
   rupeeLabel,
 } from '@gurtundaa/shared';
 import {
+  AlertController,
   IonButton,
   IonContent,
   IonHeader,
@@ -41,6 +42,7 @@ export class BillsPage implements ViewWillEnter {
   private readonly billsApi = inject(BillsApi);
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
+  private readonly alerts = inject(AlertController);
   private readonly notifications = inject(BillNotifications);
   private readonly router = inject(Router);
 
@@ -92,15 +94,31 @@ export class BillsPage implements ViewWillEnter {
   }
 
   protected async markPaid(bill: Bill): Promise<void> {
+    if (!(await this.confirm('Mark as paid?', `${bill.name} — ${rupeeLabel(bill.amount)}`))) return;
     await firstValueFrom(this.billsApi.setPaid(bill.id, { isPaid: true }));
     await this.toast('marked as paid ✅');
     await this.load();
   }
 
   protected async remove(bill: Bill): Promise<void> {
+    if (!(await this.confirm('Delete this bill?', bill.name))) return;
     await firstValueFrom(this.billsApi.delete(bill.id));
     await this.toast('bill removed');
     await this.load();
+  }
+
+  private async confirm(header: string, message: string): Promise<boolean> {
+    const alert = await this.alerts.create({
+      header,
+      message,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Confirm', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onWillDismiss();
+    return role === 'confirm';
   }
 
   protected viewAll(): void {

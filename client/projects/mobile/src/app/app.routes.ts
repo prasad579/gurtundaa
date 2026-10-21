@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
-import { AuthService, signedInGuard, signedOutGuard } from '@gurtundaa/shared';
+import { AuthService, customerGuard, shopGuard, signedInGuard, signedOutGuard } from '@gurtundaa/shared';
 
 export const routes: Routes = [
   {
@@ -15,8 +15,59 @@ export const routes: Routes = [
       { path: 'milk', loadComponent: () => import('./pages/milk/milk.page').then((m) => m.MilkPage) },
       { path: 'laundry', loadComponent: () => import('./pages/laundry/laundry.page').then((m) => m.LaundryPage) },
       { path: 'bills', loadComponent: () => import('./pages/bills/bills.page').then((m) => m.BillsPage) },
+      {
+        path: 'health',
+        canActivate: [customerGuard],
+        loadComponent: () => import('./pages/health/health-home.page').then((m) => m.HealthHomePage),
+      },
+      {
+        path: 'marketplace',
+        canActivate: [customerGuard],
+        loadComponent: () => import('./pages/marketplace/marketplace-home.page').then((m) => m.MarketplaceHomePage),
+      },
+      {
+        path: 'shop/incoming-requests',
+        canActivate: [shopGuard],
+        loadComponent: () =>
+          import('./pages/marketplace/shop/incoming-requests.page').then((m) => m.IncomingRequestsPage),
+      },
+      {
+        path: 'shop/orders',
+        canActivate: [shopGuard],
+        loadComponent: () => import('./pages/marketplace/shop/orders.page').then((m) => m.OrdersPage),
+      },
+      {
+        path: 'shop/price-list',
+        canActivate: [shopGuard],
+        loadComponent: () => import('./pages/marketplace/shop/price-list.page').then((m) => m.PriceListPage),
+      },
+      {
+        path: 'shop/profile',
+        canActivate: [shopGuard],
+        loadComponent: () => import('./pages/marketplace/shop/shop-profile.page').then((m) => m.ShopProfilePage),
+      },
       { path: 'more', loadComponent: () => import('./pages/more/more.page').then((m) => m.MorePage) },
     ],
+  },
+  {
+    path: 'marketplace/category/:categoryKey',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/marketplace/marketplace-browse.page').then((m) => m.MarketplaceBrowsePage),
+  },
+  {
+    path: 'marketplace/cart',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/marketplace/marketplace-cart.page').then((m) => m.MarketplaceCartPage),
+  },
+  {
+    path: 'marketplace/requests',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/marketplace/my-requests.page').then((m) => m.MyRequestsPage),
+  },
+  {
+    path: 'marketplace/requests/:id',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/marketplace/request-detail.page').then((m) => m.RequestDetailPage),
   },
   {
     path: 'welcome',
@@ -54,13 +105,23 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/milk/milk-pause.page').then((m) => m.MilkPausePage),
   },
   {
+    path: 'new-prescription',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/health/new-prescription.page').then((m) => m.NewPrescriptionPage),
+  },
+  {
     path: 'bills/all',
     canActivate: [signedInGuard],
     loadComponent: () => import('./pages/bills/bills-all.page').then((m) => m.BillsAllPage),
   },
   {
+    path: 'shop-onboarding',
+    canActivate: [signedInGuard, shopGuard],
+    loadComponent: () => import('./pages/shop-onboarding/shop-onboarding.page').then((m) => m.ShopOnboardingPage),
+  },
+  {
     path: 'onboarding',
-    canActivate: [signedInGuard],
+    canActivate: [signedInGuard, customerGuard],
     children: [
       { path: '', redirectTo: 'account-type', pathMatch: 'full' },
       {

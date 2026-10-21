@@ -1,0 +1,75 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>My Price List 🏷️</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  @if (loading() && entries().length === 0) {
+    <p class="muted">loading…</p>
+  } @else {
+    @if (entries().length === 0) {
+      <div class="info">
+        <span>✨</span>
+        You haven't quoted anything yet. Your price list builds itself the first time you send a quote — no need to type one out.
+      </div>
+    } @else {
+      <div class="info">
+        <span>✨</span>
+        You never typed a price list — it builds itself from the quotes you send: {{ stats().items }} item{{ stats().items === 1 ? '' : 's' }} so far.
+      </div>
+
+      <div class="stats3">
+        <div class="s3i"><div class="lbl">Items</div><div class="val">{{ stats().items }}</div></div>
+        <div class="s3i"><div class="lbl">Updated 7d</div><div class="val fresh">{{ stats().fresh }}</div></div>
+        <div class="s3i"><div class="lbl">Old &gt;14d</div><div class="val stale">{{ stats().stale }}</div></div>
+      </div>
+
+      <div class="tabs2">
+        <div [class.sel]="filter() === 'all'" (click)="filter.set('all')">All</div>
+        <div [class.sel]="filter() === 'old'" (click)="filter.set('old')">Old prices</div>
+      </div>
+
+      <div class="card">
+        @for (e of filtered(); track e.itemKey) {
+          <div class="pl-row">
+            <div class="pl-txt">
+              <div class="a">{{ itemName(e.itemKey) }} · {{ itemPack(e.itemKey) }}</div>
+              <div class="b" [class.warn]="isStale(e)">
+                @if (isStale(e)) {
+                  ⚠️
+                }
+                Updated {{ dateLabel(e.updatedAt) }}
+              </div>
+            </div>
+            <div class="pl-r">
+              <b>{{ rupeeLabel(e.unitPrice) }}</b>
+              @if (e.previousUnitPrice === null) {
+                <span class="muted">new</span>
+              } @else if (e.previousUnitPrice === e.unitPrice) {
+                <span class="same">Same</span>
+              } @else if (e.unitPrice > e.previousUnitPrice) {
+                <span class="up">↑ {{ rupeeLabel(e.unitPrice - e.previousUnitPrice) }}</span>
+              } @else {
+                <span class="dn">↓ {{ rupeeLabel(e.previousUnitPrice - e.unitPrice) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (unpricedOptions().length > 0) {
+      <h3 class="section-title">Add a price</h3>
+      <form [formGroup]="addForm" class="add-row">
+        <ion-select formControlName="itemKey" placeholder="pick an item" interface="popover" class="add-select">
+          @for (item of unpricedOptions(); track item.key) {
+            <ion-select-option [value]="item.key">{{ item.name }} · {{ item.pack }}</ion-select-option>
+          }
+        </ion-select>
+        <ion-input type="number" inputmode="decimal" placeholder="₹" formControlName="unitPrice" class="add-price" />
+        <ion-button [disabled]="!addForm.controls.itemKey.value || addForm.controls.unitPrice.value <= 0" (click)="addPrice()">Add</ion-button>
+      </form>
+    }
+  }
+</ion-content>

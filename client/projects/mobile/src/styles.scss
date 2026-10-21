@@ -82,6 +82,18 @@ ion-input {
   white-space: pre-line;
 }
 
+// Ionic's own segment.md.css ships `:host(.segment-scrollable::-webkit-scrollbar) { display: none; }`
+// — invalid syntax (a pseudo-element can't live inside :host()'s argument), so browsers drop the
+// rule silently and the native scrollbar shows through on any `<ion-segment scrollable>`. Re-declare
+// it correctly from outside; `ion-segment` is a real light-DOM element so this doesn't need `::part()`.
+ion-segment.segment-scrollable {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 // ion-tabs clones the <ion-router-outlet> it's given into its own tab-stack wrapper and leaves
 // the original element behind, empty, full-size, and still capturing pointer events — which
 // silently swallows every click/tap on the active tab's content underneath it. An outlet with

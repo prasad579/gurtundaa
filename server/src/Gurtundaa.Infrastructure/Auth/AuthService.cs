@@ -45,6 +45,7 @@ public class AuthService(
             UserName = request.Email.Trim(),
             DisplayName = request.DisplayName.Trim(),
             PhoneNumber = phoneNumber,
+            UserType = request.UserType,
         };
 
         var created = await userManager.CreateAsync(user, request.Password);
@@ -184,6 +185,7 @@ public class AuthService(
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
                 new Claim("name", user.DisplayName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, user.UserType.ToString()),
             ],
             notBefore: now.UtcDateTime,
             expires: accessExpires.UtcDateTime,
@@ -208,7 +210,7 @@ public class AuthService(
             ToDto(user));
     }
 
-    private static UserDto ToDto(AppUser user) => new(user.Id, user.Email ?? string.Empty, user.DisplayName, user.PhoneNumber);
+    private static UserDto ToDto(AppUser user) => new(user.Id, user.Email ?? string.Empty, user.DisplayName, user.PhoneNumber, user.UserType);
 
     private static string Hash(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));

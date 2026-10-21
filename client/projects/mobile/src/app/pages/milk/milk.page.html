@@ -179,7 +179,7 @@
 
         <div class="amt-rows">
           <div class="amt-row">
-            <div class="ar-lbl">Regular ({{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+            <div class="ar-lbl">Regular ({{ m.summary.delivered }} days delivered, {{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
             <div class="ar-val">{{ rupeeLabel(m.summary.regularAmount) }}</div>
           </div>
           @if (m.summary.extraLitres > 0) {
@@ -200,9 +200,14 @@
             {{ m.summary.isPaid ? 'Mark as Pending' : 'Mark as Paid' }}
           </button>
         </div>
-        @if (contact()) {
-          <button class="share-wa-btn" (click)="shareSettlement()"><ion-icon name="logo-whatsapp" />Share via WhatsApp</button>
-        }
+        <div class="share-row">
+          @if (contact()) {
+            <button class="share-wa-btn" (click)="shareSettlement()"><ion-icon name="logo-whatsapp" />Share</button>
+          }
+          <button class="share-other-btn" (click)="shareSettlementWithOthers()">
+            <ion-icon name="share-social-outline" />Share
+          </button>
+        </div>
       }
     </section>
 

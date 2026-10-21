@@ -1,0 +1,95 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Orders 📦</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && quotes().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 60px; border-radius: 16px" />
+    </div>
+  } @else {
+    <div class="list">
+      @if (activeOrders().length > 0) {
+        <h3 class="section-title">Active Orders</h3>
+        @for (q of activeOrders(); track q.id) {
+          <div class="won">
+            <div class="won-hd">
+              <div class="won-ic">🏆</div>
+              <div class="wt"><div class="t">{{ q.customerName ?? 'Customer' }}</div></div>
+              <b>{{ rupeeLabel(q.totalAmount) }}</b>
+              <ion-button class="share-btn" fill="clear" size="small" (click)="openShareSheet(q)">
+                <ion-icon slot="icon-only" name="share-social-outline" />
+              </ion-button>
+            </div>
+
+            <div class="pack">
+              @for (item of q.items; track item.itemKey) {
+                <div class="pk" [class.done]="isPacked(q, item.itemKey)" (click)="togglePacked(q, item.itemKey)">
+                  <div class="cb">
+                    @if (isPacked(q, item.itemKey)) {
+                      ✓
+                    }
+                  </div>
+                  <span>{{ item.name }} · {{ item.qty }} {{ item.pack }}</span>
+                  <em>{{ rupeeLabel(item.unitPrice) }}</em>
+                </div>
+              }
+            </div>
+
+            <div class="steps">
+              @for (step of fulfillmentSteps; track step.value; let i = $index) {
+                <div class="stp" [class.on]="i <= stepIndex(q.fulfillmentStatus)">
+                  <div class="sd"></div>{{ step.label }}
+                </div>
+              }
+            </div>
+
+            <div class="act-row">
+              @if (q.customerPhone) {
+                <button class="ab" (click)="callCustomer(q)">Call</button>
+                <button class="ab wa" (click)="whatsappCustomer(q)">WhatsApp</button>
+              }
+              @if (nextLabel(q.fulfillmentStatus); as label) {
+                <button class="ab go" (click)="advance(q)">{{ label }}</button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      @if (results().length > 0) {
+        <h3 class="section-title">Quote Results</h3>
+        <div class="card">
+          @for (q of results(); track q.id) {
+            <div class="lost">
+              <div class="li" [class.won]="q.status === 'Accepted'" [class.lost]="q.status === 'Rejected'">
+                {{ q.status === 'Accepted' ? '✓' : q.status === 'Rejected' ? '✕' : '…' }}
+              </div>
+              <div class="lt">
+                <div class="a">{{ q.items.length }} item{{ q.items.length === 1 ? '' : 's' }} · {{ q.createdAt | date: 'd MMM' }}</div>
+                <div class="b">{{ resultLabel(q) }}</div>
+              </div>
+              <div class="lr">{{ rupeeLabel(q.totalAmount) }}</div>
+              <ion-button class="share-btn" fill="clear" size="small" (click)="openShareSheet(q)">
+                <ion-icon slot="icon-only" name="share-social-outline" />
+              </ion-button>
+            </div>
+          }
+        </div>
+      }
+
+      @if (quotes().length === 0) {
+        <div class="empty ion-padding">
+          <span aria-hidden="true">📦</span>
+          <p>no orders yet</p>
+        </div>
+      }
+    </div>
+  }
+</ion-content>

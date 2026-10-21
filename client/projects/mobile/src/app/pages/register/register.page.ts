@@ -1,12 +1,36 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService, BRAND } from '@gurtundaa/shared';
-import { IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonList, IonText } from '@ionic/angular';
+import { AuthService, BRAND, UserType } from '@gurtundaa/shared';
+import {
+  IonButton,
+  IonCheckbox,
+  IonContent,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonSegment,
+  IonSegmentButton,
+  IonText,
+} from '@ionic/angular';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, IonContent, IonList, IonItem, IonInput, IonButton, IonCheckbox, IonText],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    IonContent,
+    IonList,
+    IonItem,
+    IonInput,
+    IonButton,
+    IonCheckbox,
+    IonText,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+  ],
   templateUrl: './register.page.html',
   styleUrl: './register.page.scss',
 })
@@ -18,6 +42,11 @@ export class RegisterPage {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly agreed = signal(false);
+  protected readonly userType = signal<UserType>('Customer');
+
+  protected setUserType(value: unknown): void {
+    this.userType.set(value as UserType);
+  }
 
   protected readonly form = new FormGroup({
     displayName: new FormControl('', { nonNullable: true }),
@@ -54,13 +83,16 @@ export class RegisterPage {
     this.busy.set(true);
     this.error.set(null);
     try {
-      await this.auth.register({
+      const user = await this.auth.register({
         displayName: displayName.trim(),
         email: email.trim(),
         phoneNumber: phoneNumber.trim(),
         password,
+        userType: this.userType(),
       });
-      await this.router.navigateByUrl('/onboarding', { replaceUrl: true });
+      await this.router.navigateByUrl(user.userType === 'Shop' ? '/shop-onboarding' : '/onboarding', {
+        replaceUrl: true,
+      });
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {

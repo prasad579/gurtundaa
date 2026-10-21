@@ -1,0 +1,159 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/marketplace/requests" /></ion-buttons>
+    <ion-title>Request Detail</ion-title>
+    @if (detail(); as d) {
+      <ion-buttons slot="end">
+        <ion-button (click)="openShareSheet()">
+          <ion-icon slot="icon-only" name="share-social-outline" />
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && !detail()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 60px; border-radius: 16px" />
+    </div>
+  } @else if (detail(); as d) {
+    <section class="card ion-margin">
+      <h3>Items</h3>
+      <p>{{ itemsSummary(d) }}</p>
+      @if (d.notes) {
+        <p class="notes">Note: {{ d.notes }}</p>
+      }
+    </section>
+
+    @if (d.categoryQuoteCounts.length > 1 || countdown(d)) {
+      <section class="card ion-margin">
+        @if (d.categoryQuoteCounts.length > 1) {
+          <div class="prog">
+            @for (c of d.categoryQuoteCounts; track c.categoryKey) {
+              <div class="pg">
+                <span class="ic">{{ categoryMeta(c.categoryKey).icon }}</span>
+                <div class="pl">{{ categoryMeta(c.categoryKey).label }}</div>
+                <div class="pv">{{ c.quoteCount }} quote{{ c.quoteCount === 1 ? '' : 's' }}</div>
+              </div>
+            }
+          </div>
+        }
+        @if (countdown(d); as cd) {
+          <div class="timer" [class.urgent]="cd === 'Closed'">{{ cd === 'Closed' ? 'Quotes closed' : 'Quotes close in ' + cd }}</div>
+        }
+      </section>
+    }
+
+    <section class="card ion-margin">
+      <h3>Quotes ({{ d.quotes.length }})</h3>
+      @if (d.quotes.length === 0) {
+        <p class="muted">No quotes yet — hang tight, shops will respond soon.</p>
+      } @else {
+        @if (d.comparison; as cmp) {
+          <div class="tabs2">
+            <div [class.sel]="compareView() === 'total'" (click)="compareView.set('total')">By Shop Total</div>
+            <div [class.sel]="compareView() === 'item'" (click)="compareView.set('item')">By Item Price</div>
+          </div>
+
+          @if (compareView() === 'total') {
+            <div class="winner-banner">
+              <div class="wi">🏆</div>
+              <div class="wt">
+                <b>{{ shopName(d, cmp.cheapestTotalShopUserId) }} is cheapest</b>
+                <span>{{ savingsLabel(d) }}</span>
+              </div>
+            </div>
+          } @else {
+            <table class="cmp-table">
+              <tr>
+                <th>Item</th>
+                @for (q of d.quotes; track q.id) {
+                  <th class="shopcol">{{ q.shopName }}</th>
+                }
+              </tr>
+              @for (row of cmp.rows; track row.itemKey) {
+                <tr>
+                  <td class="itemname">{{ row.name }}</td>
+                  @for (q of d.quotes; track q.id) {
+                    <td class="shopcol" [class.cheapest]="row.cheapestShopUserId === q.shopUserId">
+                      @if (row.priceByShop[q.shopUserId] ?? null; as price) {
+                        {{ rupeeLabel(price) }}
+                        @if (row.cheapestShopUserId === q.shopUserId) {
+                          <span class="chk-badge">✓</span>
+                        }
+                      } @else {
+                        —
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+              <tr class="totrow">
+                <td>Total</td>
+                @for (q of d.quotes; track q.id) {
+                  <td class="shopcol" [style.color]="q.shopUserId === cmp.cheapestTotalShopUserId ? '#2e7d32' : null">{{ rupeeLabel(q.totalAmount) }}</td>
+                }
+              </tr>
+            </table>
+          }
+        }
+
+        @for (q of d.quotes; track q.id) {
+          <div class="quote" [class.accepted]="q.status === 'Accepted'" [class.rejected]="q.status === 'Rejected'">
+            <div class="head">
+              <span class="shop">{{ q.shopName }}</span>
+              <span class="amount">{{ rupeeLabel(q.totalAmount) }}</span>
+            </div>
+            <div class="qmeta">
+              <span>{{ q.deliveryChargeAmount > 0 ? rupeeLabel(q.deliveryChargeAmount) + ' delivery' : 'Free delivery' }}</span>
+              @if (q.estimatedDeliveryMinutes) {
+                <span>· {{ q.estimatedDeliveryMinutes }} min</span>
+              }
+            </div>
+            @if (q.note) {
+              <p class="note">{{ q.note }}</p>
+            }
+
+            @if (q.status === 'Accepted') {
+              <div class="steps">
+                @for (step of fulfillmentSteps; track step.value; let i = $index) {
+                  <div class="stp" [class.on]="i <= stepIndex(q.fulfillmentStatus)">
+                    <div class="sd"></div>{{ step.label }}
+                  </div>
+                }
+              </div>
+              @if (q.shopPhone) {
+                <div class="act-row">
+                  <button class="ab" (click)="callShop(q)">Call Shop</button>
+                  <button class="ab wa" (click)="whatsappShop(q)">WhatsApp</button>
+                </div>
+              }
+            }
+
+            <div class="status-row">
+              <span class="status">{{ q.status }}</span>
+              @if (canAccept(d, q)) {
+                <ion-button size="small" fill="outline" (click)="accept(q.id)">Accept</ion-button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      @if (d.pendingShops.length > 0) {
+        <div class="pending-hd">Waiting to hear back from</div>
+        @for (p of d.pendingShops; track p.shopUserId) {
+          <div class="pending-row">
+            <span class="pname">{{ p.shopName }}</span>
+            <span class="pstatus">{{ p.status === 'Declined' ? 'Declined' : 'Waiting to confirm' }}</span>
+          </div>
+        }
+      }
+    </section>
+  }
+</ion-content>

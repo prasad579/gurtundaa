@@ -1,0 +1,123 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/health" />
+    </ion-buttons>
+    <ion-title>New Prescription 📋</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <section class="card">
+    <h3>Visit Details</h3>
+
+    <ion-select
+      class="field"
+      label="For"
+      labelPlacement="stacked"
+      interface="popover"
+      [value]="memberId()"
+      (ionChange)="memberId.set($any($event.detail.value))"
+    >
+      @for (m of members(); track m.id) {
+        <ion-select-option [value]="m.id">{{ m.avatarEmoji }} {{ m.name }}</ion-select-option>
+      }
+    </ion-select>
+
+    <ion-input
+      class="field"
+      label="Doctor name"
+      labelPlacement="stacked"
+      placeholder="Dr. Rao"
+      [value]="doctorName()"
+      (ionInput)="doctorName.set($any($event.detail.value))"
+      [maxlength]="100"
+    />
+    <ion-input
+      class="field"
+      label="Specialty (optional)"
+      labelPlacement="stacked"
+      placeholder="General Physician"
+      [value]="doctorSpecialty()"
+      (ionInput)="doctorSpecialty.set($any($event.detail.value))"
+      [maxlength]="100"
+    />
+
+    <div class="date-row">
+      <div class="date-field">
+        <div class="df-lbl">Visit Date</div>
+        <ion-datetime-button datetime="visit-date" />
+      </div>
+      <div class="date-field">
+        <div class="df-lbl">Revisit Date</div>
+        <ion-datetime-button datetime="revisit-date" />
+      </div>
+    </div>
+    <ion-modal #visitModal [keepContentsMounted]="true">
+      <ng-template>
+        <ion-datetime
+          id="visit-date"
+          presentation="date"
+          [value]="visitDate()"
+          (ionChange)="onVisitDateChange($any($event.detail.value)); visitModal.dismiss()"
+        />
+      </ng-template>
+    </ion-modal>
+    <ion-modal #revisitModal [keepContentsMounted]="true">
+      <ng-template>
+        <ion-datetime
+          id="revisit-date"
+          presentation="date"
+          [value]="revisitDate()"
+          [min]="visitDate()"
+          (ionChange)="onRevisitDateChange($any($event.detail.value)); revisitModal.dismiss()"
+        />
+      </ng-template>
+    </ion-modal>
+
+    <p class="label">Revisit reminder</p>
+    <div class="reason-chips">
+      @for (p of revisitPresets; track p.days) {
+        <button class="rchip" (click)="selectRevisitPreset(p.days)">{{ p.label }}</button>
+      }
+      @if (revisitDate()) {
+        <button class="rchip" (click)="clearRevisit()">Clear</button>
+      }
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head">
+      <h3>Medicines</h3>
+    </div>
+
+    @if (medicines().length === 0) {
+      <p class="muted">No medicines added yet.</p>
+    } @else {
+      @for (med of medicines(); track $index) {
+        <div class="med-row">
+          <span class="mi"><ion-icon name="medkit" /></span>
+          <div class="mt">
+            <div class="mn">{{ med.name }}</div>
+            <div class="ms">
+              {{ med.morningQty + med.afternoonQty + med.eveningQty + med.nightQty }} / day ·
+              {{ med.stockCount }} tabs
+              @if (med.mode === 'Course') {
+                · {{ med.courseDays }} day course
+              }
+            </div>
+          </div>
+          <button class="del-btn" (click)="removeMedicine($index)"><ion-icon name="trash" /></button>
+        </div>
+      }
+    }
+
+    <ion-button expand="block" fill="outline" class="add-med-btn" (click)="addMedicine()">
+      <ion-icon slot="start" name="add" />Add Medicine
+    </ion-button>
+  </section>
+
+  <ion-button expand="block" class="save-btn" [disabled]="!canSave() || saving()" (click)="save()">
+    {{ saving() ? 'saving…' : 'Save Prescription' }}
+  </ion-button>
+</ion-content>

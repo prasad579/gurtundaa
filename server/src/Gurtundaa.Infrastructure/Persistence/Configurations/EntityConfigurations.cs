@@ -9,6 +9,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     public void Configure(EntityTypeBuilder<AppUser> builder)
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
+        builder.Property(u => u.UserType).HasConversion<byte>();
     }
 }
 
@@ -62,6 +63,25 @@ public class HouseholdProfileConfiguration : IEntityTypeConfiguration<HouseholdP
         builder.HasOne(p => p.User)
             .WithOne()
             .HasForeignKey<HouseholdProfile>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class ShopProfileConfiguration : IEntityTypeConfiguration<ShopProfile>
+{
+    public void Configure(EntityTypeBuilder<ShopProfile> builder)
+    {
+        builder.ToTable("ShopProfiles");
+        builder.HasKey(p => p.UserId);
+        builder.Property(p => p.ShopName).HasMaxLength(100).IsRequired();
+        builder.Property(p => p.City).HasMaxLength(100);
+        builder.Property(p => p.Address).HasMaxLength(200);
+        builder.Property(p => p.ServedCategoryKeysJson).HasMaxLength(1000).IsRequired().HasDefaultValue("[]");
+        builder.Property(p => p.PriceListJson).HasMaxLength(8000).IsRequired().HasDefaultValue("{}");
+
+        builder.HasOne(p => p.User)
+            .WithOne()
+            .HasForeignKey<ShopProfile>(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
@@ -244,6 +264,181 @@ public class MilkSettlementConfiguration : IEntityTypeConfiguration<MilkSettleme
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(s => new { s.UserId, s.Year, s.Month }).IsUnique();
+    }
+}
+
+public class HouseholdMemberConfiguration : IEntityTypeConfiguration<HouseholdMember>
+{
+    public void Configure(EntityTypeBuilder<HouseholdMember> builder)
+    {
+        builder.ToTable("HouseholdMembers");
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Name).HasMaxLength(50).IsRequired();
+        builder.Property(m => m.Relation).HasMaxLength(30);
+        builder.Property(m => m.AvatarEmoji).HasMaxLength(10).IsRequired();
+
+        builder.HasOne(m => m.User)
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
+{
+    public void Configure(EntityTypeBuilder<Medicine> builder)
+    {
+        builder.ToTable("Medicines");
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Mode).HasConversion<byte>();
+        builder.Property(m => m.FoodTiming).HasConversion<byte>();
+        builder.Property(m => m.Name).HasMaxLength(100).IsRequired();
+
+        builder.HasOne(m => m.User)
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction: AppUser already cascades to Medicine via UserId above, so the Member leg must
+        // avoid the same SQL Server multi-cascade-path issue as MilkSubscription/LaundryBatch ->
+        // ServiceContacts. HouseholdMemberService.DeleteAsync deletes a member's medicines itself.
+        builder.HasOne(m => m.Member)
+            .WithMany()
+            .HasForeignKey(m => m.MemberId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Same reasoning again for the Prescription leg. PrescriptionService.DeleteAsync unlinks
+        // (not deletes) a prescription's medicines before removing it.
+        builder.HasOne(m => m.Prescription)
+            .WithMany()
+            .HasForeignKey(m => m.PrescriptionId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(m => new { m.UserId, m.MemberId });
+    }
+}
+
+public class PrescriptionConfiguration : IEntityTypeConfiguration<Prescription>
+{
+    public void Configure(EntityTypeBuilder<Prescription> builder)
+    {
+        builder.ToTable("Prescriptions");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.DoctorName).HasMaxLength(100).IsRequired();
+        builder.Property(p => p.DoctorSpecialty).HasMaxLength(100);
+
+        builder.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction: same multi-cascade-path reasoning as Medicine.Member above.
+        builder.HasOne(p => p.Member)
+            .WithMany()
+            .HasForeignKey(p => p.MemberId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(p => new { p.UserId, p.MemberId });
+    }
+}
+
+public class DoseLogConfiguration : IEntityTypeConfiguration<DoseLog>
+{
+    public void Configure(EntityTypeBuilder<DoseLog> builder)
+    {
+        builder.ToTable("DoseLogs");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Slot).HasConversion<byte>();
+        builder.Property(l => l.Status).HasConversion<byte>();
+
+        builder.HasOne(l => l.Medicine)
+            .WithMany()
+            .HasForeignKey(l => l.MedicineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(l => new { l.MedicineId, l.Date, l.Slot }).IsUnique();
+    }
+}
+
+public class QuotationRequestConfiguration : IEntityTypeConfiguration<QuotationRequest>
+{
+    public void Configure(EntityTypeBuilder<QuotationRequest> builder)
+    {
+        builder.ToTable("QuotationRequests");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Status).HasConversion<byte>();
+        builder.Property(r => r.ItemsJson).HasMaxLength(4000).IsRequired();
+        builder.Property(r => r.Notes).HasMaxLength(500);
+
+        builder.HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction: Quote.QuotationRequestId already cascades Quote -> QuotationRequest. If this
+        // FK (the reverse direction, QuotationRequest -> its AcceptedQuote) were also Cascade, SQL
+        // Server rejects it as a cyclic cascade path between the same two tables.
+        builder.HasOne(r => r.AcceptedQuote)
+            .WithMany()
+            .HasForeignKey(r => r.AcceptedQuoteId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(r => new { r.CustomerUserId, r.CreatedAt });
+    }
+}
+
+public class QuotationRequestShopTargetConfiguration : IEntityTypeConfiguration<QuotationRequestShopTarget>
+{
+    public void Configure(EntityTypeBuilder<QuotationRequestShopTarget> builder)
+    {
+        builder.ToTable("QuotationRequestShopTargets");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Status).HasConversion<byte>();
+
+        builder.HasOne(t => t.QuotationRequest)
+            .WithMany()
+            .HasForeignKey(t => t.QuotationRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: QuotationRequest already cascades Customer -> AspNetUsers, so the
+        // Shop leg must avoid the same SQL Server multi-cascade-path issue noted above.
+        builder.HasOne(t => t.Shop)
+            .WithMany()
+            .HasForeignKey(t => t.ShopUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(t => new { t.ShopUserId, t.QuotationRequestId }).IsUnique();
+    }
+}
+
+public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
+{
+    public void Configure(EntityTypeBuilder<Quote> builder)
+    {
+        builder.ToTable("Quotes");
+        builder.HasKey(q => q.Id);
+        builder.Property(q => q.Status).HasConversion<byte>();
+        builder.Property(q => q.ItemsJson).HasMaxLength(4000).IsRequired();
+        builder.Property(q => q.TotalAmount).HasColumnType("decimal(10,2)");
+        builder.Property(q => q.DeliveryChargeAmount).HasColumnType("decimal(10,2)");
+        builder.Property(q => q.Note).HasMaxLength(300);
+        builder.Property(q => q.FulfillmentStatus).HasConversion<byte>();
+        builder.Property(q => q.PackedItemKeysJson).HasMaxLength(2000).IsRequired().HasDefaultValue("[]");
+
+        builder.HasOne(q => q.QuotationRequest)
+            .WithMany()
+            .HasForeignKey(q => q.QuotationRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: same multi-cascade-path issue as MilkSubscription/LaundryBatch ->
+        // ServiceContacts — QuotationRequest already cascades Customer -> AspNetUsers.
+        builder.HasOne(q => q.Shop)
+            .WithMany()
+            .HasForeignKey(q => q.ShopUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // One quote per shop per request — re-submitting replaces it.
+        builder.HasIndex(q => new { q.QuotationRequestId, q.ShopUserId }).IsUnique();
     }
 }
 

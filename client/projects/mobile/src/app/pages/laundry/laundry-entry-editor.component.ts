@@ -74,6 +74,8 @@ export class LaundryEntryEditorComponent implements OnInit {
   protected readonly today = toDateOnlyString(new Date());
   protected readonly quantities = signal<Record<string, number>>({});
   protected readonly prices = signal<Record<string, number>>({});
+  protected readonly neededByDates = signal<Record<string, string>>({});
+  protected readonly neededByOpen = signal<Record<string, boolean>>({});
   protected readonly serviceType = signal<LaundryServiceType>('WashAndIron');
 
   protected readonly form = new FormGroup({
@@ -108,17 +110,25 @@ export class LaundryEntryEditorComponent implements OnInit {
       const known = new Set(this.itemTypes.map((t) => t.label));
       const quantities: Record<string, number> = {};
       const prices: Record<string, number> = {};
+      const neededByDates: Record<string, string> = {};
+      const neededByOpen: Record<string, boolean> = {};
       let other: LaundryItemLine | undefined;
       for (const item of this.batch.items) {
         if (known.has(item.itemType)) {
           quantities[item.itemType] = item.quantity;
           if (item.pricePerItem) prices[item.itemType] = item.pricePerItem;
+          if (item.neededBy) {
+            neededByDates[item.itemType] = item.neededBy;
+            neededByOpen[item.itemType] = true;
+          }
         } else {
           other = item;
         }
       }
       this.quantities.set(quantities);
       this.prices.set(prices);
+      this.neededByDates.set(neededByDates);
+      this.neededByOpen.set(neededByOpen);
       this.form.setValue({
         contactId: this.batch.contactId,
         givenOn: this.batch.givenOn,
@@ -154,6 +164,26 @@ export class LaundryEntryEditorComponent implements OnInit {
     this.prices.update((p) => ({ ...p, [itemType]: price }));
   }
 
+  protected neededBy(itemType: string): string {
+    return this.neededByDates()[itemType] ?? '';
+  }
+
+  protected isNeededByOpen(itemType: string): boolean {
+    return !!this.neededByOpen()[itemType];
+  }
+
+  protected toggleNeededBy(itemType: string): void {
+    const willOpen = !this.isNeededByOpen(itemType);
+    this.neededByOpen.update((o) => ({ ...o, [itemType]: willOpen }));
+    if (!willOpen) {
+      this.neededByDates.update((d) => ({ ...d, [itemType]: '' }));
+    }
+  }
+
+  protected setNeededBy(itemType: string, value: string): void {
+    this.neededByDates.update((d) => ({ ...d, [itemType]: value }));
+  }
+
   protected adjustOther(delta: number): void {
     const current = this.form.controls.otherQty.value;
     this.form.controls.otherQty.setValue(Math.max(0, current + delta));
@@ -180,9 +210,15 @@ export class LaundryEntryEditorComponent implements OnInit {
   protected save(): Promise<boolean> {
     const v = this.form.getRawValue();
     const prices = this.prices();
+    const neededByDates = this.neededByDates();
     const items: LaundryItemLine[] = Object.entries(this.quantities())
       .filter(([, qty]) => qty > 0)
-      .map(([itemType, quantity]) => ({ itemType, quantity, pricePerItem: prices[itemType] || null }));
+      .map(([itemType, quantity]) => ({
+        itemType,
+        quantity,
+        pricePerItem: prices[itemType] || null,
+        neededBy: neededByDates[itemType] || null,
+      }));
 
     const otherType = v.otherType.trim();
     if (otherType && v.otherQty > 0) {

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Gurtundaa.Domain.Entities;
 
 namespace Gurtundaa.Application.Auth;
 
@@ -6,7 +7,8 @@ public sealed record RegisterRequest(
     [Required, EmailAddress, MaxLength(256)] string Email,
     [Required, MinLength(8), MaxLength(128)] string Password,
     [Required, MaxLength(100)] string DisplayName,
-    [Required, MaxLength(20)] string PhoneNumber);
+    [Required, MaxLength(20)] string PhoneNumber,
+    UserType UserType = UserType.Customer);
 
 public sealed record LoginRequest(
     [Required, EmailAddress] string Email,
@@ -28,4 +30,4 @@ public sealed record AuthResponse(
     string RefreshToken,
     UserDto User);
 
-public sealed record UserDto(Guid Id, string Email, string DisplayName, string? PhoneNumber);
+public sealed record UserDto(Guid Id, string Email, string DisplayName, string? PhoneNumber, UserType UserType);

@@ -7,3 +7,9 @@ export const signedInGuard: CanActivateFn = () =>
 
 export const signedOutGuard: CanActivateFn = () =>
   !inject(AuthService).isSignedIn() || inject(Router).createUrlTree(['/']);
+
+export const customerGuard: CanActivateFn = () =>
+  inject(AuthService).user()?.userType !== 'Shop' || inject(Router).createUrlTree(['/']);
+
+export const shopGuard: CanActivateFn = () =>
+  inject(AuthService).user()?.userType === 'Shop' || inject(Router).createUrlTree(['/']);

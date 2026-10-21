@@ -1,0 +1,64 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/marketplace" /></ion-buttons>
+    <ion-title>{{ selectedCategory()?.label ?? 'Browse' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="browse">
+    <aside class="cat-rail">
+      @for (c of categories; track c.key) {
+        <button class="cat-btn" [class.active]="c.key === selectedCategoryKey()" (click)="selectCategory(c.key)">
+          <span class="ic" [style.background]="c.bg">{{ c.icon }}</span>
+          <span class="lbl">{{ c.label }}</span>
+        </button>
+      }
+    </aside>
+
+    <div class="item-pane">
+      <p class="hint">no prices shown — add what you need and request a quote</p>
+
+      @if (selectedCategory(); as c) {
+        <div class="item-grid">
+          @for (item of c.items; track item.key) {
+            <div class="item-card">
+              <div class="item-thumb" [style.background]="c.bg"><img [src]="item.image" [alt]="item.name" loading="lazy" /></div>
+              <div class="name">{{ item.name }}</div>
+
+              @if (item.packOptions.length > 1) {
+                <app-pack-size-picker [itemKey]="item.key" />
+              } @else {
+                <div class="pack">{{ item.pack }}</div>
+
+                @if (cart.quantityOf(item.key) === 0) {
+                  <button class="add-btn" (click)="cart.add(item.key)">ADD</button>
+                } @else {
+                  <div class="stepper">
+                    <button (click)="cart.setQuantity(item.key, cart.quantityOf(item.key) - 1)">
+                      <ion-icon name="remove" />
+                    </button>
+                    <span>{{ cart.quantityOf(item.key) }}</span>
+                    <button (click)="cart.setQuantity(item.key, cart.quantityOf(item.key) + 1)">
+                      <ion-icon name="add" />
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (cart.totalItems() > 0) {
+    <div class="cart-bar" (click)="openCart()">
+      <div class="left">
+        <b>{{ cart.totalItems() }} item{{ cart.totalItems() === 1 ? '' : 's' }} added</b>
+        <small>qty {{ cart.totalQty() }} · tap to review</small>
+      </div>
+      <ion-icon name="cart-outline" />
+    </div>
+  }
+</ion-content>

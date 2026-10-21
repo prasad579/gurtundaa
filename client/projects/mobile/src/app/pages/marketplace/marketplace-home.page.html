@@ -1,0 +1,34 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Marketplace 🛒</ion-title>
+    <ion-button slot="end" fill="clear" (click)="openMyRequests()">
+      <ion-icon slot="icon-only" name="list-outline" />
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="promo ion-padding">
+    <h2>Get the best price, every time</h2>
+    <p>Add items to cart → request a quotation → shops quote you their price</p>
+  </div>
+
+  <div class="cat-grid">
+    @for (c of categories; track c.key) {
+      <div class="cat-card" (click)="openCategory(c.key)">
+        <div class="cat-icon" [style.background]="c.bg">{{ c.icon }}</div>
+        <span>{{ c.label }}</span>
+      </div>
+    }
+  </div>
+
+  @if (cart.totalItems() > 0) {
+    <div class="cart-bar" (click)="openCart()">
+      <div class="left">
+        <b>{{ cart.totalItems() }} item{{ cart.totalItems() === 1 ? '' : 's' }} added</b>
+        <small>qty {{ cart.totalQty() }} · tap to review</small>
+      </div>
+      <ion-icon name="cart-outline" />
+    </div>
+  }
+</ion-content>

@@ -1,10 +1,20 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { HouseholdApi } from '@gurtundaa/shared';
+import { AuthService, HouseholdApi } from '@gurtundaa/shared';
 import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { ellipsisHorizontalOutline, homeOutline, receiptOutline, shirtOutline, waterOutline } from 'ionicons/icons';
+import {
+  cartOutline,
+  downloadOutline,
+  ellipsisHorizontalOutline,
+  homeOutline,
+  medkitOutline,
+  receiptOutline,
+  shirtOutline,
+  storefrontOutline,
+  waterOutline,
+} from 'ionicons/icons';
 import { filter, firstValueFrom } from 'rxjs';
 
 @Component({
@@ -14,11 +24,23 @@ import { filter, firstValueFrom } from 'rxjs';
 })
 export class TabsPage {
   private readonly household = inject(HouseholdApi);
+  private readonly auth = inject(AuthService);
 
+  protected readonly isShop = computed(() => this.auth.user()?.userType === 'Shop');
   protected readonly enabledFeatures = signal<ReadonlySet<string>>(new Set());
 
   constructor() {
-    addIcons({ homeOutline, waterOutline, shirtOutline, receiptOutline, ellipsisHorizontalOutline });
+    addIcons({
+      homeOutline,
+      waterOutline,
+      shirtOutline,
+      receiptOutline,
+      ellipsisHorizontalOutline,
+      cartOutline,
+      downloadOutline,
+      storefrontOutline,
+      medkitOutline,
+    });
     void this.loadFeatures();
 
     // The tabs shell stays mounted across navigation (e.g. to/from the Profile page), so a
@@ -34,6 +56,13 @@ export class TabsPage {
   }
 
   private async loadFeatures(): Promise<void> {
+    // Shop accounts have no HouseholdProfile row at all — calling household.get() for them
+    // would just be a guaranteed 404 on every navigation.
+    if (this.isShop()) {
+      this.enabledFeatures.set(new Set());
+      return;
+    }
+
     try {
       const profile = await firstValueFrom(this.household.get());
       this.enabledFeatures.set(new Set(profile?.enabledFeatures ?? []));

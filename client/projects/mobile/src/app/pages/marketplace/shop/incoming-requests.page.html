@@ -1,0 +1,60 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Incoming Requests 📥</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && requests().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 60px; border-radius: 16px" />
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="empty ion-padding">
+      <span aria-hidden="true">📭</span>
+      <p>no quotation requests yet</p>
+    </div>
+  } @else {
+    <div class="list">
+      @for (r of requests(); track r.id) {
+        <div class="card" (click)="openQuoteSheet(r)">
+          <div class="head">
+            <span class="date">{{ dateLabel(r.createdAt) }}</span>
+            <div class="head-right">
+              @if (r.hasQuoted) {
+                <span class="badge quoted">Quoted</span>
+                <ion-button class="share-btn" fill="clear" size="small" (click)="openShareSheet(r); $event.stopPropagation()">
+                  <ion-icon slot="icon-only" name="share-social-outline" />
+                </ion-button>
+              } @else {
+                <span class="badge">{{ r.targetStatus }}</span>
+              }
+            </div>
+          </div>
+          <div class="pill-row">
+            @if (categoryLabel(r); as cat) {
+              <span class="cat-pill">{{ cat }}</span>
+            }
+            @if (!r.hasQuoted && countdown(r); as cd) {
+              <span class="cd-pill" [class.urgent]="cd === 'Closed'">{{ cd === 'Closed' ? 'Closed' : cd + ' to quote' }}</span>
+            }
+            @if (r.competingShopCount > 0) {
+              <span class="comp-pill">{{ r.competingShopCount }} other shop{{ r.competingShopCount === 1 ? '' : 's' }} quoting</span>
+            }
+          </div>
+          <p class="items">{{ itemsSummary(r) }}</p>
+          @if (r.notes) {
+            <p class="notes">Note: {{ r.notes }}</p>
+          }
+          @if (r.otherItemsCount > 0) {
+            <p class="other-note">+{{ r.otherItemsCount }} other item{{ r.otherItemsCount === 1 ? '' : 's' }} from this order went to other shops</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</ion-content>

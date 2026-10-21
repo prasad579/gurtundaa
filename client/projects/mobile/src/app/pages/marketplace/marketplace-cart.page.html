@@ -1,0 +1,51 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/marketplace" /></ion-buttons>
+    <ion-title>Your Cart</ion-title>
+    @if (cart.lines().length > 0) {
+      <ion-buttons slot="end">
+        <ion-button (click)="openShareSheet()">
+          <ion-icon slot="icon-only" name="share-social-outline" />
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (cart.lines().length === 0) {
+    <div class="empty ion-padding">
+      <span aria-hidden="true">🛒</span>
+      <p>cart's empty — add some items first</p>
+    </div>
+  } @else {
+    <div class="lines">
+      @for (line of cart.lines(); track line.itemKey) {
+        <div class="line">
+          <div class="info">
+            <div class="name">{{ line.name }}</div>
+            @if (!cart.isScalable(line.itemKey)) {
+              <div class="pack">{{ line.pack }}</div>
+            }
+          </div>
+
+          @if (cart.isScalable(line.itemKey)) {
+            <app-pack-size-picker [itemKey]="line.itemKey" />
+          } @else {
+            <div class="stepper">
+              <button (click)="cart.setQuantity(line.itemKey, line.qty - 1)"><ion-icon name="remove" /></button>
+              <span>{{ line.qty }}</span>
+              <button (click)="cart.setQuantity(line.itemKey, line.qty + 1)"><ion-icon name="add" /></button>
+            </div>
+          }
+
+          <button class="remove-btn" (click)="cart.remove(line.itemKey)">
+            <ion-icon name="trash" />
+          </button>
+        </div>
+      }
+    </div>
+
+    <ion-button class="request-btn" expand="block" (click)="openRequestSheet()">Request Quotation →</ion-button>
+  }
+</ion-content>

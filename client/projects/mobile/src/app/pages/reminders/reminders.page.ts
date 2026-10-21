@@ -1,19 +1,35 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { RouterLink } from '@angular/router';
 import {
   AuthService,
+  Bill,
   BRAND,
+  DoseEntry,
+  DoseLogApi,
+  HouseholdApi,
+  LaundryApi,
+  LaundryBatch,
+  Medicine,
+  MedicinesApi,
+  MilkApi,
+  MilkPause,
+  MilkToday,
+  BillsApi,
   PRIORITY_LABELS,
   Reminder,
   ReminderFilter,
   ReminderStats,
   RemindersApi,
   SaveReminderRequest,
+  billUrgency,
   dueLabel,
   emptyStateLine,
   greeting,
   isOverdue,
   randomCheer,
+  rupeeLabel,
+  shortDateLabel,
 } from '@gurtundaa/shared';
 import {
   IonCheckbox,
@@ -49,6 +65,7 @@ import { ReminderEditorComponent } from './reminder-editor.component';
 @Component({
   selector: 'app-reminders',
   imports: [
+    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -79,6 +96,12 @@ export class RemindersPage implements ViewWillEnter {
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly notifications = inject(ReminderNotifications);
+  private readonly household = inject(HouseholdApi);
+  private readonly milkApi = inject(MilkApi);
+  private readonly laundryApi = inject(LaundryApi);
+  private readonly billsApi = inject(BillsApi);
+  private readonly medicinesApi = inject(MedicinesApi);
+  private readonly doseLogApi = inject(DoseLogApi);
 
   protected readonly brand = BRAND;
   protected readonly priorityLabels = PRIORITY_LABELS;
@@ -91,6 +114,43 @@ export class RemindersPage implements ViewWillEnter {
 
   protected readonly dueLabel = dueLabel;
   protected readonly isOverdue = isOverdue;
+  protected readonly rupeeLabel = rupeeLabel;
+  protected readonly shortDateLabel = shortDateLabel;
+
+  // ---------- Cross-module "what needs attention" cards ----------
+  protected readonly milkToday = signal<MilkToday | null>(null);
+  protected readonly milkPause = signal<MilkPause | null>(null);
+  protected readonly laundryActive = signal<LaundryBatch[]>([]);
+  protected readonly bills = signal<Bill[]>([]);
+  protected readonly healthDoses = signal<DoseEntry[]>([]);
+  protected readonly healthMedicines = signal<Medicine[]>([]);
+
+  protected readonly milkMissedSlots = computed(() => {
+    const t = this.milkToday();
+    if (!t) return [];
+    const missed: string[] = [];
+    if (t.morning.enabled && t.morning.status === 'Missed') missed.push('Morning');
+    if (t.evening.enabled && t.evening.status === 'Missed') missed.push('Evening');
+    return missed;
+  });
+
+  protected readonly laundryNextPickup = computed(() =>
+    [...this.laundryActive()]
+      .filter((b) => b.expectedReturn)
+      .sort((a, b) => a.expectedReturn!.localeCompare(b.expectedReturn!))[0] ?? null,
+  );
+
+  protected readonly billsNeedingAttention = computed(() =>
+    this.bills().filter((b) => !b.isPaid && billUrgency(b.dueDate) !== 'Upcoming'),
+  );
+  protected readonly billsPendingAmount = computed(() =>
+    this.billsNeedingAttention().reduce((sum, b) => sum + b.amount, 0),
+  );
+
+  protected readonly healthPendingCount = computed(() => this.healthDoses().filter((d) => d.status === null).length);
+  protected readonly healthLowStock = computed(() =>
+    this.healthMedicines().filter((m) => m.isActive && m.perDayQty > 0 && m.daysRemaining <= 2),
+  );
 
   constructor() {
     addIcons({ add, pencil, trash });
@@ -98,6 +158,7 @@ export class RemindersPage implements ViewWillEnter {
 
   ionViewWillEnter(): void {
     void this.load();
+    void this.loadDashboard();
   }
 
   protected async setFilter(value: unknown): Promise<void> {
@@ -164,6 +225,43 @@ export class RemindersPage implements ViewWillEnter {
       await this.toast("can't reach the server rn 😵‍💫", 'danger');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // Best-effort — a dashboard card failing to load shouldn't block the reminders list itself,
+  // so each module's fetch is wrapped individually rather than one shared try/catch.
+  private async loadDashboard(): Promise<void> {
+    const profile = await firstValueFrom(this.household.get()).catch(() => null);
+    const enabled = new Set(profile?.enabledFeatures ?? []);
+
+    if (enabled.has('milk')) {
+      firstValueFrom(this.milkApi.getToday())
+        .then((t) => this.milkToday.set(t))
+        .catch(() => undefined);
+      firstValueFrom(this.milkApi.listPauses(true))
+        .then((p) => this.milkPause.set(p[0] ?? null))
+        .catch(() => undefined);
+    }
+
+    if (enabled.has('laundry')) {
+      firstValueFrom(this.laundryApi.list('Active'))
+        .then((b) => this.laundryActive.set(b))
+        .catch(() => undefined);
+    }
+
+    if (enabled.has('bills')) {
+      firstValueFrom(this.billsApi.list())
+        .then((b) => this.bills.set(b))
+        .catch(() => undefined);
+    }
+
+    if (enabled.has('medicines')) {
+      firstValueFrom(this.medicinesApi.list())
+        .then((m) => this.healthMedicines.set(m))
+        .catch(() => undefined);
+      firstValueFrom(this.doseLogApi.getToday())
+        .then((d) => this.healthDoses.set(d))
+        .catch(() => undefined);
     }
   }
 

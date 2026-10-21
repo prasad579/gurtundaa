@@ -20,65 +20,141 @@
       </div>
     }
 
-    <section class="card">
-      <div class="section-head">
-        <h3>Active Laundry</h3>
-        <ion-button size="small" fill="solid" (click)="openEntryEditor()">
-          <ion-icon slot="start" name="add" />New Entry
-        </ion-button>
-      </div>
+    @if (primaryContact(); as c) {
+      <section class="card">
+        <div class="mk-row">
+          <div class="avatar">🧺</div>
+          <div class="mk-info">
+            <div class="nm">
+              {{ c.name }}
+              @if (c.isDefault) {
+                <span class="badge-blue">Default</span>
+              }
+            </div>
+            <div class="mt"><ion-icon name="call-outline" /> {{ c.phone }}</div>
+            @if (c.address) {
+              <div class="mt"><ion-icon name="location-outline" /> {{ c.address }}</div>
+            }
+          </div>
+          <div class="mk-acts">
+            <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="ic-btn whatsapp"><ion-icon name="logo-whatsapp" /></a>
+            <a [href]="telLink(c.phone)" class="ic-btn"><ion-icon name="call-outline" /></a>
+          </div>
+        </div>
+        <div class="stats4">
+          <div class="s4i"><div class="lbl">With Dhobi</div><div class="val">{{ withDhobiQty() }}</div><div class="sub">Clothes</div></div>
+          <div class="s4i"><div class="lbl">Active Batches</div><div class="val">{{ active().length }}</div></div>
+          <div class="s4i"><div class="lbl">This Month</div><div class="val small">{{ rupeeLabel(monthPaymentSummary().total) }}</div></div>
+          <div class="s4i">
+            <div class="lbl">Next Pickup</div>
+            @if (nextPickupBatch(); as nb) {
+              <div class="val small">{{ shortDateLabel(nb.expectedReturn!) }}</div>
+            } @else {
+              <div class="val small dim">—</div>
+            }
+          </div>
+        </div>
+      </section>
+    }
 
-      @if (active().length === 0) {
-        <p class="muted">Nothing out at the moment.</p>
-      } @else {
-        <ion-list [inset]="true">
+    <div class="row2" [class.full]="!nextPickupBatch()">
+      <section class="card">
+        <div class="section-head">
+          <h3>Active Laundry</h3>
+          <ion-button size="small" fill="clear" (click)="openEntryEditor()">
+            <ion-icon slot="icon-only" name="add" />
+          </ion-button>
+        </div>
+
+        @if (active().length === 0) {
+          <p class="muted">Nothing out at the moment.</p>
+        } @else {
           @for (b of active(); track b.id) {
-            <ion-item-sliding #activeSliding>
-              <ion-item [button]="true" [detail]="true" (click)="openEntryEditor(b, activeSliding)">
-                <ion-icon slot="start" name="shirt-outline" />
-                <ion-label>
-                  <h2>
-                    {{ b.contactName ?? 'No dhobi set' }}
-                    <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
-                  </h2>
-                  <p>{{ itemsSummary(b) }}</p>
-                  <p class="dates">
-                    Given {{ shortDateLabel(b.givenOn) }}
-                    @if (b.expectedReturn) {
-                      · Expected {{ shortDateLabel(b.expectedReturn) }}
-                    }
-                  </p>
-                  @if (b.contactPhone) {
-                    <div class="item-actions">
-                      <button class="mini-btn wa" (click)="shareBill(b); $event.stopPropagation()">
-                        <ion-icon name="logo-whatsapp" />Share
+            <div class="active-batch">
+              <div class="act-box" (click)="openEntryEditor(b)">
+                <div class="shirt-c"><ion-icon name="shirt-outline" /></div>
+                <div class="ab">
+                  <div class="abt">{{ serviceTypeLabels[b.serviceType] }}</div>
+                  <div class="abq">{{ itemsCount(b) }} Items</div>
+                  @if (batchAmount(b); as amount) {
+                    <div class="aba">
+                      Amount: {{ rupeeLabel(amount) }}
+                      <button
+                        class="paid-badge"
+                        [class.paid]="b.isPaid"
+                        (click)="setPaid(b, !b.isPaid); $event.stopPropagation()"
+                      >
+                        {{ b.isPaid ? 'PAID' : 'PENDING' }}
                       </button>
                     </div>
                   }
-                </ion-label>
-                @if (batchAmount(b); as amount) {
-                  <ion-note slot="end">~{{ rupeeLabel(amount) }}</ion-note>
+                </div>
+                <ion-icon class="edit-hint" name="pencil" />
+              </div>
+              <div class="dates">
+                <div class="dline"><span class="k">Given</span><span class="v">{{ shortDateLabel(b.givenOn) }}</span></div>
+                @if (b.expectedReturn) {
+                  <div class="dline"><span class="k">Return</span><span class="v">{{ shortDateLabel(b.expectedReturn) }}</span></div>
                 }
-              </ion-item>
-              <ion-item-options side="end">
-                <ion-item-option color="success" (click)="markPickedUp(b, activeSliding)">
-                  <ion-icon slot="icon-only" name="checkmark-done-outline" />
-                </ion-item-option>
-                <ion-item-option color="danger" (click)="remove(b, activeSliding)">
-                  <ion-icon slot="icon-only" name="trash" />
-                </ion-item-option>
-              </ion-item-options>
-            </ion-item-sliding>
+              </div>
+              <div class="act-btns">
+                <button class="mbtn g" (click)="markPickedUp(b)"><ion-icon name="checkmark-done-outline" />Picked</button>
+                <button class="mbtn" (click)="openShareSheet(b)"><ion-icon name="share-social-outline" />Share</button>
+                <button class="mbtn danger" (click)="remove(b)"><ion-icon name="trash" /></button>
+              </div>
+            </div>
           }
-        </ion-list>
+        }
+      </section>
+
+      @if (nextPickupBatch(); as nb) {
+        <section class="card">
+          <div class="section-head">
+            <h3><ion-icon name="alarm-outline" />Pickup Reminder</h3>
+          </div>
+          <div class="pause-box">
+            <div class="pb-range">{{ shortDateLabel(nb.expectedReturn!) }}</div>
+            <div class="pb-detail">{{ itemsCount(nb) }} items at {{ nb.contactName ?? 'dhobi' }}</div>
+            <div class="pb-resume"><ion-icon name="time-outline" /> {{ daysUntilLabel(nb.expectedReturn!) }}</div>
+            <div class="pb-btns">
+              @if (nb.contactPhone) {
+                <button class="btn-wa" (click)="notifyPickup(nb)"><ion-icon name="logo-whatsapp" />Ask</button>
+              }
+              <button class="btn-edit" (click)="openEntryEditor(nb)"><ion-icon name="pencil" />Change</button>
+            </div>
+          </div>
+        </section>
       }
-    </section>
+    </div>
+
+    @if (specialReminders().length > 0) {
+      <section class="card">
+        <div class="section-head"><h3>Special Reminders</h3></div>
+        <div class="uc-scroll">
+          @for (r of specialReminders(); track r.item.itemType + r.batch.id) {
+            <div class="uc-item">
+              <div class="uc-tp"><ion-icon name="alarm-outline" />{{ r.item.itemType }}</div>
+              <div class="uc-dt">Need by {{ shortDateLabel(r.item.neededBy!) }}</div>
+              <div class="uc-qty">{{ r.item.quantity }} {{ r.item.quantity === 1 ? 'pc' : 'pcs' }}</div>
+              <div class="uc-rsn">{{ daysUntilLabel(r.item.neededBy!) }} · at {{ r.batch.contactName ?? 'dhobi' }}</div>
+            </div>
+          }
+        </div>
+      </section>
+    }
 
     <section class="card">
       <div class="month-nav">
         <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
         <h3>{{ monthLabel() }}</h3>
         <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+      </div>
+
+      <div class="sum-grid">
+        <div class="sg-item"><div class="sgl">Entries</div><div class="sgv b">{{ monthEntries() }}</div></div>
+        <div class="sg-item"><div class="sgl">Total Items</div><div class="sgv">{{ monthTotalItems() }}</div></div>
+        <div class="sg-item"><div class="sgl">Picked Up</div><div class="sgv g">{{ monthPickedUp() }}</div></div>
+        <div class="sg-item"><div class="sgl">With Dhobi</div><div class="sgv o">{{ monthWithDhobi() }}</div></div>
       </div>
 
       @if (categoryTotals().length === 0) {
@@ -103,6 +179,10 @@
             <div class="pss paid">{{ rupeeLabel(monthPaymentSummary().paid) }}</div>
           </div>
         </div>
+
+        @if (monthPaymentSummary().pending > 0) {
+          <button class="mpaid-btn" (click)="markAllPaidThisMonth()">Mark all as Paid</button>
+        }
       }
     </section>
 
@@ -112,20 +192,19 @@
           <h3>Dhobi Contacts</h3>
           <a routerLink="/contacts" class="manage-link">Manage</a>
         </div>
-        <ion-list [inset]="true">
+        <div class="ct-scroll">
           @for (c of contacts(); track c.id) {
-            <ion-item lines="full">
-              <ion-label>
-                <h2>{{ c.name }}{{ c.isDefault ? ' (default)' : '' }}</h2>
-                <p>{{ c.phone }}</p>
-              </ion-label>
-              <a [href]="telLink(c.phone)" class="icon-btn" slot="end"><ion-icon name="call-outline" /></a>
-              <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="icon-btn whatsapp" slot="end">
-                <ion-icon name="logo-whatsapp" />
-              </a>
-            </ion-item>
+            <div class="ct-item" [class.def]="c.isDefault">
+              <div class="ct-av">🧺</div>
+              <div class="ct-nm">{{ c.name }}</div>
+              <div class="ct-ph">{{ c.phone }}</div>
+              <div class="ct-acts">
+                <a [href]="telLink(c.phone)"><ion-icon name="call-outline" /></a>
+                <a [href]="waLink(c.phone)" target="_blank" rel="noopener"><ion-icon name="logo-whatsapp" /></a>
+              </div>
+            </div>
           }
-        </ion-list>
+        </div>
       </section>
     }
 
@@ -159,6 +238,9 @@
                     @if (b.contactPhone) {
                       <button class="mini-btn wa" (click)="shareBill(b)"><ion-icon name="logo-whatsapp" />Share</button>
                     }
+                    <button class="mini-btn" (click)="shareBillWithOthers(b)">
+                      <ion-icon name="share-social-outline" />Share
+                    </button>
                     @if (b.amount) {
                       <button class="mini-btn" (click)="setPaid(b, !b.isPaid)">
                         <ion-icon [name]="b.isPaid ? 'close' : 'checkmark-done-outline'" />

@@ -16,6 +16,7 @@ export const FEATURE_OPTIONS = [
   { key: 'school', label: 'School', hint: 'School fees, exams & reminders', icon: '🎓' },
   { key: 'milk', label: 'Milk', hint: 'Milk delivery & settlement', icon: '🥛' },
   { key: 'laundry', label: 'Laundry', hint: 'Laundry tracking & reminders', icon: '🧺' },
+  { key: 'marketplace', label: 'Marketplace', hint: 'Get quotes from shops for groceries', icon: '🛒' },
   { key: 'finance', label: 'Finance', hint: 'Expenses, FD & renewals', icon: '💰' },
   { key: 'essentials', label: 'Essentials', hint: 'Home utilities & smart alerts', icon: '🏡' },
 ] as const;

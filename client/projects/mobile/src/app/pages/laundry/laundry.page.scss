@@ -2,13 +2,22 @@
   margin: 12px 16px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: var(--ion-color-step-50, rgb(124 58 237 / 0.05));
+  background: #fff;
+  border: 1px solid var(--ion-color-step-100, #efeaf9);
 
-  h3 { margin: 0 0 8px; font-size: 15px; font-weight: 800; }
+  h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
 }
 
 .hint-card {
   background: rgb(255 196 9 / 0.14);
+  border-color: rgb(255 196 9 / 0.4);
   p { margin: 0; font-size: 12.5px; color: #9a6b00; }
 }
 
@@ -26,11 +35,6 @@
   font-weight: 700;
   color: var(--ion-color-primary);
   text-decoration: none;
-}
-
-.dates {
-  color: var(--ion-color-medium);
-  font-size: 11px;
 }
 
 .icon-btn {
@@ -86,7 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 
   h3 { margin: 0; }
   .icon-btn { width: 28px; height: 28px; font-size: 13px; margin-left: 0; }
@@ -135,12 +139,373 @@
   display: inline-block;
   margin-left: 6px;
   padding: 1px 7px;
+  border: none;
   border-radius: 20px;
   font-size: 9.5px;
   font-weight: 700;
   background: rgb(235 68 90 / 0.12);
   color: #c62828;
   vertical-align: middle;
+  cursor: pointer;
 
   &.paid { background: rgb(45 211 111 / 0.15); color: #2e7d32; }
+}
+
+// ---------- Dhobi contact card ----------
+
+.mk-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgb(124 58 237 / 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  flex-shrink: 0;
+}
+
+.mk-info {
+  flex: 1;
+  min-width: 0;
+
+  .nm {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .mt {
+    font-size: 11px;
+    color: var(--ion-color-medium);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    ion-icon { font-size: 11px; }
+  }
+}
+
+.badge-blue {
+  background: #e8f0fe;
+  color: #1a56a0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.mk-acts {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.ic-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ion-color-step-100, #e8e8e8);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ion-color-primary);
+  font-size: 15px;
+
+  &.whatsapp { color: #25d366; }
+}
+
+.stats4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: 12px;
+  background: var(--ion-color-step-100, #eee);
+  border: 1px solid var(--ion-color-step-100, #eee);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.s4i {
+  background: #fff;
+  padding: 7px 4px;
+  text-align: center;
+
+  .lbl { font-size: 8.5px; color: var(--ion-color-medium); }
+  .val { font-size: 12px; font-weight: 700; margin-top: 2px; }
+  .val.small { font-size: 10px; }
+  .val.dim { color: var(--ion-color-medium); opacity: 0.6; }
+}
+
+// ---------- Active Laundry + Pickup Reminder ----------
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 16px 12px;
+
+  .card { margin: 0; }
+
+  &.full { grid-template-columns: 1fr; }
+}
+
+.active-batch {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  &:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
+}
+
+.act-box {
+  background: rgb(124 58 237 / 0.06);
+  border-radius: 9px;
+  padding: 9px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 7px;
+  cursor: pointer;
+}
+
+// Tapping the whole card opens the editor — this icon just hints at that, matching the "whole
+// row is tappable" pattern already used elsewhere (e.g. History rows).
+.edit-hint {
+  flex-shrink: 0;
+  color: var(--ion-color-medium);
+  opacity: 0.5;
+  font-size: 13px;
+}
+
+.shirt-c {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  background: var(--ion-color-primary, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 15px;
+}
+
+.ab {
+  .abt { font-size: 10px; font-weight: 700; color: var(--ion-color-primary); }
+  .abq { font-size: 17px; font-weight: 800; line-height: 1.2; }
+  .aba { font-size: 10px; color: var(--ion-color-medium); }
+}
+
+.dates {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 7px;
+}
+
+.dline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+
+  .k { color: var(--ion-color-medium); }
+  .v { color: var(--ion-color-dark, #1f1330); font-weight: 600; }
+}
+
+.act-btns {
+  display: flex;
+  gap: 5px;
+}
+
+.mbtn {
+  background: #fff;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 7px;
+  padding: 5px 6px;
+  font-size: 10px;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+  flex: 1;
+
+  ion-icon { font-size: 11px; }
+
+  &.g { background: #43a047; color: #fff; border-color: #43a047; flex: 1.4; }
+  &.danger { flex: 0; color: #c62828; border-color: rgb(235 68 90 / 0.3); }
+}
+
+.pause-box {
+  background: rgb(255 196 9 / 0.14);
+  border: 1px solid rgb(255 196 9 / 0.4);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.pb-range { font-size: 11.5px; font-weight: 700; color: #e65100; }
+.pb-detail { font-size: 10.5px; color: #795548; margin-top: 2px; }
+.pb-resume {
+  font-size: 10.5px;
+  color: #388e3c;
+  font-weight: 700;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  ion-icon { font-size: 12px; }
+}
+
+.pb-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-wa, .btn-edit {
+  flex: 1;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+
+  ion-icon { font-size: 12px; }
+}
+
+.btn-wa { background: #25d366; color: #fff; }
+.btn-edit { background: #fff; color: #e65100; border: 1px solid #ffb74d; }
+
+// ---------- Month summary ----------
+
+.sum-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sg-item {
+  background: var(--ion-color-step-50, #f7f8fb);
+  border-radius: 9px;
+  padding: 8px;
+  text-align: center;
+
+  .sgl { font-size: 10px; color: var(--ion-color-medium); }
+  .sgv { font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .sgv.g { color: #2e7d32; }
+  .sgv.o { color: #f57c00; }
+  .sgv.b { color: var(--ion-color-primary); }
+}
+
+.mpaid-btn {
+  width: 100%;
+  background: #f57c00;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+// ---------- Special reminders strip ----------
+
+.uc-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  margin: 0 -2px;
+}
+
+.uc-item {
+  background: var(--ion-color-step-50, #f7f8fb);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 118px;
+  flex-shrink: 0;
+  border: 1px solid rgb(255 196 9 / 0.4);
+}
+
+.uc-tp {
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 3px;
+  color: #e65100;
+
+  ion-icon { font-size: 12px; }
+}
+
+.uc-dt { font-size: 10px; color: var(--ion-color-medium); margin-bottom: 2px; }
+.uc-qty { font-size: 13px; font-weight: 700; }
+.uc-rsn { font-size: 9.5px; color: var(--ion-color-medium); margin-top: 2px; }
+
+// ---------- Dhobi contacts strip ----------
+
+.ct-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.ct-item {
+  min-width: 108px;
+  flex-shrink: 0;
+  background: var(--ion-color-step-50, #f7f8fb);
+  border: 1px solid var(--ion-color-step-100, #e8eaee);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+
+  &.def { border-color: var(--ion-color-primary); background: rgb(124 58 237 / 0.06); }
+}
+
+.ct-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  margin: 0 auto 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+
+.ct-nm { font-size: 11.5px; font-weight: 700; }
+.ct-ph { font-size: 10px; color: var(--ion-color-medium); }
+
+.ct-acts {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+
+  a { color: var(--ion-color-primary); font-size: 15px; }
+  a:last-child { color: #25d366; }
 }

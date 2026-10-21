@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Shop Profile 🏪</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ion-list lines="full">
+      <ion-item>
+        <ion-input label="shop name" labelPlacement="stacked" formControlName="shopName" />
+      </ion-item>
+      <ion-item>
+        <ion-input label="city" labelPlacement="stacked" formControlName="city" />
+      </ion-item>
+      <ion-item>
+        <ion-input label="address (optional)" labelPlacement="stacked" formControlName="address" />
+      </ion-item>
+    </ion-list>
+
+    <h3 class="section-title">What do you sell?</h3>
+    <p class="hint">Pick every category you stock — customer orders are only routed to you for these.</p>
+    <div class="cat-grid">
+      @for (c of categories; track c.key) {
+        <div class="cat-opt" [class.sel]="selectedCategoryKeys().has(c.key)" (click)="toggleCategory(c.key)">
+          <span class="ic">{{ c.icon }}</span>{{ c.label }}
+          <div class="chk">
+            @if (selectedCategoryKeys().has(c.key)) {
+              <ion-icon name="checkmark" />
+            }
+          </div>
+        </div>
+      }
+    </div>
+    @if (selectedCategoryKeys().size === 0) {
+      <div class="warn">Quotation requests won't reach you until you pick at least one category.</div>
+    } @else {
+      <p class="count-label">{{ categoryCountLabel() }}</p>
+    }
+
+    <ion-button expand="block" class="ion-margin-top" type="submit" [disabled]="busy()">
+      {{ busy() ? 'saving…' : 'save' }}
+    </ion-button>
+  </form>
+</ion-content>

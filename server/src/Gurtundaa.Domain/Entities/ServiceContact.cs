@@ -29,4 +29,5 @@ public enum ServiceContactCategory
     Plumber = 3,
     Family = 4,
     Other = 5,
+    Shop = 6,
 }

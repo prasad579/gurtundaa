@@ -23,6 +23,7 @@ export const CONTACT_CATEGORY_OPTIONS: { value: ServiceContactCategory; label: s
   { value: 'Electrician', label: '⚡ Electrician' },
   { value: 'Plumber', label: '🔧 Plumber' },
   { value: 'Family', label: '👨‍👩‍👧 Family' },
+  { value: 'Shop', label: '🛒 Shop' },
   { value: 'Other', label: '📇 Other' },
 ];
 

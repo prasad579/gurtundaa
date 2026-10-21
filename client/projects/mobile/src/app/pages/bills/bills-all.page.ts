@@ -8,6 +8,7 @@ import {
   rupeeLabel,
 } from '@gurtundaa/shared';
 import {
+  AlertController,
   IonBackButton,
   IonButtons,
   IonContent,
@@ -31,6 +32,7 @@ type FilterKey = 'All' | 'Overdue' | 'DueSoon' | 'Upcoming' | 'Paid';
 export class BillsAllPage implements ViewWillEnter {
   private readonly billsApi = inject(BillsApi);
   private readonly toasts = inject(ToastController);
+  private readonly alerts = inject(AlertController);
 
   protected readonly categoryLabels = BILL_CATEGORY_LABELS;
   protected readonly rupeeLabel = rupeeLabel;
@@ -74,6 +76,19 @@ export class BillsAllPage implements ViewWillEnter {
   }
 
   protected async markPaid(bill: Bill): Promise<void> {
+    if (!bill.isPaid) {
+      const alert = await this.alerts.create({
+        header: 'Mark as paid?',
+        message: `${bill.name} — ${rupeeLabel(bill.amount)}`,
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          { text: 'Confirm', role: 'confirm' },
+        ],
+      });
+      await alert.present();
+      const { role } = await alert.onWillDismiss();
+      if (role !== 'confirm') return;
+    }
     await firstValueFrom(this.billsApi.setPaid(bill.id, { isPaid: !bill.isPaid }));
     await this.load();
   }

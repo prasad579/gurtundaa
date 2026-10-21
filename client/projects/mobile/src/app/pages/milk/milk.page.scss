@@ -332,9 +332,15 @@
   &.pending { background: var(--ion-color-medium, #92949c); }
 }
 
-.share-wa-btn {
-  width: 100%;
+.share-row {
+  display: flex;
+  gap: 8px;
   margin-top: 8px;
+}
+
+.share-wa-btn,
+.share-other-btn {
+  flex: 1;
   background: #25d366;
   color: #fff;
   border: none;
@@ -348,6 +354,11 @@
   gap: 6px;
 
   ion-icon { font-size: 14px; }
+}
+
+.share-other-btn {
+  background: var(--ion-color-step-150, #e8e4f2);
+  color: var(--ion-color-dark, #1f1330);
 }
 
 // ---------- Upcoming horizontal scroll ----------
@@ -365,7 +376,7 @@
   background: var(--ion-color-step-50, #f7f8fb);
   border-radius: 10px;
   padding: 10px;
-  min-width: 118px;
+  min-width: 140px;
   flex-shrink: 0;
   border: 1px solid var(--ion-color-step-100, #e8eaee);
 
@@ -378,11 +389,16 @@
   font-size: 10px;
   font-weight: 700;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 3px;
   margin-bottom: 3px;
+  // Leaves room for the notify/delete icon buttons absolutely positioned in the card's
+  // top-right corner (see .uc-del) — without this, a long label like "Extra Milk (🌅 Morning)"
+  // runs straight under those buttons instead of wrapping clear of them.
+  padding-right: 34px;
+  overflow-wrap: break-word;
 
-  ion-icon { font-size: 12px; }
+  ion-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
   &.ex { color: #2e7d32; }
   &.ps { color: #e65100; }
   &.qc { color: var(--ion-color-primary, #7c3aed); }

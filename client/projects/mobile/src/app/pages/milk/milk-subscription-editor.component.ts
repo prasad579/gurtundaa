@@ -59,7 +59,7 @@ export interface SaveMilkSubscriptionFormResult {
           <ion-item>
             <ion-input
               formControlName="name"
-              label="milkman's name"
+              label="milk delivery person name"
               labelPlacement="stacked"
               placeholder="Raju Milkman"
               [maxlength]="100"
@@ -124,10 +124,10 @@ export interface SaveMilkSubscriptionFormResult {
               />
             </ion-item>
             <ion-item>
-              <ion-input formControlName="morningWindowStart" type="time" label="window start (optional)" labelPlacement="stacked" />
+              <ion-input formControlName="morningWindowStart" type="time" label="delivery timings — from (optional)" labelPlacement="stacked" />
             </ion-item>
             <ion-item>
-              <ion-input formControlName="morningWindowEnd" type="time" label="window end (optional)" labelPlacement="stacked" />
+              <ion-input formControlName="morningWindowEnd" type="time" label="delivery timings — to (optional)" labelPlacement="stacked" />
             </ion-item>
           }
         </ion-list>
@@ -149,10 +149,10 @@ export interface SaveMilkSubscriptionFormResult {
               />
             </ion-item>
             <ion-item>
-              <ion-input formControlName="eveningWindowStart" type="time" label="window start (optional)" labelPlacement="stacked" />
+              <ion-input formControlName="eveningWindowStart" type="time" label="delivery timings — from (optional)" labelPlacement="stacked" />
             </ion-item>
             <ion-item>
-              <ion-input formControlName="eveningWindowEnd" type="time" label="window end (optional)" labelPlacement="stacked" />
+              <ion-input formControlName="eveningWindowEnd" type="time" label="delivery timings — to (optional)" labelPlacement="stacked" />
             </ion-item>
           }
         </ion-list>

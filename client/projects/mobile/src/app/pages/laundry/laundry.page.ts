@@ -6,17 +6,21 @@ import {
   LAUNDRY_SERVICE_TYPE_LABELS,
   LaundryApi,
   LaundryBatch,
+  LaundryItemLine,
   LaundryServiceType,
   ServiceContact,
   ServiceContactsApi,
   formatWhatsAppBill,
   parseDateOnly,
   rupeeLabel,
+  rupeesInWords,
   shareOnWhatsApp,
   shortDateLabel,
   waLink,
 } from '@gurtundaa/shared';
 import {
+  ActionSheetController,
+  AlertController,
   IonButton,
   IonContent,
   IonHeader,
@@ -40,18 +44,24 @@ import {
 import { addIcons } from 'ionicons';
 import {
   add,
+  alarmOutline,
   callOutline,
   checkmarkDoneOutline,
   chevronBack,
   chevronForward,
   close,
+  locationOutline,
   logoWhatsapp,
   pencil,
   peopleOutline,
+  shareSocialOutline,
   shirtOutline,
+  timeOutline,
   trash,
 } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
+import { LaundryNotifications } from '../../services/laundry-notifications';
+import { shareText } from '../../services/share';
 import { LaundryEntryEditorComponent } from './laundry-entry-editor.component';
 import { LaundryPickupComponent } from './laundry-pickup.component';
 
@@ -84,6 +94,9 @@ export class LaundryPage implements ViewWillEnter {
   private readonly contactsApi = inject(ServiceContactsApi);
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
+  private readonly alerts = inject(AlertController);
+  private readonly actionSheets = inject(ActionSheetController);
+  private readonly notifications = inject(LaundryNotifications);
 
   protected readonly rupeeLabel = rupeeLabel;
   protected readonly shortDateLabel = shortDateLabel;
@@ -129,6 +142,35 @@ export class LaundryPage implements ViewWillEnter {
     return { paid, pending, total: paid + pending };
   });
 
+  protected readonly monthEntries = computed(() => this.batchesInMonth().length);
+  protected readonly monthTotalItems = computed(() =>
+    this.batchesInMonth().reduce((sum, b) => sum + b.items.reduce((s, i) => s + i.quantity, 0), 0),
+  );
+  protected readonly monthPickedUp = computed(() => this.batchesInMonth().filter((b) => b.status === 'PickedUp').length);
+  protected readonly monthWithDhobi = computed(() => this.batchesInMonth().filter((b) => b.status === 'Active').length);
+
+  protected readonly primaryContact = computed(() => this.contacts().find((c) => c.isDefault) ?? this.contacts()[0] ?? null);
+
+  protected readonly withDhobiQty = computed(() =>
+    this.active().reduce((sum, b) => sum + b.items.reduce((s, i) => s + i.quantity, 0), 0),
+  );
+
+  private readonly sortedByReturn = computed(() =>
+    [...this.active()].filter((b) => b.expectedReturn).sort((a, b) => a.expectedReturn!.localeCompare(b.expectedReturn!)),
+  );
+
+  protected readonly nextPickupBatch = computed(() => this.sortedByReturn()[0] ?? null);
+
+  protected readonly specialReminders = computed(() => {
+    const entries: { batch: LaundryBatch; item: LaundryItemLine }[] = [];
+    for (const b of this.active()) {
+      for (const item of b.items) {
+        if (item.neededBy) entries.push({ batch: b, item });
+      }
+    }
+    return entries.sort((a, b) => a.item.neededBy!.localeCompare(b.item.neededBy!));
+  });
+
   constructor() {
     addIcons({
       add,
@@ -142,6 +184,10 @@ export class LaundryPage implements ViewWillEnter {
       chevronBack,
       chevronForward,
       close,
+      shareSocialOutline,
+      locationOutline,
+      alarmOutline,
+      timeOutline,
     });
   }
 
@@ -158,6 +204,10 @@ export class LaundryPage implements ViewWillEnter {
   protected changeMonth(delta: number): void {
     const d = this.monthDate();
     this.monthDate.set(new Date(d.getFullYear(), d.getMonth() + delta, 1));
+  }
+
+  protected itemsCount(batch: LaundryBatch): number {
+    return batch.items.reduce((sum, i) => sum + i.quantity, 0);
   }
 
   protected itemsSummary(batch: LaundryBatch): string {
@@ -197,8 +247,8 @@ export class LaundryPage implements ViewWillEnter {
     await this.load();
   }
 
-  protected async markPickedUp(batch: LaundryBatch, sliding: IonItemSliding): Promise<void> {
-    await sliding.close();
+  protected async markPickedUp(batch: LaundryBatch, sliding?: IonItemSliding): Promise<void> {
+    await sliding?.close();
     const modal = await this.modals.create({
       component: LaundryPickupComponent,
       componentProps: { batch },
@@ -222,8 +272,64 @@ export class LaundryPage implements ViewWillEnter {
     await this.load();
   }
 
+  protected async markAllPaidThisMonth(): Promise<void> {
+    const pending = this.batchesInMonth().filter((b) => !b.isPaid && this.batchAmount(b));
+    if (pending.length === 0) return;
+    await Promise.all(pending.map((b) => firstValueFrom(this.laundry.setPaid(b.id, { isPaid: true }))));
+    await this.toast('marked as paid ✅');
+    await this.load();
+  }
+
+  protected daysUntil(dateOnly: string): number {
+    const target = parseDateOnly(dateOnly);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  }
+
+  protected daysUntilLabel(dateOnly: string): string {
+    const days = this.daysUntil(dateOnly);
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue`;
+    return `In ${days} days`;
+  }
+
+  protected notifyPickup(batch: LaundryBatch): void {
+    if (!batch.contactPhone) return;
+    const qty = batch.items.reduce((sum, i) => sum + i.quantity, 0);
+    shareOnWhatsApp(
+      batch.contactPhone,
+      `Hi, checking on my laundry (${qty} item${qty === 1 ? '' : 's'}, given ${shortDateLabel(batch.givenOn)}) — is it ready for pickup?`,
+    );
+  }
+
   protected shareBill(batch: LaundryBatch): void {
     if (!batch.contactPhone) return;
+    shareOnWhatsApp(batch.contactPhone, formatWhatsAppBill(this.buildLaundryBill(batch)));
+  }
+
+  protected async openShareSheet(batch: LaundryBatch): Promise<void> {
+    const sheet = await this.actionSheets.create({
+      header: 'Share bill',
+      buttons: [
+        ...(batch.contactPhone
+          ? [{ text: 'Share via WhatsApp', icon: 'logo-whatsapp', handler: () => this.shareBill(batch) }]
+          : []),
+        { text: 'Share with others', icon: 'share-social-outline', handler: () => void this.shareBillWithOthers(batch) },
+        { text: 'cancel', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  protected async shareBillWithOthers(batch: LaundryBatch): Promise<void> {
+    const bill = this.buildLaundryBill(batch);
+    await shareText(formatWhatsAppBill(bill), bill.title);
+  }
+
+  private buildLaundryBill(batch: LaundryBatch): BillData {
     const amount = this.batchAmount(batch);
     const items: BillLineItem[] = batch.items.map((i) => ({
       label: i.itemType,
@@ -232,20 +338,22 @@ export class LaundryPage implements ViewWillEnter {
       amount: i.pricePerItem ? rupeeLabel(i.pricePerItem * i.quantity) : '',
     }));
     const totalItems = batch.items.reduce((sum, i) => sum + i.quantity, 0);
-    const bill: BillData = {
+    return {
       icon: '🧺',
       title: 'Laundry Bill',
       subtitleLines: [`📅 ${shortDateLabel(batch.givenOn)}`, this.serviceTypeLabels[batch.serviceType]],
       items,
       quantitySummary: { label: 'Total Items', value: String(totalItems) },
-      total: amount ? { label: 'Total Amount', amount: rupeeLabel(amount), isPaid: batch.isPaid } : undefined,
+      total: amount
+        ? { label: 'Total Amount', amount: rupeeLabel(amount), isPaid: batch.isPaid, amountInWords: rupeesInWords(amount) }
+        : undefined,
       closingLine: 'Thank you! 🙏',
     };
-    shareOnWhatsApp(batch.contactPhone, formatWhatsAppBill(bill));
   }
 
-  protected async remove(batch: LaundryBatch, sliding: IonItemSliding): Promise<void> {
-    await sliding.close();
+  protected async remove(batch: LaundryBatch, sliding?: IonItemSliding): Promise<void> {
+    await sliding?.close();
+    if (!(await this.confirmDelete('Delete this laundry entry?'))) return;
     await firstValueFrom(this.laundry.delete(batch.id));
     await this.toast('entry removed');
     await this.load();
@@ -267,11 +375,26 @@ export class LaundryPage implements ViewWillEnter {
       this.contacts.set(contacts);
       this.active.set(active);
       this.history.set(history);
+      void this.notifications.sync(active);
     } catch {
       await this.toast("can't reach the server rn 😵‍💫", 'danger');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async confirmDelete(message: string): Promise<boolean> {
+    const alert = await this.alerts.create({
+      header: 'Delete?',
+      message,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Delete', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onWillDismiss();
+    return role === 'destructive';
   }
 
   private async toast(message: string, color?: string): Promise<void> {

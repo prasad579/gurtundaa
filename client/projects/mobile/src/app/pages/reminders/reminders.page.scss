@@ -37,6 +37,35 @@
   }
 }
 
+// ---------- Cross-module "needs attention" cards ----------
+
+.attn-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 1rem 0.6rem;
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+  border: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  .ic { font-size: 22px; flex-shrink: 0; }
+
+  .txt {
+    flex: 1;
+    min-width: 0;
+
+    .t { font-size: 12.5px; font-weight: 700; color: var(--ion-color-dark, #1f1330); }
+    .s { font-size: 10.5px; color: var(--ion-color-medium); margin-top: 1px; }
+  }
+
+  &.milk { border-left: 3px solid #2dd36f; }
+  &.laundry { border-left: 3px solid #7c3aed; }
+  &.bills { border-left: 3px solid #eb445a; }
+  &.health { border-left: 3px solid #ffc409; }
+}
+
 .filters {
   margin: 0.5rem 1rem 0;
   width: auto;

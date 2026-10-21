@@ -27,6 +27,42 @@
       </ion-tab-button>
     }
 
+    @if (enabledFeatures().has('medicines')) {
+      <ion-tab-button tab="health">
+        <ion-icon name="medkit-outline" />
+        <ion-label>Health</ion-label>
+      </ion-tab-button>
+    }
+
+    @if (enabledFeatures().has('marketplace')) {
+      <ion-tab-button tab="marketplace">
+        <ion-icon name="cart-outline" />
+        <ion-label>Marketplace</ion-label>
+      </ion-tab-button>
+    }
+
+    @if (isShop()) {
+      <ion-tab-button tab="shop/incoming-requests">
+        <ion-icon name="download-outline" />
+        <ion-label>Requests</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="shop/orders">
+        <ion-icon name="cube-outline" />
+        <ion-label>Orders</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="shop/price-list">
+        <ion-icon name="pricetag-outline" />
+        <ion-label>Prices</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="shop/profile">
+        <ion-icon name="storefront-outline" />
+        <ion-label>Shop</ion-label>
+      </ion-tab-button>
+    }
+
     <ion-tab-button tab="more">
       <ion-icon name="ellipsis-horizontal-outline" />
       <ion-label>More</ion-label>

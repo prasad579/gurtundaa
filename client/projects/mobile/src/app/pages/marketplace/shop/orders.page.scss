@@ -1,0 +1,254 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 80px;
+  gap: 8px;
+
+  span {
+    font-size: 40px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+  }
+}
+
+.list {
+  padding: 8px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-title {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.won {
+  background: #f1f8e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.won-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .won-ic {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #43a047;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .t {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1b5e20;
+  }
+
+  b {
+    margin-left: auto;
+    font-size: 15px;
+    color: #1b5e20;
+  }
+}
+
+.share-btn {
+  --padding-start: 4px;
+  --padding-end: 4px;
+  height: 24px;
+  margin: 0 0 0 4px;
+
+  ion-icon {
+    font-size: 16px;
+    color: var(--ion-color-primary, #4338ca);
+  }
+}
+
+.pack {
+  background: #fff;
+  border-radius: 10px;
+  padding: 7px 10px;
+  margin-top: 9px;
+}
+
+.pk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--ion-color-dark, #111);
+  border-bottom: 1px solid var(--ion-color-step-50, #f2f2f2);
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .cb {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #a5d6a7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 9px;
+    color: #fff;
+  }
+
+  &.done {
+    .cb {
+      background: #43a047;
+      border-color: #43a047;
+    }
+
+    span {
+      color: var(--ion-color-medium);
+      text-decoration: line-through;
+    }
+  }
+
+  span {
+    flex: 1;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 11px;
+    color: var(--ion-color-medium);
+  }
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 9px;
+
+  .stp {
+    flex: 1;
+    text-align: center;
+    font-size: 9px;
+    color: var(--ion-color-medium);
+
+    .sd {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--ion-color-step-150, #e0e0e0);
+      margin-bottom: 3px;
+    }
+
+    &.on {
+      color: #2e7d32;
+      font-weight: 600;
+
+      .sd {
+        background: #43a047;
+      }
+    }
+  }
+}
+
+.act-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+
+  .ab {
+    flex: 1;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: var(--ion-color-primary, #4338ca);
+
+    &.wa {
+      background: #25d366;
+      color: #fff;
+      border-color: #25d366;
+    }
+
+    &.go {
+      background: #43a047;
+      color: #fff;
+      border-color: #43a047;
+    }
+  }
+}
+
+.card {
+  background: var(--ion-color-light, #fff);
+  border: 1px solid var(--ion-color-step-100, #ece7f6);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+
+.lost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ion-color-step-50, #f2f2f2);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .li {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    background: var(--ion-color-step-100, #f3f3f3);
+    color: var(--ion-color-medium);
+
+    &.won {
+      background: #e8f5e9;
+      color: #43a047;
+    }
+
+    &.lost {
+      background: #ffebee;
+      color: #e53935;
+    }
+  }
+
+  .lt {
+    flex: 1;
+    min-width: 0;
+
+    .a {
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    .b {
+      font-size: 9.5px;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  .lr {
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+}

@@ -13,6 +13,7 @@
 .item-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 8px 10px;
   border-radius: 12px;
@@ -31,6 +32,27 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+.needed-toggle {
+  flex-basis: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 10.5px;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  padding: 0;
+}
+
+.needed-date {
+  flex-basis: 100%;
+  border: 1px solid var(--ion-color-step-150, #ddd);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--ion-color-dark, #1f1330);
 }
 
 .stepper {
@@ -106,6 +128,8 @@
   color: var(--ion-color-medium);
   margin: 0 4px 10px;
 }
+
+ion-label p { font-size: 10.5px; color: var(--ion-color-medium); white-space: normal; }
 
 .price-input {
   display: flex;

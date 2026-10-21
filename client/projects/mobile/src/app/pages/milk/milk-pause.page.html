@@ -67,14 +67,26 @@
           <ion-datetime-button datetime="pause-till" />
         </div>
       </div>
-      <ion-modal [keepContentsMounted]="true">
+      <ion-modal #fromModal [keepContentsMounted]="true">
         <ng-template>
-          <ion-datetime id="pause-from" presentation="date" [value]="startDate()" [min]="today" (ionChange)="onStartDateChange($any($event.detail.value))" />
+          <ion-datetime
+            id="pause-from"
+            presentation="date"
+            [value]="startDate()"
+            [min]="today"
+            (ionChange)="onStartDateChange($any($event.detail.value)); fromModal.dismiss()"
+          />
         </ng-template>
       </ion-modal>
-      <ion-modal [keepContentsMounted]="true">
+      <ion-modal #tillModal [keepContentsMounted]="true">
         <ng-template>
-          <ion-datetime id="pause-till" presentation="date" [value]="endDate()" [min]="startDate()" (ionChange)="onEndDateChange($any($event.detail.value))" />
+          <ion-datetime
+            id="pause-till"
+            presentation="date"
+            [value]="endDate()"
+            [min]="startDate()"
+            (ionChange)="onEndDateChange($any($event.detail.value)); tillModal.dismiss()"
+          />
         </ng-template>
       </ion-modal>
 

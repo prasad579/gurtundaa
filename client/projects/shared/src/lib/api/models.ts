@@ -31,11 +31,14 @@ export interface ReminderStats {
   done: number;
 }
 
+export type UserType = 'Customer' | 'Shop';
+
 export interface User {
   id: string;
   email: string;
   displayName: string;
   phoneNumber: string | null;
+  userType: UserType;
 }
 
 export interface AuthResponse {
@@ -53,6 +56,7 @@ export interface LoginRequest {
 export interface RegisterRequest extends LoginRequest {
   displayName: string;
   phoneNumber: string;
+  userType?: UserType;
 }
 
 export interface RequestOtpRequest {
@@ -79,9 +83,20 @@ export interface HouseholdProfile {
 
 export type SaveHouseholdProfileRequest = HouseholdProfile;
 
+// ---------- Shop profile (marketplace shop accounts) ----------
+
+export interface ShopProfile {
+  shopName: string;
+  city: string | null;
+  address: string | null;
+  servedCategoryKeys: string[];
+}
+
+export type SaveShopProfileRequest = ShopProfile;
+
 // ---------- Service contacts (general household directory) ----------
 
-export type ServiceContactCategory = 'Milk' | 'Laundry' | 'Electrician' | 'Plumber' | 'Family' | 'Other';
+export type ServiceContactCategory = 'Milk' | 'Laundry' | 'Electrician' | 'Plumber' | 'Family' | 'Other' | 'Shop';
 
 export interface ServiceContact {
   id: string;
@@ -264,6 +279,8 @@ export interface LaundryItemLine {
   itemType: string;
   quantity: number;
   pricePerItem?: number | null;
+  /** Flags this specific item for an earlier pickup than the rest of the batch (e.g. school uniform needed sooner). */
+  neededBy?: string | null;
 }
 
 export interface LaundryBatch {
@@ -343,4 +360,273 @@ export interface SaveBillRequest {
 
 export interface SetBillPaidRequest {
   isPaid: boolean;
+}
+
+// ---------- Marketplace quotations ----------
+
+export type QuotationRequestStatus = 'Open' | 'Closed' | 'Cancelled';
+
+export type QuoteStatus = 'Submitted' | 'Accepted' | 'Rejected' | 'Withdrawn';
+
+export type QuotationRequestTargetStatus = 'Sent' | 'Viewed' | 'Quoted' | 'Declined';
+
+export interface QuotationItemLine {
+  itemKey: string;
+  name: string;
+  qty: number;
+  pack: string;
+}
+
+export interface QuoteItemLine {
+  itemKey: string;
+  name: string;
+  qty: number;
+  pack: string;
+  unitPrice: number;
+}
+
+export interface SubmitQuotationRequest {
+  items: QuotationItemLine[];
+  notes?: string | null;
+  shopUserIds: string[];
+  quotesCloseAt?: string | null;
+}
+
+export interface QuotationRequest {
+  id: string;
+  status: QuotationRequestStatus;
+  items: QuotationItemLine[];
+  notes: string | null;
+  acceptedQuoteId: string | null;
+  createdAt: string;
+  quoteCount: number;
+  lowestQuoteAmount: number | null;
+  quotesCloseAt: string | null;
+}
+
+export type FulfillmentStatus = 'Accepted' | 'Packing' | 'OutForDelivery' | 'Delivered';
+
+export interface Quote {
+  id: string;
+  quotationRequestId: string;
+  shopUserId: string;
+  shopName: string;
+  status: QuoteStatus;
+  items: QuoteItemLine[];
+  totalAmount: number;
+  deliveryChargeAmount: number;
+  estimatedDeliveryMinutes: number | null;
+  validUntil: string | null;
+  note: string | null;
+  createdAt: string;
+  fulfillmentStatus: FulfillmentStatus | null;
+  packedItemKeys: string[];
+  /** Set for the customer's view of any quote. */
+  shopPhone: string | null;
+  /** Set only for the shop's own view of a quote it has won (privacy: shared only after acceptance). */
+  customerName: string | null;
+  customerPhone: string | null;
+}
+
+export interface TogglePackedItemRequest {
+  itemKey: string;
+}
+
+export interface AdvanceFulfillmentRequest {
+  status: FulfillmentStatus;
+}
+
+export interface PendingShop {
+  shopUserId: string;
+  shopName: string;
+  status: QuotationRequestTargetStatus;
+}
+
+export interface CategoryQuoteCount {
+  categoryKey: string;
+  quoteCount: number;
+}
+
+export interface QuotationRequestDetail {
+  id: string;
+  status: QuotationRequestStatus;
+  items: QuotationItemLine[];
+  notes: string | null;
+  acceptedQuoteId: string | null;
+  createdAt: string;
+  quotes: Quote[];
+  comparison: PriceComparison | null;
+  pendingShops: PendingShop[];
+  quotesCloseAt: string | null;
+  categoryQuoteCounts: CategoryQuoteCount[];
+}
+
+export interface AcceptQuoteRequest {
+  quoteId: string;
+}
+
+export interface ShopSummary {
+  userId: string;
+  shopName: string;
+  city: string | null;
+  servedCategoryKeys: string[];
+}
+
+export interface SubmitQuoteItemLine {
+  itemKey: string;
+  unitPrice: number;
+}
+
+export interface SubmitQuoteRequest {
+  items: SubmitQuoteItemLine[];
+  note?: string | null;
+  deliveryChargeAmount: number;
+  estimatedDeliveryMinutes?: number | null;
+  validUntil?: string | null;
+}
+
+export interface ShopPriceListItem {
+  itemKey: string;
+  unitPrice: number;
+}
+
+export interface SavePriceListRequest {
+  items: ShopPriceListItem[];
+}
+
+export interface PriceListEntry {
+  itemKey: string;
+  unitPrice: number;
+  previousUnitPrice: number | null;
+  updatedAt: string;
+}
+
+export interface IncomingQuotationRequest {
+  id: string;
+  items: QuotationItemLine[];
+  notes: string | null;
+  createdAt: string;
+  targetStatus: QuotationRequestTargetStatus;
+  hasQuoted: boolean;
+  /** Items in this request outside your shop's declared categories — not shown to you. */
+  otherItemsCount: number;
+  quotesCloseAt: string | null;
+  /** Other shops also competing for these categories — count only, no names or prices (blind bidding). */
+  competingShopCount: number;
+}
+
+export interface ItemPriceRow {
+  itemKey: string;
+  name: string;
+  /** shopUserId -> unit price, or null/absent if that shop didn't quote this item. */
+  priceByShop: Record<string, number | null>;
+  cheapestShopUserId: string | null;
+}
+
+/** Only present once 2+ shops have quoted on the same request. */
+export interface PriceComparison {
+  rows: ItemPriceRow[];
+  cheapestTotalShopUserId: string;
+  cheapestTotalAmount: number;
+}
+
+// ---------- Health & Medicines ----------
+
+export interface HouseholdMember {
+  id: string;
+  name: string;
+  relation: string;
+  avatarEmoji: string;
+}
+
+export interface SaveHouseholdMemberRequest {
+  name: string;
+  relation: string;
+  avatarEmoji: string;
+}
+
+export type MedicineMode = 'Daily' | 'Course';
+
+export type FoodTiming = 'AnyTime' | 'BeforeFood' | 'AfterFood';
+
+export interface Medicine {
+  id: string;
+  memberId: string;
+  memberName: string;
+  memberAvatarEmoji: string;
+  name: string;
+  mode: MedicineMode;
+  courseDays: number | null;
+  morningQty: number;
+  afternoonQty: number;
+  eveningQty: number;
+  nightQty: number;
+  foodTiming: FoodTiming;
+  stockCount: number;
+  startDate: string;
+  isActive: boolean;
+  perDayQty: number;
+  daysRemaining: number;
+  lastDoseDate: string | null;
+  refillReminderDate: string | null;
+  createdAt: string;
+}
+
+export interface SaveMedicineRequest {
+  memberId: string;
+  name: string;
+  mode: MedicineMode;
+  courseDays?: number | null;
+  morningQty: number;
+  afternoonQty: number;
+  eveningQty: number;
+  nightQty: number;
+  foodTiming: FoodTiming;
+  stockCount: number;
+  startDate: string;
+}
+
+export type DoseSlot = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
+
+export type DoseStatus = 'Taken' | 'Skipped';
+
+export interface DoseEntry {
+  medicineId: string;
+  medicineName: string;
+  memberId: string;
+  memberName: string;
+  memberAvatarEmoji: string;
+  slot: DoseSlot;
+  qty: number;
+  foodTiming: FoodTiming;
+  /** `null` means still pending (not yet taken or skipped). */
+  status: DoseStatus | null;
+  stockLeft: number;
+  daysRemaining: number;
+}
+
+export interface SetDoseStatusRequest {
+  status: DoseStatus | null;
+}
+
+export interface PrescriptionDto {
+  id: string;
+  memberId: string;
+  memberName: string;
+  memberAvatarEmoji: string;
+  doctorName: string;
+  doctorSpecialty: string | null;
+  visitDate: string;
+  revisitDate: string | null;
+  medicines: Medicine[];
+  createdAt: string;
+}
+
+export interface SavePrescriptionRequest {
+  memberId: string;
+  doctorName: string;
+  doctorSpecialty?: string | null;
+  visitDate: string;
+  revisitDate?: string | null;
+  medicines: SaveMedicineRequest[];
 }

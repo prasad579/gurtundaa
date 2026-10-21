@@ -6,6 +6,8 @@ public class AppUser : IdentityUser<Guid>
 {
     public string DisplayName { get; set; } = string.Empty;
 
+    public UserType UserType { get; set; } = UserType.Customer;
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public ICollection<Reminder> Reminders { get; set; } = new List<Reminder>();

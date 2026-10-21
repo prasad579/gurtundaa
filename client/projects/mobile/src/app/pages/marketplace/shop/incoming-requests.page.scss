@@ -1,0 +1,133 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 80px;
+  gap: 8px;
+
+  span {
+    font-size: 40px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+  }
+}
+
+.list {
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--ion-color-light, #fff);
+  border: 1px solid var(--ion-color-step-100, #ece7f6);
+  border-radius: 14px;
+  padding: 12px 14px;
+
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+
+    .date {
+      font-size: 11px;
+      color: var(--ion-color-medium);
+    }
+
+    .head-right {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .share-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 24px;
+      margin: 0;
+
+      ion-icon {
+        font-size: 16px;
+        color: var(--ion-color-primary, #7c3aed);
+      }
+    }
+
+    .badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--ion-color-step-100, #ece7f6);
+
+      &.quoted {
+        background: rgb(34 197 94 / 0.15);
+        color: #15803d;
+      }
+    }
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+
+  .cat-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgb(124 58 237 / 0.1);
+    color: var(--ion-color-primary, #7c3aed);
+  }
+
+  .cd-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff3e0;
+    color: #e65100;
+
+    &.urgent {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+
+  .comp-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--ion-color-step-100, #f3f3f3);
+    color: var(--ion-color-medium, #888);
+  }
+
+  .items {
+    font-size: 13px;
+    margin: 0 0 4px;
+  }
+
+  .notes {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    margin: 0;
+  }
+
+  .other-note {
+    font-size: 10.5px;
+    color: var(--ion-color-medium);
+    font-style: italic;
+    margin: 4px 0 0;
+  }
+}

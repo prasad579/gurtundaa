@@ -1,0 +1,31 @@
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="wrap">
+    <header class="hero">
+      <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
+      <h1 class="gradient-text">{{ brand.name }}</h1>
+      <p>a few details about your shop</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-input label="shop name" labelPlacement="floating" formControlName="shopName" autocomplete="organization" />
+        </ion-item>
+        <ion-item>
+          <ion-input label="city" labelPlacement="floating" formControlName="city" />
+        </ion-item>
+        <ion-item>
+          <ion-input label="address (optional)" labelPlacement="floating" formControlName="address" />
+        </ion-item>
+      </ion-list>
+
+      @if (error(); as message) {
+        <ion-text color="danger"><p class="error" role="alert">{{ message }}</p></ion-text>
+      }
+
+      <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
+        {{ busy() ? 'one sec…' : 'finish setup ✨' }}
+      </ion-button>
+    </form>
+  </div>
+</ion-content>

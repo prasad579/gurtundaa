@@ -1,0 +1,274 @@
+.card {
+  margin: 12px 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  h3 { margin: 0; }
+}
+
+.muted { color: var(--ion-color-medium); font-size: 13px; margin: 4px 0; }
+
+// ---------- Low-stock alert banner ----------
+
+.alert-banner {
+  margin: 12px 16px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgb(235 68 90 / 0.08);
+  border: 1px solid rgb(235 68 90 / 0.3);
+
+  .al-ic { font-size: 18px; flex-shrink: 0; }
+
+  .al-txt {
+    flex: 1;
+    min-width: 0;
+
+    .t { font-size: 12px; font-weight: 700; color: #c62828; }
+    .s { font-size: 10.5px; color: var(--ion-color-medium); margin-top: 1px; }
+  }
+}
+
+// ---------- Today's Medicines ----------
+
+.slot-group {
+  margin-bottom: 12px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.slot-hd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  .ic { font-size: 15px; }
+  .sh { font-size: 12px; font-weight: 700; }
+  .count {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: rgb(45 211 111 / 0.15);
+    color: #2e7d32;
+  }
+  .time { font-size: 10px; color: var(--ion-color-medium); margin-left: auto; }
+}
+
+.dose {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
+  border-radius: 9px;
+  padding: 8px;
+  margin-bottom: 5px;
+  cursor: pointer;
+
+  &:last-child { margin-bottom: 0; }
+  &.done { background: rgb(45 211 111 / 0.1); }
+  &.skipped { opacity: 0.6; }
+}
+
+.d-chk {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ion-color-step-150, #ddd);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+
+  .dose.done & { background: #43a047; border-color: #43a047; }
+
+  ion-icon { font-size: 13px; }
+}
+
+.d-txt {
+  flex: 1;
+  min-width: 0;
+
+  .dn { font-size: 12px; font-weight: 700; }
+  .ds { font-size: 10px; color: var(--ion-color-medium); margin-top: 1px; }
+}
+
+.who {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: rgb(124 58 237 / 0.1);
+  color: var(--ion-color-primary);
+  margin-left: 3px;
+}
+
+.d-r {
+  text-align: right;
+  flex-shrink: 0;
+
+  .left { font-size: 11px; font-weight: 700; color: #2e7d32; }
+  .left.low { color: #c62828; }
+  .lsub { font-size: 9px; color: var(--ion-color-medium); }
+}
+
+// ---------- Family members strip ----------
+
+.ct-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.ct-item {
+  min-width: 90px;
+  flex-shrink: 0;
+  background: var(--ion-color-step-50, #f7f8fb);
+  border: 1px solid var(--ion-color-step-100, #e8eaee);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ct-av {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.ct-nm { font-size: 11.5px; font-weight: 700; }
+.ct-rel { font-size: 10px; color: var(--ion-color-medium); }
+
+.add-tile {
+  min-width: 78px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgb(124 58 237 / 0.06);
+  border: 1.5px dashed rgb(124 58 237 / 0.35);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--ion-color-primary);
+
+  ion-icon { font-size: 18px; }
+  span { font-size: 9.5px; font-weight: 700; text-align: center; }
+}
+
+// ---------- Stock Left ----------
+
+.stk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+  cursor: pointer;
+
+  &:last-of-type { border-bottom: none; }
+}
+
+.stk-info {
+  flex: 1;
+  min-width: 0;
+
+  .sn { font-size: 12px; font-weight: 700; }
+  .ss { font-size: 10px; color: var(--ion-color-medium); margin: 1px 0 4px; }
+}
+
+.bar {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--ion-color-step-100, #eee);
+  overflow: hidden;
+  width: 120px;
+
+  div {
+    height: 100%;
+    border-radius: 4px;
+    background: #43a047;
+
+    &.low { background: #eb445a; }
+  }
+}
+
+.stk-r {
+  text-align: right;
+  flex-shrink: 0;
+
+  b { font-size: 12px; display: block; color: #2e7d32; }
+  b.low { color: #c62828; }
+  span { font-size: 9.5px; color: var(--ion-color-medium); }
+}
+
+.del-btn {
+  background: none;
+  border: none;
+  color: var(--ion-color-medium);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+// ---------- Prescriptions ----------
+
+.rx-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  &:last-of-type { border-bottom: none; }
+}
+
+.rx-ic { font-size: 18px; flex-shrink: 0; }
+
+.rx-txt {
+  flex: 1;
+  min-width: 0;
+
+  .rn { font-size: 12px; font-weight: 700; }
+  .rs { font-size: 10px; color: var(--ion-color-medium); margin-top: 1px; }
+}
+
+// ---------- Add button ----------
+
+.fab-add {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  --border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  --padding-start: 0;
+  --padding-end: 0;
+  font-size: 22px;
+  z-index: 10;
+}

@@ -6,7 +6,10 @@ namespace Gurtundaa.Application.Laundry;
 public sealed record LaundryItemLine(
     [Required, MaxLength(50)] string ItemType,
     [Range(1, 999)] int Quantity,
-    decimal? PricePerItem = null);
+    decimal? PricePerItem = null,
+    // Lets a specific item (e.g. school uniform) be flagged for an earlier pickup than the rest
+    // of the batch's ExpectedReturn — surfaced as a "Special Reminder" separate from the batch date.
+    DateOnly? NeededBy = null);
 
 public sealed record LaundryBatchDto(
     Guid Id,

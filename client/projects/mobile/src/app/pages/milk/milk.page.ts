@@ -14,6 +14,7 @@ import {
   MilkQuantityChange,
   MilkSlot,
   MilkSlotState,
+  SaveMilkExtraRequestRequest,
   SaveMilkPauseRequest,
   SaveMilkQuantityChangeRequest,
   MilkSubscription,
@@ -26,6 +27,7 @@ import {
   litresLabel,
   pauseRangeLabel,
   rupeeLabel,
+  rupeesInWords,
   shareOnWhatsApp,
   shortDateLabel,
   timeOfDayLabel,
@@ -62,9 +64,11 @@ import {
   logoWhatsapp,
   pause,
   pauseOutline,
+  shareSocialOutline,
   trash,
 } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
+import { shareText } from '../../services/share';
 import { MilkCalendarComponent } from './milk-calendar.component';
 import { MilkExtraEditorComponent } from './milk-extra-editor.component';
 import { MilkPauseEditorComponent } from './milk-pause-editor.component';
@@ -196,6 +200,7 @@ export class MilkPage implements ViewWillEnter {
       close,
       pause,
       checkmarkDoneOutline,
+      shareSocialOutline,
     });
   }
 
@@ -292,6 +297,14 @@ export class MilkPage implements ViewWillEnter {
           }))
       : [];
 
+    // Lets you log extra consumed on this exact day — past or future — without re-picking the
+    // date in a separate sheet.
+    const addExtraButton = {
+      text: 'Add Extra',
+      icon: 'add',
+      handler: () => void this.openExtraEditor(day.date),
+    };
+
     // Plain text, not HTML — Ionic's alert escapes the message by default, which is what we want
     // since `reason` is free-text the user typed; `white-space: pre-line` (global styles) turns
     // the \n's into real line breaks without needing any HTML at all.
@@ -300,7 +313,7 @@ export class MilkPage implements ViewWillEnter {
       subHeader: statusLabel,
       message: lines.join('\n'),
       cssClass: 'day-detail-alert',
-      buttons: [...toggleButtons, ...notifyButtons, 'Close'],
+      buttons: [...toggleButtons, addExtraButton, ...notifyButtons, 'Close'],
     });
     await alert.present();
   }
@@ -330,9 +343,22 @@ export class MilkPage implements ViewWillEnter {
 
   protected shareSettlement(): void {
     const c = this.contact();
+    const bill = this.buildSettlementBill();
+    if (!c || !bill) return;
+    shareOnWhatsApp(c.phone, formatWhatsAppBill(bill));
+  }
+
+  protected async shareSettlementWithOthers(): Promise<void> {
+    const bill = this.buildSettlementBill();
+    if (!bill) return;
+    await shareText(formatWhatsAppBill(bill), bill.title);
+  }
+
+  private buildSettlementBill(): BillData | null {
     const m = this.month();
-    if (!c || !m) return;
+    if (!m) return null;
     const s = m.summary;
+    const totalDays = s.planned + s.delivered + s.paused + s.missed;
 
     const items: BillLineItem[] = [
       { label: 'Regular', qty: litresLabel(s.regularLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.regularAmount) },
@@ -341,15 +367,25 @@ export class MilkPage implements ViewWillEnter {
       items.push({ label: 'Extra', qty: litresLabel(s.extraLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.extraAmount) });
     }
 
-    const bill: BillData = {
+    const dayParts: string[] = [`${s.delivered} delivered`];
+    if (s.missed > 0) dayParts.push(`${s.missed} missed`);
+    if (s.paused > 0) dayParts.push(`${s.paused} paused`);
+    if (s.planned > 0) dayParts.push(`${s.planned} upcoming`);
+
+    return {
       icon: '🥛',
       title: `Milk Bill — ${this.monthLabel()}`,
+      subtitleLines: [`📅 ${dayParts.join(' · ')} (of ${totalDays} days)`],
       items,
       quantitySummary: { label: 'Total Liters', value: litresLabel(s.regularLitres + s.extraLitres) },
-      total: { label: 'Total Amount', amount: rupeeLabel(s.totalAmount), isPaid: s.isPaid },
+      total: {
+        label: 'Total Amount',
+        amount: rupeeLabel(s.totalAmount),
+        isPaid: s.isPaid,
+        amountInWords: rupeesInWords(s.totalAmount),
+      },
       closingLine: 'Thank you! 🙏',
     };
-    shareOnWhatsApp(c.phone, formatWhatsAppBill(bill));
   }
 
   protected async openSubscriptionEditor(): Promise<void> {
@@ -438,6 +474,7 @@ export class MilkPage implements ViewWillEnter {
   }
 
   protected async cancelPause(pause: MilkPause): Promise<void> {
+    if (!(await this.confirmDelete('Cancel this pause?'))) return;
     await firstValueFrom(this.milk.deletePause(pause.id));
     await this.toast('pause cancelled');
     await this.load();
@@ -493,30 +530,36 @@ export class MilkPage implements ViewWillEnter {
     );
   }
 
-  protected async openExtraEditor(): Promise<void> {
+  protected async openExtraEditor(initialDate?: string): Promise<void> {
     const modal = await this.modals.create({
       component: MilkExtraEditorComponent,
+      componentProps: initialDate ? { initialDate } : undefined,
       breakpoints: [0, 0.75, 1],
       initialBreakpoint: 0.75,
     });
     await modal.present();
 
-    const { data, role } = await modal.onWillDismiss();
-    if (role !== 'save' || !data) return;
+    const { data, role } = await modal.onWillDismiss<SaveMilkExtraRequestRequest[]>();
+    if (role !== 'save' || !data || data.length === 0) return;
 
-    const created = await firstValueFrom(this.milk.createExtraRequest(data));
+    const created = await Promise.all(data.map((request) => firstValueFrom(this.milk.createExtraRequest(request))));
     await this.load();
 
+    const message = created.length === 1 ? 'extra milk requested 🥛' : `extra milk requested for ${created.length} days 🥛`;
     const toast = await this.toasts.create({
-      message: 'extra milk requested 🥛',
+      message,
       duration: 4000,
       position: 'bottom',
-      buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyExtra(created) }] : [],
+      buttons:
+        created.length === 1 && this.contact()
+          ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyExtra(created[0]) }]
+          : [],
     });
     await toast.present();
   }
 
   protected async cancelExtra(extra: MilkExtraRequestItem): Promise<void> {
+    if (!(await this.confirmDelete('Remove this extra milk request?'))) return;
     await firstValueFrom(this.milk.deleteExtraRequest(extra.id));
     await this.toast('extra request cancelled');
     await this.load();
@@ -540,6 +583,7 @@ export class MilkPage implements ViewWillEnter {
   }
 
   protected async cancelQuantityChange(change: MilkQuantityChange): Promise<void> {
+    if (!(await this.confirmDelete('Cancel this quantity change?'))) return;
     await firstValueFrom(this.milk.deleteQuantityChange(change.id));
     await this.toast('quantity change cancelled');
     await this.load();
@@ -600,6 +644,20 @@ export class MilkPage implements ViewWillEnter {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async confirmDelete(message: string): Promise<boolean> {
+    const alert = await this.alerts.create({
+      header: 'Delete?',
+      message,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Delete', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onWillDismiss();
+    return role === 'destructive';
   }
 
   private async toast(message: string, color?: string): Promise<void> {

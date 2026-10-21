@@ -1,0 +1,46 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/marketplace" /></ion-buttons>
+    <ion-title>My Requests</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && requests().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 60px; border-radius: 16px" />
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="empty ion-padding">
+      <span aria-hidden="true">🧾</span>
+      <p>no quotation requests yet</p>
+    </div>
+  } @else {
+    <div class="list">
+      @for (r of requests(); track r.id) {
+        <div class="card" (click)="openDetail(r)">
+          <div class="head">
+            <span class="status" [class]="r.status.toLowerCase()">{{ r.status }}</span>
+            <div class="head-right">
+              <span class="date">{{ dateLabel(r.createdAt) }}</span>
+              <button class="share-btn" (click)="openShareSheet(r); $event.stopPropagation()">
+                <ion-icon name="share-social-outline" />
+              </button>
+            </div>
+          </div>
+          <p class="items">{{ itemsSummary(r) }}</p>
+          <div class="foot">
+            <span>{{ r.quoteCount }} quote{{ r.quoteCount === 1 ? '' : 's' }}</span>
+            @if (r.lowestQuoteAmount !== null) {
+              <span class="lowest">from {{ rupeeLabel(r.lowestQuoteAmount) }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</ion-content>

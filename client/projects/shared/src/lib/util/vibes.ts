@@ -24,6 +24,22 @@ export function shareOnWhatsApp(phone: string, message: string): void {
   window.open(`${waLink(phone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+/** Opens WhatsApp with `message` pre-filled but no fixed recipient — the user picks any chat/contact themselves. */
+export function shareOnWhatsAppAny(message: string): void {
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+/** "18 min", "1 hr 40", or "Closed" for a quotes-close countdown — null input means no deadline set. */
+export function countdownLabel(closeAt: string | null, now = new Date()): string | null {
+  if (!closeAt) return null;
+  const msLeft = new Date(closeAt).getTime() - now.getTime();
+  if (msLeft <= 0) return 'Closed';
+  const totalMinutes = Math.ceil(msLeft / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours} hr ${minutes}` : `${minutes} min`;
+}
+
 export function greeting(name: string | undefined, now = new Date()): string {
   const hour = now.getHours();
   const who = name ? name.split(' ')[0].toLowerCase() : 'bestie';
@@ -163,6 +179,65 @@ export function timeOfDayLabel(iso: string): string {
 
 export function rupeeLabel(amount: number): string {
   return `₹${Math.round(amount)}`;
+}
+
+const ONES = [
+  '',
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
+];
+const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+function twoDigitWords(n: number): string {
+  if (n < 20) return ONES[n];
+  const tens = Math.floor(n / 10);
+  const ones = n % 10;
+  return ones ? `${TENS[tens]} ${ONES[ones]}` : TENS[tens];
+}
+
+function threeDigitWords(n: number): string {
+  const hundreds = Math.floor(n / 100);
+  const rest = n % 100;
+  const parts: string[] = [];
+  if (hundreds) parts.push(`${ONES[hundreds]} Hundred`);
+  if (rest) parts.push(twoDigitWords(rest));
+  return parts.join(' ');
+}
+
+/** Classic Indian invoice convention, e.g. 3477 -> "Three Thousand Four Hundred Seventy Seven Rupees Only". */
+export function rupeesInWords(amount: number): string {
+  const n = Math.round(amount);
+  if (n === 0) return 'Zero Rupees Only';
+
+  const crore = Math.floor(n / 1_00_00_000);
+  const lakh = Math.floor((n % 1_00_00_000) / 1_00_000);
+  const thousand = Math.floor((n % 1_00_000) / 1000);
+  const hundred = n % 1000;
+
+  const parts: string[] = [];
+  if (crore) parts.push(`${threeDigitWords(crore)} Crore`);
+  if (lakh) parts.push(`${threeDigitWords(lakh)} Lakh`);
+  if (thousand) parts.push(`${threeDigitWords(thousand)} Thousand`);
+  if (hundred) parts.push(threeDigitWords(hundred));
+
+  return `${parts.join(' ')} Rupees Only`;
 }
 
 // ---------- Laundry management ----------

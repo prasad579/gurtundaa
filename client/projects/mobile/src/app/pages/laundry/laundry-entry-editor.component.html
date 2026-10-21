@@ -31,19 +31,34 @@
         <ion-label>given on</ion-label>
         <ion-datetime-button datetime="given-on" />
       </ion-item>
-      <ion-modal [keepContentsMounted]="true">
+      <ion-modal #givenOnModal [keepContentsMounted]="true">
         <ng-template>
-          <ion-datetime id="given-on" formControlName="givenOn" presentation="date" [max]="today" />
+          <ion-datetime
+            id="given-on"
+            formControlName="givenOn"
+            presentation="date"
+            [max]="today"
+            (ionChange)="givenOnModal.dismiss()"
+          />
         </ng-template>
       </ion-modal>
 
       <ion-item>
-        <ion-label>expected return (optional)</ion-label>
+        <ion-label>
+          expected return (optional)
+          <p>When the whole batch should be back. Individual items needing earlier pickup can be flagged below.</p>
+        </ion-label>
         <ion-datetime-button datetime="expected-return" />
       </ion-item>
-      <ion-modal [keepContentsMounted]="true">
+      <ion-modal #returnModal [keepContentsMounted]="true">
         <ng-template>
-          <ion-datetime id="expected-return" formControlName="expectedReturn" presentation="date" [min]="form.controls.givenOn.value" />
+          <ion-datetime
+            id="expected-return"
+            formControlName="expectedReturn"
+            presentation="date"
+            [min]="form.controls.givenOn.value"
+            (ionChange)="returnModal.dismiss()"
+          />
         </ng-template>
       </ion-modal>
     </ion-list>
@@ -79,6 +94,18 @@
                 (input)="setPrice(type.label, $any($event.target).value)"
               />
             </div>
+            <button type="button" class="needed-toggle" (click)="toggleNeededBy(type.label)">
+              ⏰ {{ isNeededByOpen(type.label) ? (neededBy(type.label) ? 'needed by ' + neededBy(type.label) : 'set earlier pickup date') : 'need this sooner?' }}
+            </button>
+            @if (isNeededByOpen(type.label)) {
+              <input
+                type="date"
+                class="needed-date"
+                [min]="today"
+                [value]="neededBy(type.label)"
+                (input)="setNeededBy(type.label, $any($event.target).value)"
+              />
+            }
           }
         </div>
       }
