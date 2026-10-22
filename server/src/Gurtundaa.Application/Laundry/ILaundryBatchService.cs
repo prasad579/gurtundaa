@@ -17,7 +17,11 @@ public interface ILaundryBatchService
 
     Task<LaundryBatchDto?> MarkPickedUpAsync(Guid id, MarkPickedUpRequest request, CancellationToken ct);
 
+    /// <summary>Settles the whole batch at once — also sets every item's own IsPaid to match.</summary>
     Task<LaundryBatchDto?> SetPaidAsync(Guid id, SetLaundryPaidRequest request, CancellationToken ct);
+
+    /// <summary>Settles a single item line (by its position in the batch) for batches paid off in stages. The batch's own IsPaid becomes true once every item is.</summary>
+    Task<LaundryBatchDto?> SetItemPaidAsync(Guid id, int itemIndex, SetLaundryItemPaidRequest request, CancellationToken ct);
 
     Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }

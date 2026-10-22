@@ -90,13 +90,24 @@ export class RegisterPage {
         password,
         userType: this.userType(),
       });
-      await this.router.navigateByUrl(user.userType === 'Shop' ? '/shop-onboarding' : '/onboarding', {
-        replaceUrl: true,
-      });
+      await this.router.navigateByUrl(this.postRegisterRoute(user.userType), { replaceUrl: true });
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  private postRegisterRoute(userType: UserType): string {
+    switch (userType) {
+      case 'Shop':
+        return '/shop-onboarding';
+      case 'MilkProvider':
+        return '/provider/milk';
+      case 'LaundryProvider':
+        return '/provider/laundry';
+      default:
+        return '/onboarding';
     }
   }
 }

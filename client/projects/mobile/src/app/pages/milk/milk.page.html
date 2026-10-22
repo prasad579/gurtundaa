@@ -17,15 +17,15 @@
     <div class="empty ion-padding">
       <span aria-hidden="true">🥛</span>
       <p>No milk subscription set up yet.</p>
-      <ion-button (click)="openSubscriptionEditor()">Set up milk delivery</ion-button>
+      <ion-button (click)="openSubscriptionEditor()">Set up milk tracking</ion-button>
     </div>
   } @else {
     <section class="card contact-card">
       <div class="mk-row">
-        <div class="avatar">🧑‍🍼</div>
+        <div class="avatar">{{ subscription()?.isSelfCollected ? '🛒' : '🧑‍🍼' }}</div>
         <div class="mk-info">
           <div class="nm">
-            {{ contact()?.name ?? 'No milkman set' }}
+            {{ contact()?.name ?? (subscription()?.isSelfCollected ? 'Self-collected' : 'No milkman set') }}
             @if (subscription(); as s) {
               <span class="badge-blue">{{ s.settlementCycle }}</span>
             }
@@ -64,7 +64,7 @@
         @if (t.morning.enabled) {
           <section class="card today-card">
             <div class="today-head">
-              <h3>🌅 Morning Delivery</h3>
+              <h3>🌅 {{ isSelfCollected() ? 'Morning Pickup' : 'Morning Delivery' }}</h3>
             </div>
             @if (t.morning.status !== 'Paused') {
               <div class="del-inner">
@@ -72,16 +72,20 @@
                   <ion-icon [name]="t.morning.status === 'Delivered' ? 'checkmark' : 'close'" />
                 </div>
                 <div class="dt">
-                  <div class="dtt">{{ statusLabels[t.morning.status] }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtt">{{ statusLabelFor(t.morning.status) }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
                   <div class="dtq">{{ litresLabel(t.morning.quantityLtr) }}</div>
                   <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.morning)) }}</div>
                 </div>
               </div>
               <div class="today-actions">
                 @if (t.morning.status === 'Delivered') {
-                  <button class="mbtn" (click)="markNotDelivered('Morning')"><ion-icon name="close" />Not Delivered</button>
+                  <button class="mbtn" (click)="markNotDelivered('Morning')">
+                    <ion-icon name="close" />{{ isSelfCollected() ? 'Not Picked Up' : 'Not Delivered' }}
+                  </button>
                 } @else {
-                  <button class="mbtn" (click)="markDelivered('Morning')"><ion-icon name="checkmark" />Delivered</button>
+                  <button class="mbtn" (click)="markDelivered('Morning')">
+                    <ion-icon name="checkmark" />{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}
+                  </button>
                 }
                 <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />Edit Qty</button>
                 @if (t.morning.status === 'Missed' && contact()) {
@@ -92,7 +96,7 @@
                 <div class="ontrack">{{ hint }}</div>
               }
             } @else {
-              <p class="muted">Delivery is paused today — see the Paused card.</p>
+              <p class="muted">{{ isSelfCollected() ? 'Pickup' : 'Delivery' }} is paused today — see the Paused card.</p>
             }
           </section>
         }
@@ -100,7 +104,7 @@
         @if (t.evening.enabled) {
           <section class="card today-card">
             <div class="today-head">
-              <h3>🌙 Evening Delivery</h3>
+              <h3>🌙 {{ isSelfCollected() ? 'Evening Pickup' : 'Evening Delivery' }}</h3>
             </div>
             @if (t.evening.status !== 'Paused') {
               <div class="del-inner">
@@ -108,16 +112,20 @@
                   <ion-icon [name]="t.evening.status === 'Delivered' ? 'checkmark' : 'close'" />
                 </div>
                 <div class="dt">
-                  <div class="dtt">{{ statusLabels[t.evening.status] }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtt">{{ statusLabelFor(t.evening.status) }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
                   <div class="dtq">{{ litresLabel(t.evening.quantityLtr) }}</div>
                   <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.evening)) }}</div>
                 </div>
               </div>
               <div class="today-actions">
                 @if (t.evening.status === 'Delivered') {
-                  <button class="mbtn" (click)="markNotDelivered('Evening')"><ion-icon name="close" />Not Delivered</button>
+                  <button class="mbtn" (click)="markNotDelivered('Evening')">
+                    <ion-icon name="close" />{{ isSelfCollected() ? 'Not Picked Up' : 'Not Delivered' }}
+                  </button>
                 } @else {
-                  <button class="mbtn" (click)="markDelivered('Evening')"><ion-icon name="checkmark" />Delivered</button>
+                  <button class="mbtn" (click)="markDelivered('Evening')">
+                    <ion-icon name="checkmark" />{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}
+                  </button>
                 }
                 <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />Edit Qty</button>
                 @if (t.evening.status === 'Missed' && contact()) {
@@ -128,7 +136,7 @@
                 <div class="ontrack">{{ hint }}</div>
               }
             } @else {
-              <p class="muted">Delivery is paused today — see the Paused card.</p>
+              <p class="muted">{{ isSelfCollected() ? 'Pickup' : 'Delivery' }} is paused today — see the Paused card.</p>
             }
           </section>
         }
@@ -137,7 +145,7 @@
       @if (activePause(); as p) {
         <section class="card pause-card">
           <div class="sec-head">
-            <h3><ion-icon name="pause-outline" /> Delivery Paused</h3>
+            <h3><ion-icon name="pause-outline" /> {{ isSelfCollected() ? 'Pickup Paused' : 'Delivery Paused' }}</h3>
             <a routerLink="/milk-pause" class="manage-link">Manage</a>
           </div>
           <div class="pause-box">
@@ -147,7 +155,9 @@
             }
             <div class="pb-resume">Resumes {{ resumeDateLabel(p) }}</div>
             <div class="pb-btns">
-              <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
+              @if (contact()) {
+                <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
+              }
               <button class="btn-edit" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />Edit</button>
             </div>
           </div>
@@ -172,14 +182,14 @@
         />
         <div class="summary">
           <div class="sg-item"><div class="sgl">Planned</div><div class="sgv">{{ m.summary.planned }}</div></div>
-          <div class="sg-item"><div class="sgl">Delivered</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
+          <div class="sg-item"><div class="sgl">{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
           <div class="sg-item"><div class="sgl">Paused</div><div class="sgv o">{{ m.summary.paused }}</div></div>
           <div class="sg-item"><div class="sgl">Missed</div><div class="sgv r">{{ m.summary.missed }}</div></div>
         </div>
 
         <div class="amt-rows">
           <div class="amt-row">
-            <div class="ar-lbl">Regular ({{ m.summary.delivered }} days delivered, {{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+            <div class="ar-lbl">Regular ({{ m.summary.delivered }} days {{ isSelfCollected() ? 'picked up' : 'delivered' }}, {{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
             <div class="ar-val">{{ rupeeLabel(m.summary.regularAmount) }}</div>
           </div>
           @if (m.summary.extraLitres > 0) {
@@ -199,6 +209,39 @@
           <button class="mpaid-btn" [class.pending]="m.summary.isPaid" (click)="toggleSettlementPaid()">
             {{ m.summary.isPaid ? 'Mark as Pending' : 'Mark as Paid' }}
           </button>
+        </div>
+
+        <div class="payments-box">
+          <div class="pb-row">
+            <div><div class="psl">Paid So Far</div><div class="pss good">{{ rupeeLabel(m.summary.paidSoFar) }}</div></div>
+            <div><div class="psl">Balance Due</div><div class="pss">{{ rupeeLabel(balanceDue()) }}</div></div>
+          </div>
+          <div class="pb-btns">
+            @if (providerPaymentInfo()?.upiId && balanceDue() > 0) {
+              <ion-button size="small" (click)="payViaUpi()">💳 Pay via UPI</ion-button>
+            }
+            <ion-button size="small" fill="outline" (click)="recordPayment()">+ Record Payment</ion-button>
+          </div>
+          @if (payments().length > 0) {
+            <div class="pb-list">
+              @for (p of payments(); track p.id) {
+                <div class="pb-item">
+                  <div class="pb-info">
+                    <span class="pb-amt">{{ rupeeLabel(p.amount) }}</span>
+                    <span class="pb-date">
+                      {{ shortDateLabel(p.date) }}{{ p.note ? ' · ' + p.note : '' }}
+                      @if (p.status === 'AwaitingConfirmation') {
+                        <span class="pb-status pending">⏳ awaiting confirmation</span>
+                      } @else if (p.status === 'Rejected') {
+                        <span class="pb-status rejected">❌ rejected — not received</span>
+                      }
+                    </span>
+                  </div>
+                  <button class="pb-del" (click)="deletePayment(p)"><ion-icon name="close" /></button>
+                </div>
+              }
+            </div>
+          }
         </div>
         <div class="share-row">
           @if (contact()) {
@@ -265,7 +308,12 @@
             <div class="act-row">
               <div class="act-ic" [class]="a.type.toLowerCase()"><ion-icon [name]="activityIcon(a.type)" /></div>
               <div class="act-txt">
-                <div class="att">{{ a.description }}</div>
+                <div class="att">
+                  {{ a.description }}
+                  @if (a.addedByProviderName) {
+                    <span class="by-provider">· added by {{ a.addedByProviderName }}</span>
+                  }
+                </div>
                 <div class="ats">{{ shortDateLabel(a.date) }}, {{ timeOfDayLabel(a.occurredAt) }}</div>
               </div>
               @if (a.quantityLtr) {

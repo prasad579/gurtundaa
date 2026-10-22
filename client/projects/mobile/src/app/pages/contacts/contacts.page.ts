@@ -20,9 +20,10 @@ import {
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, callOutline, logoWhatsapp, pencil, star, starOutline, trash } from 'ionicons/icons';
+import { add, callOutline, link, logoWhatsapp, pencil, star, starOutline, trash } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { CONTACT_CATEGORY_OPTIONS, ContactEditorComponent } from './contact-editor.component';
+import { InviteProviderComponent } from './invite-provider.component';
 
 @Component({
   selector: 'app-contacts',
@@ -55,7 +56,7 @@ export class ContactsPage implements ViewWillEnter {
   protected readonly byCategory = signal<Partial<Record<ServiceContactCategory, ServiceContact[]>>>({});
 
   constructor() {
-    addIcons({ add, callOutline, logoWhatsapp, pencil, trash, star, starOutline });
+    addIcons({ add, callOutline, logoWhatsapp, pencil, trash, star, starOutline, link });
   }
 
   ionViewWillEnter(): void {
@@ -86,6 +87,12 @@ export class ContactsPage implements ViewWillEnter {
     await firstValueFrom(contact ? this.contacts.update(contact.id, data) : this.contacts.create(data));
     await this.toast(contact ? 'contact updated' : 'contact added');
     await this.load();
+  }
+
+  protected async openInvite(contact: ServiceContact, sliding: IonItemSliding): Promise<void> {
+    await sliding.close();
+    const modal = await this.modals.create({ component: InviteProviderComponent, componentProps: { contact } });
+    await modal.present();
   }
 
   protected async setDefault(contact: ServiceContact, sliding: IonItemSliding): Promise<void> {

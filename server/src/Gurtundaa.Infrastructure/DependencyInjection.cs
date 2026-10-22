@@ -5,6 +5,7 @@ using Gurtundaa.Application.Household;
 using Gurtundaa.Application.Laundry;
 using Gurtundaa.Application.Marketplace;
 using Gurtundaa.Application.Milk;
+using Gurtundaa.Application.Providers;
 using Gurtundaa.Application.Reminders;
 using Gurtundaa.Application.ServiceContacts;
 using Gurtundaa.Application.Shop;
@@ -17,6 +18,7 @@ using Gurtundaa.Infrastructure.Laundry;
 using Gurtundaa.Infrastructure.Marketplace;
 using Gurtundaa.Infrastructure.Milk;
 using Gurtundaa.Infrastructure.Persistence;
+using Gurtundaa.Infrastructure.Providers;
 using Gurtundaa.Infrastructure.Reminders;
 using Gurtundaa.Infrastructure.ServiceContacts;
 using Gurtundaa.Infrastructure.Shop;
@@ -64,6 +66,7 @@ public static class DependencyInjection
         services.AddScoped<IMilkPauseService, MilkPauseService>();
         services.AddScoped<IMilkExtraRequestService, MilkExtraRequestService>();
         services.AddScoped<IMilkActivityService, MilkActivityService>();
+        services.AddScoped<IMilkPaymentService, MilkPaymentService>();
         services.AddScoped<ILaundryBatchService, LaundryBatchService>();
         services.AddScoped<IMilkQuantityChangeService, MilkQuantityChangeService>();
         services.AddScoped<IBillService, BillService>();
@@ -75,6 +78,14 @@ public static class DependencyInjection
         services.AddScoped<IMedicineService, MedicineService>();
         services.AddScoped<IDoseLogService, DoseLogService>();
         services.AddScoped<IPrescriptionService, PrescriptionService>();
+        services.AddScoped<IProviderLinkService, ProviderLinkService>();
+        services.AddScoped<IProviderDashboardService, ProviderDashboardService>();
+        services.AddScoped<IProviderMilkActionsService, ProviderMilkActionsService>();
+        services.AddScoped<IProviderCustomersService, ProviderCustomersService>();
+        services.AddScoped<IManualMilkService, ManualMilkService>();
+        services.AddScoped<IManualLaundryService, ManualLaundryService>();
+        services.AddScoped<ILaundryPickupRequestService, LaundryPickupRequestService>();
+        services.AddScoped<IProviderPaymentSettingsService, ProviderPaymentSettingsService>();
 
         return services;
     }

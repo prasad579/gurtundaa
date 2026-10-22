@@ -11,6 +11,8 @@ import {
   MilkExtraRequestItem,
   MilkMonth,
   MilkPause,
+  MilkPayment,
+  MilkProviderPaymentInfo,
   MilkQuantityChange,
   MilkSlot,
   MilkSlotState,
@@ -26,6 +28,7 @@ import {
   isFutureDate,
   litresLabel,
   pauseRangeLabel,
+  payViaUpi,
   rupeeLabel,
   rupeesInWords,
   shareOnWhatsApp,
@@ -107,7 +110,6 @@ export class MilkPage implements ViewWillEnter {
   private readonly actionSheets = inject(ActionSheetController);
   private readonly router = inject(Router);
 
-  protected readonly statusLabels = MILK_STATUS_LABELS;
   protected readonly slotLabels = MILK_SLOT_LABELS;
   protected readonly litresLabel = litresLabel;
   protected readonly shortDateLabel = shortDateLabel;
@@ -118,8 +120,15 @@ export class MilkPage implements ViewWillEnter {
   protected readonly loading = signal(true);
   protected readonly subscription = signal<MilkSubscription | null>(null);
   protected readonly contact = signal<ServiceContact | null>(null);
+  protected readonly isSelfCollected = computed(() => this.subscription()?.isSelfCollected ?? false);
   protected readonly today = signal<MilkToday | null>(null);
   protected readonly month = signal<MilkMonth | null>(null);
+  protected readonly payments = signal<MilkPayment[]>([]);
+  protected readonly providerPaymentInfo = signal<MilkProviderPaymentInfo | null>(null);
+  protected readonly balanceDue = computed(() => {
+    const m = this.month();
+    return m ? Math.max(0, m.summary.totalAmount - m.summary.paidSoFar) : 0;
+  });
   protected readonly pauses = signal<MilkPause[]>([]);
   protected readonly extras = signal<MilkExtraRequestItem[]>([]);
   protected readonly quantityChanges = signal<MilkQuantityChange[]>([]);
@@ -227,6 +236,12 @@ export class MilkPage implements ViewWillEnter {
     return `tel:${phone.replace(/\s+/g, '')}`;
   }
 
+  protected statusLabelFor(status: MilkCalendarDay['status']): string {
+    if (status === 'Delivered') return this.isSelfCollected() ? 'Picked Up ✅' : 'Delivered ✅';
+    if (status === 'Missed') return this.isSelfCollected() ? 'Not Picked Up ❌' : 'Missed ❌';
+    return MILK_STATUS_LABELS[status];
+  }
+
   private isBeforeStart(date: string): boolean {
     const startDate = this.subscription()?.startDate;
     return !!startDate && date < startDate;
@@ -244,7 +259,7 @@ export class MilkPage implements ViewWillEnter {
     }
 
     const isPlanned = day.status === 'Delivered' && isFutureDate(day.date);
-    const statusLabel = isPlanned ? 'Planned 📅' : this.statusLabels[day.status];
+    const statusLabel = isPlanned ? 'Planned 📅' : this.statusLabelFor(day.status);
 
     const lines: string[] = [];
     for (const [slotName, slot] of [
@@ -256,9 +271,10 @@ export class MilkPage implements ViewWillEnter {
       if (slot.status === 'Paused') {
         lines.push(`${this.slotLabels[slotName]}: Paused`);
       } else if (slot.status === 'Missed') {
-        lines.push(`${this.slotLabels[slotName]}: Missed`);
+        lines.push(`${this.slotLabels[slotName]}: ${this.isSelfCollected() ? 'Not picked up' : 'Missed'}`);
       } else {
-        lines.push(`${this.slotLabels[slotName]}: ${slotIsPlanned ? 'Expected' : 'Delivered'} ${litresLabel(slot.quantityLtr)}`);
+        const verb = slotIsPlanned ? 'Expected' : this.isSelfCollected() ? 'Picked up' : 'Delivered';
+        lines.push(`${this.slotLabels[slotName]}: ${verb} ${litresLabel(slot.quantityLtr)}`);
       }
     }
     for (const extra of this.allExtras().filter((e) => e.date === day.date)) {
@@ -280,10 +296,13 @@ export class MilkPage implements ViewWillEnter {
     // nothing has happened on them yet.
     const toggleButtons = isFutureDate(day.date)
       ? []
-      : slotEntries.map(([slotName, slot]) => ({
-          text: slot.status === 'Missed' ? `Mark ${slotName} Delivered` : `Mark ${slotName} Missed`,
-          handler: () => void this.toggleDaySlot(day.date, slotName, slot.status),
-        }));
+      : slotEntries.map(([slotName, slot]) => {
+          const self = this.isSelfCollected();
+          const text = slot.status === 'Missed'
+            ? `Mark ${slotName} ${self ? 'Picked Up' : 'Delivered'}`
+            : `Mark ${slotName} ${self ? 'Not Picked Up' : 'Missed'}`;
+          return { text, handler: () => void this.toggleDaySlot(day.date, slotName, slot.status) };
+        });
 
     // A persistent way to (re-)notify the milkman about a missed slot on this day, whenever —
     // not just the moment it's first marked missed, since that toast disappears.
@@ -321,7 +340,11 @@ export class MilkPage implements ViewWillEnter {
   private async toggleDaySlot(date: string, slot: MilkSlot, currentStatus: MilkSlotState['status']): Promise<void> {
     const status = currentStatus === 'Missed' ? 'Delivered' : 'Missed';
     await firstValueFrom(this.milk.setDeliveryOverride(date, { slot, status, quantityLtr: null }));
-    await this.toast(status === 'Missed' ? 'marked as not delivered' : 'marked as delivered ✅');
+    await this.toast(
+      status === 'Missed'
+        ? this.isSelfCollected() ? 'marked as not picked up' : 'marked as not delivered'
+        : this.isSelfCollected() ? 'marked as picked up ✅' : 'marked as delivered ✅',
+    );
     await this.load();
   }
 
@@ -339,6 +362,107 @@ export class MilkPage implements ViewWillEnter {
     const summary = await firstValueFrom(this.milk.setSettlementPaid(d.getFullYear(), d.getMonth() + 1, { isPaid }));
     this.month.set({ ...m, summary });
     await this.toast(isPaid ? 'marked as paid ✅' : 'marked as pending');
+  }
+
+  protected async payViaUpi(): Promise<void> {
+    const info = this.providerPaymentInfo();
+    const balance = this.balanceDue();
+    if (!info?.upiId || balance <= 0) return;
+
+    const amountAlert = await this.alerts.create({
+      header: 'Pay via UPI',
+      message: `Opens your UPI app to pay ${info.providerDisplayName ?? 'your milkman'} directly — Gurtundaa never touches the money.`,
+      inputs: [{ name: 'amount', type: 'number', value: balance, min: 0.01 }],
+      buttons: [
+        { text: 'cancel', role: 'cancel' },
+        { text: 'continue', role: 'confirm' },
+      ],
+    });
+    await amountAlert.present();
+    const { role: amountRole, data: amountData } = await amountAlert.onWillDismiss();
+    const amount = Number(amountData?.values?.amount);
+    if (amountRole !== 'confirm' || !amount || amount <= 0) return;
+
+    payViaUpi(info.upiId, info.providerDisplayName ?? 'Milk Provider', amount, 'Gurtundaa milk payment');
+
+    const confirmAlert = await this.alerts.create({
+      header: 'Did you complete the payment?',
+      message: "Only confirm if the UPI app showed your payment went through. This stays pending until your milkman confirms they received it.",
+      buttons: [
+        { text: "I didn't pay", role: 'cancel' },
+        { text: "Yes, I've paid", role: 'confirm' },
+      ],
+    });
+    await confirmAlert.present();
+    const { role: confirmRole } = await confirmAlert.onWillDismiss();
+    if (confirmRole !== 'confirm') return;
+
+    await firstValueFrom(this.milk.initiateUpiPayment({ amount, note: 'Paid via UPI' }));
+    await this.toast('payment recorded — awaiting confirmation ⏳');
+    await this.loadMonth();
+  }
+
+  protected async recordPayment(): Promise<void> {
+    const todayAmt = this.todayAmount();
+    const weekAmt = this.thisWeekAmountSoFar();
+    const balance = this.balanceDue();
+
+    const alert = await this.alerts.create({
+      header: 'Record a Payment',
+      message: "Log what you paid — today, this week, or any custom amount — without waiting for month-end.",
+      inputs: [
+        ...(todayAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: `Today (${rupeeLabel(todayAmt)})`, value: String(todayAmt) }] : []),
+        ...(weekAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: `This week so far (${rupeeLabel(weekAmt)})`, value: String(weekAmt) }] : []),
+        ...(balance > 0 ? [{ name: 'preset', type: 'radio' as const, label: `Full balance (${rupeeLabel(balance)})`, value: String(balance) }] : []),
+        { name: 'amount', type: 'number', placeholder: 'or enter a custom amount (₹)', min: 0.01 },
+        { name: 'note', type: 'text', placeholder: 'note (optional)' },
+      ],
+      buttons: [
+        { text: 'cancel', role: 'cancel' },
+        { text: 'save', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role, data } = await alert.onWillDismiss();
+    if (role !== 'confirm') return;
+
+    const amount = Number(data?.values?.amount) || Number(data?.values?.preset);
+    if (!amount || amount <= 0) return;
+
+    await firstValueFrom(this.milk.createPayment({ date: toDateOnlyString(new Date()), amount, note: data.values.note || null }));
+    await this.toast('payment recorded 💰');
+    await this.loadMonth();
+  }
+
+  protected async deletePayment(payment: MilkPayment): Promise<void> {
+    await firstValueFrom(this.milk.deletePayment(payment.id));
+    await this.toast('payment removed');
+    await this.loadMonth();
+  }
+
+  private dayAmount(day: MilkCalendarDay): number {
+    const rate = this.subscription()?.ratePerLtr ?? 0;
+    const morning = day.morning.enabled && day.morning.status === 'Delivered' ? day.morning.quantityLtr : 0;
+    const evening = day.evening.enabled && day.evening.status === 'Delivered' ? day.evening.quantityLtr : 0;
+    return (morning + evening) * rate;
+  }
+
+  private todayAmount(): number {
+    const todayStr = toDateOnlyString(new Date());
+    const day = this.month()?.days.find((d) => d.date === todayStr);
+    return day ? this.dayAmount(day) : 0;
+  }
+
+  private thisWeekAmountSoFar(): number {
+    const m = this.month();
+    if (!m) return 0;
+    const today = new Date();
+    const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0..Sun=6
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek);
+    const weekStartStr = toDateOnlyString(weekStart);
+    const todayStr = toDateOnlyString(today);
+    return m.days.filter((d) => d.date >= weekStartStr && d.date <= todayStr).reduce((sum, d) => sum + this.dayAmount(d), 0);
   }
 
   protected shareSettlement(): void {
@@ -367,7 +491,7 @@ export class MilkPage implements ViewWillEnter {
       items.push({ label: 'Extra', qty: litresLabel(s.extraLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.extraAmount) });
     }
 
-    const dayParts: string[] = [`${s.delivered} delivered`];
+    const dayParts: string[] = [`${s.delivered} ${this.isSelfCollected() ? 'picked up' : 'delivered'}`];
     if (s.missed > 0) dayParts.push(`${s.missed} missed`);
     if (s.paused > 0) dayParts.push(`${s.paused} paused`);
     if (s.planned > 0) dayParts.push(`${s.planned} upcoming`);
@@ -403,10 +527,10 @@ export class MilkPage implements ViewWillEnter {
     }
 
     const existingContact = this.contact();
-    const savedContact = await firstValueFrom(
-      existingContact ? this.contacts.update(existingContact.id, data.contact) : this.contacts.create(data.contact),
-    );
-    await firstValueFrom(this.milk.saveSubscription({ ...data.subscription, contactId: savedContact.id }));
+    const contactId = data.contact
+      ? (await firstValueFrom(existingContact ? this.contacts.update(existingContact.id, data.contact) : this.contacts.create(data.contact))).id
+      : null;
+    await firstValueFrom(this.milk.saveSubscription({ ...data.subscription, contactId }));
     await this.toast('milk subscription saved 🥛');
     await this.load();
   }
@@ -418,7 +542,7 @@ export class MilkPage implements ViewWillEnter {
     await this.load();
 
     const toast = await this.toasts.create({
-      message: 'marked as not delivered',
+      message: this.isSelfCollected() ? 'marked as not picked up' : 'marked as not delivered',
       duration: 4000,
       position: 'bottom',
       buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyMissed(slot) }] : [],
@@ -595,7 +719,11 @@ export class MilkPage implements ViewWillEnter {
       buttons: [
         { text: 'Request Extra Milk', icon: 'add-outline', handler: () => void this.openExtraEditor() },
         { text: 'Change Quantity', icon: 'create-outline', handler: () => void this.openQuantityChangeEditor() },
-        { text: 'Pause Delivery', icon: 'pause-outline', handler: () => void this.router.navigateByUrl('/milk-pause') },
+        {
+          text: this.isSelfCollected() ? 'Pause Pickup' : 'Pause Delivery',
+          icon: 'pause-outline',
+          handler: () => void this.router.navigateByUrl('/milk-pause'),
+        },
         { text: 'cancel', role: 'cancel' },
       ],
     });
@@ -609,7 +737,12 @@ export class MilkPage implements ViewWillEnter {
 
   private async loadMonth(): Promise<void> {
     const d = this.monthDate();
-    this.month.set(await firstValueFrom(this.milk.getMonth(d.getFullYear(), d.getMonth() + 1)));
+    const [month, payments] = await Promise.all([
+      firstValueFrom(this.milk.getMonth(d.getFullYear(), d.getMonth() + 1)),
+      firstValueFrom(this.milk.listPayments(d.getFullYear(), d.getMonth() + 1)),
+    ]);
+    this.month.set(month);
+    this.payments.set(payments);
   }
 
   private async load(): Promise<void> {
@@ -623,13 +756,14 @@ export class MilkPage implements ViewWillEnter {
       this.contact.set(contacts[0] ?? null);
 
       if (subscription) {
-        const [today, pauses, extras, allExtras, quantityChanges, activity] = await Promise.all([
+        const [today, pauses, extras, allExtras, quantityChanges, activity, providerPaymentInfo] = await Promise.all([
           firstValueFrom(this.milk.getToday()),
           firstValueFrom(this.milk.listPauses(true)),
           firstValueFrom(this.milk.listExtraRequests(true)),
           firstValueFrom(this.milk.listExtraRequests(false)),
           firstValueFrom(this.milk.listQuantityChanges(true)),
           firstValueFrom(this.milk.getActivity(10)),
+          firstValueFrom(this.milk.getProviderPaymentInfo()),
         ]);
         this.today.set(today);
         this.pauses.set(pauses);
@@ -637,6 +771,8 @@ export class MilkPage implements ViewWillEnter {
         this.allExtras.set(allExtras);
         this.quantityChanges.set(quantityChanges);
         this.activity.set(activity);
+        this.providerPaymentInfo.set(providerPaymentInfo);
+        void firstValueFrom(this.milk.markProviderActivitySeen());
         await this.loadMonth();
       }
     } catch {

@@ -1,0 +1,91 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/provider/laundry" />
+    </ion-buttons>
+    <ion-title>{{ customer()?.name ?? 'Customer' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && !customer()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (customer(); as c) {
+    <section class="card">
+      <h3>{{ c.name }}</h3>
+      @if (c.phone) {
+        <p class="muted"><ion-icon name="call-outline" /> {{ c.phone }}</p>
+      }
+      @if (c.address) {
+        <p class="muted">{{ c.address }}</p>
+      }
+      @if (c.isClaimed) {
+        <p class="muted">✅ Linked to {{ c.claimedByName }}'s app account</p>
+      }
+      <div class="action-btns" style="margin-top: 8px;">
+        @if (c.phone) {
+          <a [href]="telLink(c.phone)" class="icon-btn"><ion-icon name="call-outline" /></a>
+          <ion-button size="small" fill="outline" (click)="askOnWhatsApp()"><ion-icon slot="start" name="logo-whatsapp" />Ask</ion-button>
+        }
+        <ion-button size="small" fill="outline" (click)="shareLinkCode()">🔗 Share Link Code</ion-button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>Active Batches</h3>
+        <ion-button size="small" (click)="newBatch()">+ New Batch</ion-button>
+      </div>
+      @if (!hasActive()) {
+        <p class="muted">Nothing out at the moment.</p>
+      } @else {
+        @for (b of batches(); track b.id) {
+          @if (b.status === 'Active') {
+            <div class="cust-row">
+              <div class="cust-av">🧺</div>
+              <div class="cust-info">
+                <div class="cust-name">{{ itemsSummary(b) }}</div>
+                <div class="cust-meta">{{ itemsBreakdown(b) }}</div>
+                <div class="cust-meta">Given {{ shortDateLabel(b.givenOn) }}</div>
+              </div>
+              <div class="cust-right">
+                <ion-button size="small" fill="clear" (click)="markPickedUp(b)"><ion-icon name="checkmark-done-outline" /></ion-button>
+                <ion-button size="small" fill="clear" color="danger" (click)="remove(b)"><ion-icon name="trash" /></ion-button>
+              </div>
+            </div>
+          }
+        }
+      }
+    </section>
+
+    <section class="card">
+      <h3>History</h3>
+      @if (!hasHistory()) {
+        <p class="muted">No past entries yet.</p>
+      } @else {
+        @for (b of batches(); track b.id) {
+          @if (b.status === 'PickedUp') {
+            <div class="cust-row" (click)="togglePaid(b)">
+              <div class="cust-av">🧺</div>
+              <div class="cust-info">
+                <div class="cust-name">{{ itemsSummary(b) }}</div>
+                <div class="cust-meta">{{ itemsBreakdown(b) }}</div>
+                @if (b.pickedUpOn) {
+                  <div class="cust-meta">Picked up {{ shortDateLabel(b.pickedUpOn) }}</div>
+                }
+              </div>
+              <div class="cust-right">
+                @if (b.amount) {
+                  <div class="qty">{{ rupeeLabel(b.amount) }}</div>
+                }
+                <div class="paid-chip" [class.paid]="b.isPaid" [class.pending]="!b.isPaid">{{ b.isPaid ? 'PAID' : 'PENDING' }}</div>
+              </div>
+            </div>
+          }
+        }
+      }
+    </section>
+  }
+</ion-content>

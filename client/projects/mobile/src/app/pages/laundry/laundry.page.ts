@@ -7,6 +7,7 @@ import {
   LaundryApi,
   LaundryBatch,
   LaundryItemLine,
+  LaundryPickupRequestsApi,
   LaundryServiceType,
   ServiceContact,
   ServiceContactsApi,
@@ -16,6 +17,7 @@ import {
   rupeesInWords,
   shareOnWhatsApp,
   shortDateLabel,
+  toDateOnlyString,
   waLink,
 } from '@gurtundaa/shared';
 import {
@@ -62,6 +64,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { LaundryNotifications } from '../../services/laundry-notifications';
 import { shareText } from '../../services/share';
+import { ContactEditorComponent } from '../contacts/contact-editor.component';
 import { LaundryEntryEditorComponent } from './laundry-entry-editor.component';
 import { LaundryPickupComponent } from './laundry-pickup.component';
 
@@ -92,6 +95,7 @@ import { LaundryPickupComponent } from './laundry-pickup.component';
 export class LaundryPage implements ViewWillEnter {
   private readonly laundry = inject(LaundryApi);
   private readonly contactsApi = inject(ServiceContactsApi);
+  private readonly pickupRequestsApi = inject(LaundryPickupRequestsApi);
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly alerts = inject(AlertController);
@@ -215,6 +219,10 @@ export class LaundryPage implements ViewWillEnter {
     return `${total} item${total === 1 ? '' : 's'} · ${batch.items.map((i) => `${i.itemType} (${i.quantity})`).join(', ')}`;
   }
 
+  protected hasPricedItems(batch: LaundryBatch): boolean {
+    return batch.items.some((i) => i.pricePerItem);
+  }
+
   protected priceBreakdown(batch: LaundryBatch): string | null {
     const priced = batch.items.filter((i) => i.pricePerItem);
     if (priced.length === 0) return null;
@@ -227,6 +235,23 @@ export class LaundryPage implements ViewWillEnter {
     if (batch.amount) return batch.amount;
     const estimated = batch.items.reduce((sum, i) => sum + i.quantity * (i.pricePerItem ?? 0), 0);
     return estimated > 0 ? estimated : null;
+  }
+
+  protected async addDhobiContact(): Promise<void> {
+    const modal = await this.modals.create({
+      component: ContactEditorComponent,
+      componentProps: { defaultCategory: 'Laundry' },
+      breakpoints: [0, 0.9, 1],
+      initialBreakpoint: 0.9,
+    });
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role !== 'save' || !data) return;
+
+    await firstValueFrom(this.contactsApi.create(data));
+    await this.toast('contact added');
+    await this.load();
   }
 
   protected async openEntryEditor(batch?: LaundryBatch, sliding?: IonItemSliding): Promise<void> {
@@ -272,6 +297,13 @@ export class LaundryPage implements ViewWillEnter {
     await this.load();
   }
 
+  protected async toggleItemPaid(batch: LaundryBatch, itemIndex: number): Promise<void> {
+    const isPaid = !batch.items[itemIndex].isPaid;
+    await firstValueFrom(this.laundry.setItemPaid(batch.id, itemIndex, { isPaid }));
+    await this.toast(isPaid ? 'item marked as paid ✅' : 'item marked as pending');
+    await this.load();
+  }
+
   protected async markAllPaidThisMonth(): Promise<void> {
     const pending = this.batchesInMonth().filter((b) => !b.isPaid && this.batchAmount(b));
     if (pending.length === 0) return;
@@ -294,6 +326,34 @@ export class LaundryPage implements ViewWillEnter {
     if (days === 1) return 'Tomorrow';
     if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue`;
     return `In ${days} days`;
+  }
+
+  protected async requestPickup(serviceContactId: string): Promise<void> {
+    const alert = await this.alerts.create({
+      header: 'Request Pickup',
+      message: "Asks your linked dhobi to come collect laundry — they'll see this on their dashboard.",
+      inputs: [
+        { name: 'when', type: 'radio', label: 'Today', value: toDateOnlyString(new Date()), checked: true },
+        { name: 'when', type: 'radio', label: 'Tomorrow', value: toDateOnlyString(new Date(Date.now() + 86_400_000)) },
+        { name: 'note', type: 'text', placeholder: 'note (optional, e.g. about 10 shirts)' },
+      ],
+      buttons: [
+        { text: 'cancel', role: 'cancel' },
+        { text: 'send', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role, data } = await alert.onWillDismiss();
+    if (role !== 'confirm') return;
+
+    try {
+      await firstValueFrom(
+        this.pickupRequestsApi.create({ serviceContactId, requestedDate: data.values.when, note: data.values.note || null }),
+      );
+      await this.toast('pickup requested 📬');
+    } catch (e) {
+      await this.toast((e as { error?: { title?: string } })?.error?.title ?? "couldn't send that request", 'danger');
+    }
   }
 
   protected notifyPickup(batch: LaundryBatch): void {
@@ -332,7 +392,7 @@ export class LaundryPage implements ViewWillEnter {
   private buildLaundryBill(batch: LaundryBatch): BillData {
     const amount = this.batchAmount(batch);
     const items: BillLineItem[] = batch.items.map((i) => ({
-      label: i.itemType,
+      label: i.neededBy ? `${i.itemType} (needed by ${shortDateLabel(i.neededBy)})` : i.itemType,
       qty: String(i.quantity),
       rate: i.pricePerItem ? rupeeLabel(i.pricePerItem) : '',
       amount: i.pricePerItem ? rupeeLabel(i.pricePerItem * i.quantity) : '',

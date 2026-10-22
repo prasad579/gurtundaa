@@ -61,6 +61,7 @@ else
 }
 
 app.UseExceptionHandler();
+app.UseStaticFiles(); // serves wwwroot/uploads (shop images) at /uploads/...
 app.UseCors(ClientsCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();

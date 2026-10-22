@@ -1,6 +1,14 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
-import { AuthService, customerGuard, shopGuard, signedInGuard, signedOutGuard } from '@gurtundaa/shared';
+import {
+  AuthService,
+  customerGuard,
+  laundryProviderGuard,
+  milkProviderGuard,
+  shopGuard,
+  signedInGuard,
+  signedOutGuard,
+} from '@gurtundaa/shared';
 
 export const routes: Routes = [
   {
@@ -45,6 +53,16 @@ export const routes: Routes = [
         path: 'shop/profile',
         canActivate: [shopGuard],
         loadComponent: () => import('./pages/marketplace/shop/shop-profile.page').then((m) => m.ShopProfilePage),
+      },
+      {
+        path: 'provider/laundry',
+        canActivate: [laundryProviderGuard],
+        loadComponent: () => import('./pages/provider/laundry-provider.page').then((m) => m.LaundryProviderPage),
+      },
+      {
+        path: 'provider/milk',
+        canActivate: [milkProviderGuard],
+        loadComponent: () => import('./pages/provider/milk-provider.page').then((m) => m.MilkProviderPage),
       },
       { path: 'more', loadComponent: () => import('./pages/more/more.page').then((m) => m.MorePage) },
     ],
@@ -118,6 +136,27 @@ export const routes: Routes = [
     path: 'shop-onboarding',
     canActivate: [signedInGuard, shopGuard],
     loadComponent: () => import('./pages/shop-onboarding/shop-onboarding.page').then((m) => m.ShopOnboardingPage),
+  },
+  {
+    path: 'provider/laundry/customers/:householdUserId',
+    canActivate: [signedInGuard, laundryProviderGuard],
+    loadComponent: () =>
+      import('./pages/provider/laundry-provider-customer.page').then((m) => m.LaundryProviderCustomerPage),
+  },
+  {
+    path: 'provider/milk/customers/:householdUserId',
+    canActivate: [signedInGuard, milkProviderGuard],
+    loadComponent: () => import('./pages/provider/milk-provider-customer.page').then((m) => m.MilkProviderCustomerPage),
+  },
+  {
+    path: 'provider/milk/manual-customers/:customerId',
+    canActivate: [signedInGuard, milkProviderGuard],
+    loadComponent: () => import('./pages/provider/manual-milk-customer.page').then((m) => m.ManualMilkCustomerPage),
+  },
+  {
+    path: 'provider/laundry/manual-customers/:customerId',
+    canActivate: [signedInGuard, laundryProviderGuard],
+    loadComponent: () => import('./pages/provider/manual-laundry-customer.page').then((m) => m.ManualLaundryCustomerPage),
   },
   {
     path: 'onboarding',

@@ -1,0 +1,82 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/provider/milk" />
+    </ion-buttons>
+    <ion-title>{{ customer()?.name ?? 'Customer' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && !customer()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (customer(); as c) {
+    <section class="card">
+      <h3>{{ c.name }}</h3>
+      @if (c.phone) {
+        <p class="muted"><ion-icon name="call-outline" /> {{ c.phone }}</p>
+      }
+      @if (c.address) {
+        <p class="muted">{{ c.address }}</p>
+      }
+      @if (c.isClaimed) {
+        <p class="muted">✅ Linked to {{ c.claimedByName }}'s app account</p>
+      }
+      <div class="action-btns" style="margin-top: 8px;">
+        @if (c.phone) {
+          <a [href]="telLink(c.phone)" class="icon-btn"><ion-icon name="call-outline" /></a>
+          <ion-button size="small" fill="outline" (click)="askOnWhatsApp()"><ion-icon slot="start" name="logo-whatsapp" />Ask</ion-button>
+        }
+        <ion-button size="small" fill="outline" (click)="shareLinkCode()">🔗 Share Link Code</ion-button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Today</h3>
+      <div class="action-btns">
+        <ion-button size="small" (click)="logToday()">🥛 Log Today's Order</ion-button>
+        <ion-button size="small" fill="outline" (click)="logExtra()">+ Log Extra Request</ion-button>
+        <ion-button size="small" fill="outline" color="medium" (click)="logReturn()">↩️ Log Return</ion-button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="month-nav">
+        <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
+        <h3>{{ monthLabel() }}</h3>
+        <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+      </div>
+      <p class="muted">Tap a day to log or override that day's order.</p>
+
+      @if (month(); as m) {
+        <app-milk-calendar [days]="m.days" [baseQuantityLtr]="baseQuantityLtr()" (daySelected)="daySelected($event)" />
+      }
+    </section>
+
+    <section class="card">
+      <div class="section-head"><h3>Recent Entries</h3><span class="count-chip">{{ entries().length }}</span></div>
+      @if (entries().length === 0) {
+        <p class="muted">No entries logged yet.</p>
+      } @else {
+        @for (e of entries(); track e.id) {
+          <div class="cust-row" (click)="togglePaid(e)">
+            <div class="cust-av">{{ e.kind === 'Return' ? '↩️' : e.kind === 'Extra' ? '➕' : '🥛' }}</div>
+            <div class="cust-info">
+              <div class="cust-name">
+                {{ e.quantityLtr }} L{{ e.variety ? ' · ' + e.variety : '' }}
+                {{ e.kind !== 'Regular' ? '(' + e.kind.toLowerCase() + ')' : '' }}
+              </div>
+              <div class="cust-meta">{{ shortDateLabel(e.date) }}{{ e.note ? ' · ' + e.note : '' }}</div>
+            </div>
+            <div class="cust-right">
+              <div class="qty">{{ e.kind === 'Return' ? '-' : '' }}{{ rupeeLabel(e.amount) }}</div>
+              <div class="paid-chip" [class.paid]="e.isPaid" [class.pending]="!e.isPaid">{{ e.isPaid ? 'PAID' : 'PENDING' }}</div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  }
+</ion-content>

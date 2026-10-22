@@ -34,6 +34,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<MilkSettlement> MilkSettlements => Set<MilkSettlement>();
 
+    public DbSet<MilkPayment> MilkPayments => Set<MilkPayment>();
+
     public DbSet<Bill> Bills => Set<Bill>();
 
     public DbSet<QuotationRequest> QuotationRequests => Set<QuotationRequest>();
@@ -49,6 +51,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<DoseLog> DoseLogs => Set<DoseLog>();
 
     public DbSet<Prescription> Prescriptions => Set<Prescription>();
+
+    public DbSet<ProviderLink> ProviderLinks => Set<ProviderLink>();
+
+    public DbSet<ProviderCustomer> ProviderCustomers => Set<ProviderCustomer>();
+
+    public DbSet<ManualMilkEntry> ManualMilkEntries => Set<ManualMilkEntry>();
+
+    public DbSet<ManualLaundryBatch> ManualLaundryBatches => Set<ManualLaundryBatch>();
+
+    public DbSet<LaundryPickupRequest> LaundryPickupRequests => Set<LaundryPickupRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -16,7 +16,11 @@
   } @else {
     @if (contacts().length === 0) {
       <div class="card hint-card">
-        <p>No dhobi contacts yet — add one from <strong>More → Contacts</strong> before creating an entry.</p>
+        <p>No dhobi contacts yet — add one to start creating entries.</p>
+        <ion-button size="small" (click)="addDhobiContact()">
+          <ion-icon slot="start" name="add" />
+          Add dhobi contact
+        </ion-button>
       </div>
     }
 
@@ -40,6 +44,9 @@
             <a [href]="waLink(c.phone)" target="_blank" rel="noopener" class="ic-btn whatsapp"><ion-icon name="logo-whatsapp" /></a>
             <a [href]="telLink(c.phone)" class="ic-btn"><ion-icon name="call-outline" /></a>
           </div>
+        </div>
+        <div class="pickup-request-row">
+          <ion-button size="small" fill="outline" (click)="requestPickup(c.id)">📬 Request Pickup</ion-button>
         </div>
         <div class="stats4">
           <div class="s4i"><div class="lbl">With Dhobi</div><div class="val">{{ withDhobiQty() }}</div><div class="sub">Clothes</div></div>
@@ -97,6 +104,20 @@
                   <div class="dline"><span class="k">Return</span><span class="v">{{ shortDateLabel(b.expectedReturn) }}</span></div>
                 }
               </div>
+              @if (hasPricedItems(b)) {
+                <div class="item-lines">
+                  @for (item of b.items; track item.itemType; let i = $index) {
+                    <div class="item-line">
+                      <span class="il-name">{{ item.itemType }} ×{{ item.quantity }}</span>
+                      @if (item.pricePerItem) {
+                        <button class="paid-badge small" [class.paid]="item.isPaid" (click)="toggleItemPaid(b, i)">
+                          {{ item.isPaid ? 'PAID' : 'PENDING' }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
               <div class="act-btns">
                 <button class="mbtn g" (click)="markPickedUp(b)"><ion-icon name="checkmark-done-outline" />Picked</button>
                 <button class="mbtn" (click)="openShareSheet(b)"><ion-icon name="share-social-outline" />Share</button>
@@ -233,6 +254,20 @@
                   </p>
                   @if (priceBreakdown(b); as breakdown) {
                     <p class="price-breakdown">{{ breakdown }}</p>
+                  }
+                  @if (hasPricedItems(b)) {
+                    <div class="item-lines">
+                      @for (item of b.items; track item.itemType; let i = $index) {
+                        <div class="item-line">
+                          <span class="il-name">{{ item.itemType }} ×{{ item.quantity }}</span>
+                          @if (item.pricePerItem) {
+                            <button class="paid-badge small" [class.paid]="item.isPaid" (click)="toggleItemPaid(b, i)">
+                              {{ item.isPaid ? 'PAID' : 'PENDING' }}
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
                   }
                   <div class="item-actions">
                     @if (b.contactPhone) {

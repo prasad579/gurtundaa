@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Milk &amp; Laundry Provider Portal — Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0f0a1a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  h1 { color: #e9e4f5; font-size: 20px; width: 100%; margin: 0 0 4px; }
+  .sub { color: #a89dc4; font-size: 13px; width: 100%; margin: 0 0 20px; max-width: 900px; }
+  .phone {
+    width: 360px;
+    background: #f7f5fb;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 6px solid #1a1428;
+  }
+  .statusbar { display: flex; justify-content: space-between; padding: 8px 16px 2px; font-size: 11px; font-weight: 600; color: #333; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 10px; }
+  .topbar h2 { font-size: 17px; margin: 0; color: #1f1330; }
+  .topbar .back { font-size: 18px; color: #5a4e75; }
+  .topbar .add-btn { background: #7c3aed; color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+  .scroll { padding: 0 14px 16px; max-height: 640px; overflow-y: auto; }
+  .card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #ece7f7; }
+  .summary-card { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none; }
+  .summary-title { font-size: 12px; opacity: 0.85; margin-bottom: 8px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .summary-item .val { font-size: 18px; font-weight: 800; }
+  .summary-item .lbl { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+  .section-title { font-size: 13px; font-weight: 800; color: #1f1330; margin: 14px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
+  .section-head .section-title { margin: 0; }
+  .count-chip { background: #f1eef9; color: #7c3aed; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+
+  .label { font-size: 11px; font-weight: 700; color: #8a7fa3; margin: 12px 0 6px; }
+  .field { background: #f7f5fb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #1f1330; margin-bottom: 4px; }
+  .field .fl { font-size: 10px; color: #8a7fa3; margin-bottom: 2px; }
+  .save-btn { width: 100%; background: #7c3aed; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 13px; font-weight: 700; margin-top: 18px; }
+  .ghost-btn { width: 100%; background: #f1eef9; color: #7c3aed; border: none; border-radius: 10px; padding: 11px; font-size: 12.5px; font-weight: 700; margin-top: 8px; }
+
+  .seg-row { display: flex; gap: 6px; margin-top: 6px; }
+  .seg-chip { flex: 1; text-align: center; padding: 12px 4px; border-radius: 10px; background: #f7f5fb; font-size: 11.5px; font-weight: 700; color: #5a4e75; border: 1.5px solid transparent; }
+  .seg-chip.sel { background: #ede7fd; border-color: #7c3aed; color: #7c3aed; }
+  .seg-chip .ic { font-size: 20px; display: block; margin-bottom: 4px; }
+
+  .label-title { color: #00c48c; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .label-title .tag { background: rgba(0,196,140,0.15); color: #00c48c; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-left: 8px; vertical-align: middle; }
+
+  /* Invite code */
+  .code-box { text-align: center; background: #ede7fd; border: 1.5px dashed #7c3aed; border-radius: 14px; padding: 18px; margin: 12px 0; }
+  .code-box .code { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #7c3aed; }
+  .code-box .hint { font-size: 10.5px; color: #8a7fa3; margin-top: 6px; }
+  .share-row { display: flex; gap: 8px; margin-top: 10px; }
+  .share-btn { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-size: 11.5px; font-weight: 700; }
+  .share-wa { background: #25d366; color: #fff; }
+  .share-copy { background: #f1eef9; color: #5a4e75; }
+
+  /* Customer / contact rows */
+  .cust-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1eef9; }
+  .cust-row:last-child { border-bottom: none; }
+  .cust-av { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: #ede7fd; }
+  .cust-info { flex: 1; min-width: 0; }
+  .cust-name { font-size: 13px; font-weight: 700; color: #1f1330; }
+  .cust-meta { font-size: 10.5px; color: #8a7fa3; margin-top: 1px; }
+  .cust-right { text-align: right; flex-shrink: 0; }
+  .cust-right .qty { font-size: 13px; font-weight: 800; color: #1f1330; }
+  .paid-chip { margin-top: 4px; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; }
+  .paid-chip.paid { background: rgb(45 211 111 / 0.15); color: #2e7d32; }
+  .paid-chip.pending { background: rgb(255 152 0 / 0.15); color: #e65100; }
+
+  .muted { font-size: 11.5px; color: #8a7fa3; text-align: center; padding: 10px 0; }
+  .link-note { background: #fff8e1; border: 1px dashed #ffcc80; border-radius: 10px; padding: 10px; font-size: 10.5px; color: #8a6d3b; margin-top: 14px; }
+
+  .tel { font-size: 9px; color: #7c3aed; background: #f1eef9; padding: 2px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Milk &amp; Laundry Provider Portal — Prototype</h1>
+<p class="sub">
+  New read-only portal so a milkman/dhobi can register their own account, link the households who already added
+  them as a contact, and see an aggregated day-to-day view of who gave them what — without the household doing
+  anything differently. Linking happens via a one-time invite code shared from the household's contact card
+  (no phone-number auto-matching, no account conflicts). The household stays the single source of truth —
+  quantities, pickups and "paid" status are all set from their side and simply mirrored here.
+</p>
+
+<!-- SCREEN 1: Household side — invite the contact -->
+<div>
+  <div class="label-title">① Household — invite your dhobi/milkman <span class="tag">existing contact card</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><span class="back">←</span><h2>Dhobi Contacts</h2><div></div></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🧺</div>
+          <div class="cust-info">
+            <div class="cust-name">Ramesh Dhobi <span class="tel">Default</span></div>
+            <div class="cust-meta">📞 98765 43210</div>
+          </div>
+        </div>
+        <button class="ghost-btn">🔗 Invite as Provider</button>
+      </div>
+
+      <div class="code-box">
+        <div class="fl" style="font-size:10.5px; color:#7c3aed; font-weight:700; margin-bottom: 6px;">Share this with Ramesh</div>
+        <div class="code">GRT-4F2A</div>
+        <div class="hint">He enters this once, after signing up, to see your laundry orders. You can revoke it anytime from here.</div>
+      </div>
+      <div class="share-row">
+        <div class="share-btn share-wa">💬 Share via WhatsApp</div>
+        <div class="share-btn share-copy">📋 Copy code</div>
+      </div>
+
+      <div class="link-note">
+        💡 Already linked? This card will show "✅ Linked — can see your orders" instead, with a "Revoke access" option.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: Provider sign-up -->
+<div>
+  <div class="label-title">② Provider sign-up <span class="tag">new account type</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Create Account</h2><div></div></div>
+    <div class="scroll">
+      <div class="label">I provide</div>
+      <div class="seg-row">
+        <div class="seg-chip"><span class="ic">🥛</span>Milk</div>
+        <div class="seg-chip sel"><span class="ic">🧺</span>Laundry</div>
+        <div class="seg-chip"><span class="ic">🛒</span>Shop</div>
+      </div>
+
+      <div class="label">Your Details</div>
+      <div class="field"><div class="fl">Name</div>Ramesh Dhobi</div>
+      <div class="field"><div class="fl">Phone number</div>98765 43210</div>
+      <div class="field"><div class="fl">Password</div>••••••••</div>
+
+      <button class="save-btn">Create Provider Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: Provider — link a customer -->
+<div>
+  <div class="label-title">③ Provider — link a customer</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>My Customers</h2><div class="add-btn">+</div></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="label" style="margin-top:0;">Link a new customer</div>
+        <div class="field"><div class="fl">Enter their invite code</div>GRT-4F2A</div>
+        <button class="save-btn" style="margin-top:10px;">Link Customer</button>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">Linked Customers <span class="count-chip">6</span></div>
+      </div>
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Priya's Household</div>
+            <div class="cust-meta">Linked 12 Oct · Jubilee Hills</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Krishna Nagar Flat 3B</div>
+            <div class="cust-meta">Linked 8 Oct · Krishna Nagar</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Rao Residence</div>
+            <div class="cust-meta">Linked 2 Oct · Banjara Hills</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: Laundry provider dashboard home -->
+<div>
+  <div class="label-title">④ Laundry Provider — Today's Dashboard <span class="tag">read-only</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>🧺 My Laundry Rounds</h2><div></div></div>
+    <div class="scroll">
+
+      <div class="card summary-card">
+        <div class="summary-title">Today · 21 Oct 2026</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="val">5</div><div class="lbl">Customers Today</div></div>
+          <div class="summary-item"><div class="val">38</div><div class="lbl">Clothes Given</div></div>
+          <div class="summary-item"><div class="val">₹1,240</div><div class="lbl">Expected</div></div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">📥 Gave Clothes Today <span class="count-chip">5</span></div>
+      </div>
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Priya's Household</div>
+            <div class="cust-meta">8 items · Wash &amp; Iron</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹320</div>
+            <div class="paid-chip pending">PENDING</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Krishna Nagar Flat 3B</div>
+            <div class="cust-meta">12 items · Iron Only</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹180</div>
+            <div class="paid-chip paid">PAID</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Rao Residence</div>
+            <div class="cust-meta">6 items · Dry Clean</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹450</div>
+            <div class="paid-chip pending">PENDING</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">💰 This Month</div>
+      </div>
+      <div class="card">
+        <div class="summary-grid" style="grid-template-columns: repeat(2,1fr);">
+          <div class="summary-item" style="color:#1f1330;"><div class="val" style="color:#2e7d32;">₹9,860</div><div class="lbl" style="color:#8a7fa3;">Received</div></div>
+          <div class="summary-item" style="color:#1f1330;"><div class="val" style="color:#e65100;">₹2,140</div><div class="lbl" style="color:#8a7fa3;">Pending</div></div>
+        </div>
+      </div>
+
+      <div class="link-note">
+        💡 "Paid"/"Pending" here mirrors what the household marks on their own Laundry page — nothing to tap, it just syncs.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 5: Milk provider dashboard home -->
+<div>
+  <div class="label-title">⑤ Milk Provider — Today's Dashboard <span class="tag">read-only</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>🥛 My Milk Round</h2><div></div></div>
+    <div class="scroll">
+
+      <div class="card summary-card">
+        <div class="summary-title">Today · 21 Oct 2026</div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="val">14</div><div class="lbl">Active Customers</div></div>
+          <div class="summary-item"><div class="val">22 L</div><div class="lbl">Total Today</div></div>
+          <div class="summary-item"><div class="val">₹1,100</div><div class="lbl">Expected</div></div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">🥛 Deliver Today <span class="count-chip">14</span></div>
+      </div>
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Priya's Household</div>
+            <div class="cust-meta">1.5 L · Cow milk</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹75</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Krishna Nagar Flat 3B</div>
+            <div class="cust-meta">1 L · Buffalo milk</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹60</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">⏸️</div>
+          <div class="cust-info">
+            <div class="cust-name">Rao Residence</div>
+            <div class="cust-meta">Paused till 24 Oct</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">💰 This Month</div>
+      </div>
+      <div class="card">
+        <div class="summary-grid" style="grid-template-columns: repeat(2,1fr);">
+          <div class="summary-item" style="color:#1f1330;"><div class="val" style="color:#2e7d32;">₹18,400</div><div class="lbl" style="color:#8a7fa3;">Received</div></div>
+          <div class="summary-item" style="color:#1f1330;"><div class="val" style="color:#e65100;">₹3,300</div><div class="lbl" style="color:#8a7fa3;">Pending</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 6: Provider — customer detail (read only) -->
+<div>
+  <div class="label-title">⑥ Provider — customer detail <span class="tag">tap a row from ④/⑤</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><span class="back">←</span><h2>Rao Residence</h2><div></div></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🏠</div>
+          <div class="cust-info">
+            <div class="cust-name">Rao Residence</div>
+            <div class="cust-meta">Banjara Hills · Linked 2 Oct 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Active Batch</div>
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🧺</div>
+          <div class="cust-info">
+            <div class="cust-name">Dry Clean — 6 items</div>
+            <div class="cust-meta">Given 20 Oct · Expected back 23 Oct</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹450</div>
+            <div class="paid-chip pending">PENDING</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">History</div>
+      <div class="card">
+        <div class="cust-row">
+          <div class="cust-av">🧺</div>
+          <div class="cust-info">
+            <div class="cust-name">Wash &amp; Iron — 10 items</div>
+            <div class="cust-meta">Picked up 14 Oct</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹280</div>
+            <div class="paid-chip paid">PAID</div>
+          </div>
+        </div>
+        <div class="cust-row">
+          <div class="cust-av">🧺</div>
+          <div class="cust-info">
+            <div class="cust-name">Iron Only — 15 items</div>
+            <div class="cust-meta">Picked up 5 Oct</div>
+          </div>
+          <div class="cust-right">
+            <div class="qty">₹150</div>
+            <div class="paid-chip paid">PAID</div>
+          </div>
+        </div>
+      </div>
+      <div class="muted">No edit controls here — Rao Residence manages their own entries; this is a mirror view only.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

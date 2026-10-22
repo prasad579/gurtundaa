@@ -9,6 +9,9 @@
     @if (enabledFeatures().has('milk')) {
       <ion-tab-button tab="milk">
         <ion-icon name="water-outline" />
+        @if (unseenMilkActivity() > 0) {
+          <ion-badge color="danger">{{ unseenMilkActivity() }}</ion-badge>
+        }
         <ion-label>Milk</ion-label>
       </ion-tab-button>
     }
@@ -60,6 +63,20 @@
       <ion-tab-button tab="shop/profile">
         <ion-icon name="storefront-outline" />
         <ion-label>Shop</ion-label>
+      </ion-tab-button>
+    }
+
+    @if (isMilkProvider()) {
+      <ion-tab-button tab="provider/milk">
+        <ion-icon name="people-outline" />
+        <ion-label>My Round</ion-label>
+      </ion-tab-button>
+    }
+
+    @if (isLaundryProvider()) {
+      <ion-tab-button tab="provider/laundry">
+        <ion-icon name="people-outline" />
+        <ion-label>My Customers</ion-label>
       </ion-tab-button>
     }
 

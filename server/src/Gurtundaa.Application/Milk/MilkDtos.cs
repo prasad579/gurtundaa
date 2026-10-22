@@ -7,6 +7,7 @@ public sealed record MilkSubscriptionDto(
     Guid? ContactId,
     string? ContactName,
     string? ContactPhone,
+    bool IsSelfCollected,
     DateOnly StartDate,
     bool MorningEnabled,
     decimal MorningQuantityLtr,
@@ -22,6 +23,7 @@ public sealed record MilkSubscriptionDto(
 
 public sealed record SaveMilkSubscriptionRequest(
     Guid? ContactId,
+    bool IsSelfCollected,
     [Required] DateOnly StartDate,
     bool MorningEnabled,
     [Range(0, 50)] decimal MorningQuantityLtr,
@@ -57,9 +59,37 @@ public sealed record MilkMonthSummaryDto(
     decimal ExtraAmount,
     decimal TotalAmount,
     bool IsPaid,
-    DateTimeOffset? PaidAt);
+    DateTimeOffset? PaidAt,
+    /// <summary>Sum of this month's logged <see cref="MilkPaymentDto"/> rows — lets partial daily/weekly payments show alongside the all-or-nothing monthly toggle above.</summary>
+    decimal PaidSoFar = 0);
 
 public sealed record MilkMonthDto(IReadOnlyList<MilkCalendarDayDto> Days, MilkMonthSummaryDto Summary);
+
+public sealed record MilkPaymentDto(
+    Guid Id,
+    DateOnly Date,
+    decimal Amount,
+    string? Note,
+    PaymentMethod Method,
+    PaymentStatus Status,
+    DateTimeOffset CreatedAt);
+
+public sealed record SaveMilkPaymentRequest(
+    [Required] DateOnly Date,
+    [Range(0.01, 1_000_000)] decimal Amount,
+    [MaxLength(200)] string? Note);
+
+// ---------- Direct UPI payments (customer pays the provider's own UPI ID; Gurtundaa never touches the money) ----------
+
+/// <summary>What the household needs to build a `upi://pay` link for their linked milk provider — null fields mean "can't pay via UPI yet" (not linked, or linked but provider hasn't set one up).</summary>
+public sealed record MilkProviderPaymentInfoDto(string? ProviderDisplayName, string? UpiId);
+
+public sealed record InitiateUpiPaymentRequest(
+    [Range(0.01, 1_000_000)] decimal Amount,
+    [MaxLength(200)] string? Note);
+
+/// <summary>A household's UPI payment still awaiting (or rejected from) their provider's confirmation — shown alongside the household name on the provider's side.</summary>
+public sealed record PendingMilkPaymentDto(Guid Id, Guid HouseholdUserId, string HouseholdName, DateOnly Date, decimal Amount, string? Note, DateTimeOffset CreatedAt);
 
 public sealed record SetMilkSettlementPaidRequest(bool IsPaid);
 
@@ -94,7 +124,14 @@ public sealed record SaveMilkQuantityChangeRequest(
     [Range(0, 50)] decimal EveningQuantityLtr,
     [MaxLength(200)] string? Reason);
 
-public sealed record MilkExtraRequestDto(Guid Id, DateOnly Date, MilkSlot Slot, decimal QuantityLtr, string? Reason, DateTimeOffset CreatedAt);
+public sealed record MilkExtraRequestDto(
+    Guid Id,
+    DateOnly Date,
+    MilkSlot Slot,
+    decimal QuantityLtr,
+    string? Reason,
+    DateTimeOffset CreatedAt,
+    string? AddedByProviderName = null);
 
 public sealed record SaveMilkExtraRequestRequest(
     [Required] DateOnly Date,
@@ -115,4 +152,5 @@ public sealed record MilkActivityItemDto(
     string Description,
     DateOnly Date,
     decimal? QuantityLtr,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt,
+    string? AddedByProviderName = null);

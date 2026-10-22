@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+
+# User-uploaded shop images — not source, don't commit
+wwwroot/uploads/shops/*
+!wwwroot/uploads/shops/.gitkeep

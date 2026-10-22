@@ -332,6 +332,54 @@
   &.pending { background: var(--ion-color-medium, #92949c); }
 }
 
+.payments-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ion-color-step-50, #f7f8fb);
+
+  .pb-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    > div { flex: 1; }
+  }
+
+  .pb-btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    ion-button { margin: 0; flex: 1; font-size: 10.5px; }
+  }
+
+  .pss.good { color: #2e7d32; }
+
+  .pb-list { margin-top: 10px; border-top: 1px solid var(--ion-color-step-100, #e8e8e8); padding-top: 6px; }
+
+  .pb-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+
+  .pb-info { display: flex; flex-direction: column; }
+  .pb-amt { font-size: 12px; font-weight: 700; color: #2e7d32; }
+  .pb-date { font-size: 10px; color: var(--ion-color-medium); }
+  .pb-status { display: block; font-size: 9.5px; font-weight: 700; margin-top: 1px; }
+  .pb-status.pending { color: #e65100; }
+  .pb-status.rejected { color: #c62828; }
+
+  .pb-del {
+    background: none;
+    border: none;
+    color: var(--ion-color-medium);
+    font-size: 14px;
+    padding: 4px;
+  }
+}
+
 .share-row {
   display: flex;
   gap: 8px;
@@ -481,6 +529,7 @@
   min-width: 0;
 
   .att { font-size: 11.5px; font-weight: 700; }
+  .by-provider { font-size: 10.5px; font-weight: 600; color: var(--ion-color-primary, #7c3aed); }
   .ats { font-size: 10px; color: var(--ion-color-medium); }
 }
 

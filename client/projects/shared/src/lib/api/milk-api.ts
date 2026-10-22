@@ -3,16 +3,20 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { GURTUNDAA_API_URL } from './api-config';
 import {
+  InitiateUpiPaymentRequest,
   MilkActivityItem,
   MilkExtraRequestItem,
   MilkMonth,
   MilkMonthSummary,
   MilkPause,
+  MilkPayment,
+  MilkProviderPaymentInfo,
   MilkQuantityChange,
   MilkSubscription,
   MilkToday,
   SaveMilkExtraRequestRequest,
   SaveMilkPauseRequest,
+  SaveMilkPaymentRequest,
   SaveMilkQuantityChangeRequest,
   SaveMilkSubscriptionRequest,
   SetMilkDeliveryOverrideRequest,
@@ -87,6 +91,15 @@ export class MilkApi {
     });
   }
 
+  /** Count of provider-added overrides/extras not yet seen — drives the Milk tab badge. */
+  getUnseenProviderActivityCount(): Observable<number> {
+    return this.http.get<number>(`${this.url}/activity/unseen-count`);
+  }
+
+  markProviderActivitySeen(): Observable<void> {
+    return this.http.post<void>(`${this.url}/activity/mark-seen`, {});
+  }
+
   listQuantityChanges(upcomingOnly = false): Observable<MilkQuantityChange[]> {
     return this.http.get<MilkQuantityChange[]>(`${this.url}/quantity-changes`, {
       params: new HttpParams().set('upcoming', upcomingOnly),
@@ -107,5 +120,30 @@ export class MilkApi {
 
   setSettlementPaid(year: number, month: number, request: SetMilkSettlementPaidRequest): Observable<MilkMonthSummary> {
     return this.http.patch<MilkMonthSummary>(`${this.url}/settlement/${year}/${month}`, request);
+  }
+
+  /** A lighter alternative to the monthly settlement toggle — log a payment of any amount, any day. */
+  listPayments(year: number, month: number): Observable<MilkPayment[]> {
+    return this.http.get<MilkPayment[]>(`${this.url}/payments`, {
+      params: new HttpParams().set('year', year).set('month', month),
+    });
+  }
+
+  createPayment(request: SaveMilkPaymentRequest): Observable<MilkPayment> {
+    return this.http.post<MilkPayment>(`${this.url}/payments`, request);
+  }
+
+  deletePayment(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/payments/${id}`);
+  }
+
+  /** What's needed to build a `upi://pay` link for the household's linked provider — null fields if not linkable yet. */
+  getProviderPaymentInfo(): Observable<MilkProviderPaymentInfo> {
+    return this.http.get<MilkProviderPaymentInfo>(`${this.url}/provider-payment-info`);
+  }
+
+  /** Household declares they paid via UPI outside the app — stays pending until the provider confirms receiving it. */
+  initiateUpiPayment(request: InitiateUpiPaymentRequest): Observable<MilkPayment> {
+    return this.http.post<MilkPayment>(`${this.url}/payments/upi`, request);
   }
 }

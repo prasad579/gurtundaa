@@ -74,6 +74,10 @@ public class ServiceContactService(AppDbContext db, ICurrentUser currentUser, Ti
             .Where(b => b.UserId == currentUser.UserId && b.ContactId == id)
             .ExecuteUpdateAsync(b => b.SetProperty(x => x.ContactId, (Guid?)null), ct);
 
+        await db.ProviderLinks
+            .Where(l => l.HouseholdUserId == currentUser.UserId && l.ServiceContactId == id)
+            .ExecuteDeleteAsync(ct);
+
         return await Mine.Where(c => c.Id == id).ExecuteDeleteAsync(ct) > 0;
     }
 

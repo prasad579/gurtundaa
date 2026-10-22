@@ -9,9 +9,11 @@
     <h2>create account</h2>
     <p class="subtitle">let's get started with your account</p>
 
-    <ion-segment [value]="userType()" (ionChange)="setUserType($event.detail.value)">
+    <ion-segment [value]="userType()" (ionChange)="setUserType($event.detail.value)" scrollable="true">
       <ion-segment-button value="Customer"><ion-label>shopping for my home</ion-label></ion-segment-button>
       <ion-segment-button value="Shop"><ion-label>i run a shop</ion-label></ion-segment-button>
+      <ion-segment-button value="MilkProvider"><ion-label>🥛 i deliver milk</ion-label></ion-segment-button>
+      <ion-segment-button value="LaundryProvider"><ion-label>🧺 i run a laundry</ion-label></ion-segment-button>
     </ion-segment>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>

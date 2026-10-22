@@ -31,7 +31,7 @@ export interface ReminderStats {
   done: number;
 }
 
-export type UserType = 'Customer' | 'Shop';
+export type UserType = 'Customer' | 'Shop' | 'MilkProvider' | 'LaundryProvider';
 
 export interface User {
   id: string;
@@ -85,14 +85,28 @@ export type SaveHouseholdProfileRequest = HouseholdProfile;
 
 // ---------- Shop profile (marketplace shop accounts) ----------
 
+export type DayOfWeekName = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+
 export interface ShopProfile {
   shopName: string;
   city: string | null;
   address: string | null;
   servedCategoryKeys: string[];
+  imageUrl: string | null;
+  contactPhones: string[];
+  /** "HH:mm:ss" (server TimeOnly serialized form), or null if not set. */
+  opensAt: string | null;
+  closesAt: string | null;
+  openDays: DayOfWeekName[];
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export type SaveShopProfileRequest = ShopProfile;
+
+export interface UploadShopImageResponse {
+  imageUrl: string;
+}
 
 // ---------- Service contacts (general household directory) ----------
 
@@ -126,6 +140,7 @@ export interface MilkSubscription {
   contactId: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  isSelfCollected: boolean;
   startDate: string;
   morningEnabled: boolean;
   morningQuantityLtr: number;
@@ -142,6 +157,7 @@ export interface MilkSubscription {
 
 export interface SaveMilkSubscriptionRequest {
   contactId?: string | null;
+  isSelfCollected: boolean;
   startDate: string;
   morningEnabled: boolean;
   morningQuantityLtr: number;
@@ -183,12 +199,62 @@ export interface MilkMonthSummary {
   extraAmount: number;
   totalAmount: number;
   isPaid: boolean;
+  paidSoFar: number;
   paidAt: string | null;
 }
 
 export interface MilkMonth {
   days: MilkCalendarDay[];
   summary: MilkMonthSummary;
+}
+
+export type PaymentMethod = 'Cash' | 'Upi' | 'Other';
+export type PaymentStatus = 'Confirmed' | 'AwaitingConfirmation' | 'Rejected';
+
+export interface MilkPayment {
+  id: string;
+  date: string;
+  amount: number;
+  note: string | null;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  createdAt: string;
+}
+
+export interface SaveMilkPaymentRequest {
+  date: string;
+  amount: number;
+  note?: string | null;
+}
+
+// ---------- Direct UPI payments ----------
+
+export interface MilkProviderPaymentInfo {
+  providerDisplayName: string | null;
+  upiId: string | null;
+}
+
+export interface InitiateUpiPaymentRequest {
+  amount: number;
+  note?: string | null;
+}
+
+export interface PendingMilkPayment {
+  id: string;
+  householdUserId: string;
+  householdName: string;
+  date: string;
+  amount: number;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface ProviderPaymentSettings {
+  upiId: string | null;
+}
+
+export interface SaveProviderPaymentSettingsRequest {
+  upiId: string | null;
 }
 
 export interface SetMilkSettlementPaidRequest {
@@ -250,6 +316,7 @@ export interface MilkExtraRequestItem {
   quantityLtr: number;
   reason: string | null;
   createdAt: string;
+  addedByProviderName: string | null;
 }
 
 export interface SaveMilkExtraRequestRequest {
@@ -267,6 +334,7 @@ export interface MilkActivityItem {
   date: string;
   quantityLtr: number | null;
   occurredAt: string;
+  addedByProviderName: string | null;
 }
 
 // ---------- Laundry management ----------
@@ -281,6 +349,12 @@ export interface LaundryItemLine {
   pricePerItem?: number | null;
   /** Flags this specific item for an earlier pickup than the rest of the batch (e.g. school uniform needed sooner). */
   neededBy?: string | null;
+  /** Per-item settlement, for batches paid off in stages. The batch's own isPaid is derived from this. */
+  isPaid?: boolean;
+}
+
+export interface SetLaundryItemPaidRequest {
+  isPaid: boolean;
 }
 
 export interface LaundryBatch {
@@ -629,4 +703,241 @@ export interface SavePrescriptionRequest {
   visitDate: string;
   revisitDate?: string | null;
   medicines: SaveMedicineRequest[];
+}
+
+// ---------- Provider portal (milkman/dhobi accounts linked to household contacts) ----------
+
+export interface ProviderLink {
+  id: string;
+  serviceContactId: string;
+  contactName: string;
+  category: ServiceContactCategory;
+  inviteCode: string;
+  isClaimed: boolean;
+  providerDisplayName: string | null;
+  createdAt: string;
+  claimedAt: string | null;
+}
+
+export interface CreateProviderInviteRequest {
+  serviceContactId: string;
+}
+
+export interface ClaimProviderInviteRequest {
+  inviteCode: string;
+}
+
+export interface ProviderCustomer {
+  householdUserId: string;
+  householdName: string;
+  city: string | null;
+  phone: string | null;
+  linkedAt: string;
+}
+
+export interface ProviderLaundryTodayItem {
+  householdUserId: string;
+  householdName: string;
+  batchId: string;
+  itemsSummary: string;
+  itemCount: number;
+  amount: number | null;
+  isPaid: boolean;
+}
+
+export interface ProviderLaundryDashboard {
+  customersToday: number;
+  itemsGivenToday: number;
+  expectedToday: number;
+  gaveToday: ProviderLaundryTodayItem[];
+  receivedThisMonth: number;
+  pendingThisMonth: number;
+  customers: ProviderCustomer[];
+}
+
+export interface ProviderLaundryCustomerDetail {
+  householdUserId: string;
+  householdName: string;
+  city: string | null;
+  active: LaundryBatch[];
+  history: LaundryBatch[];
+}
+
+export interface ProviderMilkTodayItem {
+  householdUserId: string;
+  householdName: string;
+  quantityLtr: number;
+  amount: number;
+  status: MilkCalendarStatus;
+}
+
+export interface ProviderMilkDashboard {
+  activeCustomers: number;
+  deliveredCustomers: number;
+  pausedCustomers: number;
+  missedCustomers: number;
+  increasedQuantityCustomers: number;
+  decreasedQuantityCustomers: number;
+  plannedLitresToday: number;
+  totalLitresToday: number;
+  expectedToday: number;
+  deliverToday: ProviderMilkTodayItem[];
+  totalLitresThisMonth: number;
+  deliveredDaysThisMonth: number;
+  pausedDaysThisMonth: number;
+  missedDaysThisMonth: number;
+  expectedThisMonth: number;
+  receivedThisMonth: number;
+  pendingThisMonth: number;
+  customers: ProviderCustomer[];
+}
+
+export interface ProviderMilkCustomerDetail {
+  householdUserId: string;
+  householdName: string;
+  city: string | null;
+  subscription: MilkSubscription | null;
+}
+
+// ---------- Manual (off-app) customers ----------
+
+export interface ProviderManualCustomer {
+  id: string;
+  name: string;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  defaultQuantityLtr: number | null;
+  defaultRatePerLtr: number | null;
+  defaultSlot: MilkSlot;
+  defaultVariety: string | null;
+  linkCode: string | null;
+  isClaimed: boolean;
+  claimedByName: string | null;
+  createdAt: string;
+}
+
+export interface SaveProviderManualCustomerRequest {
+  name: string;
+  phone?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  defaultQuantityLtr?: number | null;
+  defaultRatePerLtr?: number | null;
+  defaultSlot?: MilkSlot;
+  defaultVariety?: string | null;
+}
+
+export interface ClaimProviderCustomerRequest {
+  linkCode: string;
+}
+
+export type ManualMilkEntryKind = 'Regular' | 'Extra' | 'Return';
+
+export interface ManualMilkEntry {
+  id: string;
+  date: string;
+  slot: MilkSlot;
+  variety: string | null;
+  quantityLtr: number;
+  ratePerLtr: number;
+  amount: number;
+  kind: ManualMilkEntryKind;
+  note: string | null;
+  isPaid: boolean;
+}
+
+export interface SaveManualMilkEntryRequest {
+  date: string;
+  slot: MilkSlot;
+  variety?: string | null;
+  quantityLtr: number;
+  ratePerLtr: number;
+  isPaid?: boolean;
+}
+
+export interface AddManualMilkExtraRequest {
+  date: string;
+  slot: MilkSlot;
+  variety?: string | null;
+  quantityLtr: number;
+  ratePerLtr: number;
+  note?: string | null;
+}
+
+export interface AddManualMilkReturnRequest {
+  date: string;
+  slot: MilkSlot;
+  variety?: string | null;
+  quantityLtr: number;
+  ratePerLtr: number;
+  note?: string | null;
+}
+
+export interface SetManualMilkPaidRequest {
+  isPaid: boolean;
+}
+
+export interface ManualMilkDaySummary {
+  date: string;
+  customerCount: number;
+  plannedLitres: number;
+  loggedLitres: number;
+  amount: number;
+}
+
+export interface ManualMilkDayCustomer {
+  providerCustomerId: string;
+  customerName: string;
+  plannedQuantityLtr: number;
+  loggedEntry: ManualMilkEntry | null;
+}
+
+export interface ManualLaundryBatch {
+  id: string;
+  serviceType: LaundryServiceType;
+  givenOn: string;
+  expectedReturn: string | null;
+  status: LaundryBatchStatus;
+  pickedUpOn: string | null;
+  amount: number | null;
+  isPaid: boolean;
+  items: LaundryItemLine[];
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface SaveManualLaundryBatchRequest {
+  serviceType: LaundryServiceType;
+  givenOn: string;
+  expectedReturn?: string | null;
+  items: LaundryItemLine[];
+  notes?: string | null;
+}
+
+export interface MarkManualPickedUpRequest {
+  amount?: number | null;
+  items?: LaundryItemLine[] | null;
+}
+
+export interface SetManualLaundryPaidRequest {
+  isPaid: boolean;
+}
+
+// ---------- Laundry pickup requests ----------
+
+export interface LaundryPickupRequest {
+  id: string;
+  householdUserId: string;
+  householdName: string;
+  requestedDate: string;
+  note: string | null;
+  createdAt: string;
+  isHandled: boolean;
+}
+
+export interface CreatePickupRequestRequest {
+  serviceContactId: string;
+  requestedDate: string;
+  note?: string | null;
 }

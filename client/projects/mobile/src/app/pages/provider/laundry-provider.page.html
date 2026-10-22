@@ -1,0 +1,149 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>🧺 My Laundry Rounds</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && !dashboard()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (dashboard(); as d) {
+    <section class="card summary-card">
+      <div class="summary-title">Today</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="val">{{ d.customersToday }}</div><div class="lbl">Customers</div></div>
+        <div class="summary-item"><div class="val">{{ d.itemsGivenToday }}</div><div class="lbl">Clothes Given</div></div>
+        <div class="summary-item"><div class="val">{{ rupeeLabel(d.expectedToday) }}</div><div class="lbl">Expected</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>🔗 Link a Customer</h3>
+      <p class="muted">Enter the invite code your customer shared with you.</p>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-input
+            [value]="linkCode()"
+            (ionInput)="setLinkCode($any($event.target).value)"
+            placeholder="GRT-XXXX"
+            [maxlength]="12"
+          />
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" size="small" [disabled]="linking() || !linkCode()" (click)="linkCustomer()">
+        {{ linking() ? 'linking…' : 'Link Customer' }}
+      </ion-button>
+    </section>
+
+    @if (pickupRequests().length > 0) {
+      <section class="card">
+        <div class="section-head"><h3>📬 Pickup Requests</h3><span class="count-chip">{{ pickupRequests().length }}</span></div>
+        @for (r of pickupRequests(); track r.id) {
+          <div class="cust-row">
+            <div class="cust-av">📬</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ r.householdName }}</div>
+              <div class="cust-meta">Wants pickup {{ shortDateLabel(r.requestedDate) }}{{ r.note ? ' · ' + r.note : '' }}</div>
+            </div>
+            <ion-button size="small" fill="outline" (click)="markPickupHandled(r)">
+              <ion-icon slot="icon-only" name="checkmark-done-outline" />
+            </ion-button>
+          </div>
+        }
+      </section>
+    }
+
+    <section class="card">
+      <div class="section-head"><h3>📥 Gave Clothes Today</h3><span class="count-chip">{{ d.gaveToday.length }}</span></div>
+      @if (d.gaveToday.length === 0) {
+        <p class="muted">No pickups today yet.</p>
+      } @else {
+        @for (item of d.gaveToday; track item.batchId) {
+          <div class="cust-row" (click)="openCustomer(item.householdUserId)">
+            <div class="cust-av">🏠</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ item.householdName }}</div>
+              <div class="cust-meta">{{ item.itemsSummary }}</div>
+            </div>
+            <div class="cust-right">
+              @if (item.amount) {
+                <div class="qty">{{ rupeeLabel(item.amount) }}</div>
+              }
+              <div class="paid-chip" [class.paid]="item.isPaid" [class.pending]="!item.isPaid">
+                {{ item.isPaid ? 'PAID' : 'PENDING' }}
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="card">
+      <h3>💰 This Month</h3>
+      <div class="summary-grid two">
+        <div class="summary-item dark"><div class="val good">{{ rupeeLabel(d.receivedThisMonth) }}</div><div class="lbl">Received</div></div>
+        <div class="summary-item dark"><div class="val warn">{{ rupeeLabel(d.pendingThisMonth) }}</div><div class="lbl">Pending</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><h3>Linked Customers</h3><span class="count-chip">{{ d.customers.length }}</span></div>
+      @if (d.customers.length === 0) {
+        <p class="muted">No customers linked yet — share your invite code above once a customer gives it to you.</p>
+      } @else {
+        @for (c of d.customers; track c.householdUserId) {
+          <div class="cust-row">
+            <div class="cust-av" (click)="openCustomer(c.householdUserId)">🏠</div>
+            <div class="cust-info" (click)="openCustomer(c.householdUserId)">
+              <div class="cust-name">{{ c.householdName }}</div>
+              @if (c.city) {
+                <div class="cust-meta"><ion-icon name="location-outline" /> {{ c.city }}</div>
+              }
+            </div>
+            @if (c.phone) {
+              <ion-button size="small" fill="clear" (click)="askOnWhatsApp(c.householdName, c.phone)">
+                <ion-icon slot="icon-only" name="logo-whatsapp" />
+              </ion-button>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>📇 Manual Customers</h3>
+        <ion-button size="small" fill="clear" (click)="addManualCustomer()">
+          <ion-icon slot="icon-only" name="add" />
+        </ion-button>
+      </div>
+      <p class="muted">Shops, hotels, or anyone not on the app — you manage these yourself.</p>
+      @if (manual().length === 0) {
+        <p class="muted">No manual customers yet.</p>
+      } @else {
+        @for (c of manual(); track c.id) {
+          <div class="cust-row">
+            <div class="cust-av" (click)="openManualCustomer(c.id)">🏪</div>
+            <div class="cust-info" (click)="openManualCustomer(c.id)">
+              <div class="cust-name">{{ c.name }}</div>
+              @if (c.address) {
+                <div class="cust-meta"><ion-icon name="location-outline" /> {{ c.address }}</div>
+              }
+            </div>
+            @if (c.phone) {
+              <ion-button size="small" fill="clear" (click)="askOnWhatsApp(c.name, c.phone)">
+                <ion-icon slot="icon-only" name="logo-whatsapp" />
+              </ion-button>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+</ion-content>

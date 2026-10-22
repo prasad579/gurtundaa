@@ -2,7 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { GURTUNDAA_API_URL } from './api-config';
-import { LaundryBatch, LaundryBatchStatus, MarkPickedUpRequest, SaveLaundryBatchRequest, SetLaundryPaidRequest } from './models';
+import {
+  LaundryBatch,
+  LaundryBatchStatus,
+  MarkPickedUpRequest,
+  SaveLaundryBatchRequest,
+  SetLaundryItemPaidRequest,
+  SetLaundryPaidRequest,
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class LaundryApi {
@@ -27,6 +34,10 @@ export class LaundryApi {
 
   setPaid(id: string, request: SetLaundryPaidRequest): Observable<LaundryBatch> {
     return this.http.patch<LaundryBatch>(`${this.url}/${id}/paid`, request);
+  }
+
+  setItemPaid(id: string, itemIndex: number, request: SetLaundryItemPaidRequest): Observable<LaundryBatch> {
+    return this.http.patch<LaundryBatch>(`${this.url}/${id}/items/${itemIndex}/paid`, request);
   }
 
   delete(id: string): Observable<void> {

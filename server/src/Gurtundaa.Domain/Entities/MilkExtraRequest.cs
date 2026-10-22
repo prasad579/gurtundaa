@@ -16,5 +16,13 @@ public class MilkExtraRequest
 
     public string? Reason { get; set; }
 
+    /// <summary>Set when a linked provider (not the household) added this — e.g. the milkman logging extra milk the household forgot to request.</summary>
+    public Guid? AddedByProviderId { get; set; }
+
+    public AppUser? AddedByProvider { get; set; }
+
+    /// <summary>Null until the household has seen this entry in their activity feed — drives the "new from your provider" badge.</summary>
+    public DateTimeOffset? SeenByHouseholdAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

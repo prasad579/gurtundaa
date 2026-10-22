@@ -9,7 +9,10 @@ public sealed record LaundryItemLine(
     decimal? PricePerItem = null,
     // Lets a specific item (e.g. school uniform) be flagged for an earlier pickup than the rest
     // of the batch's ExpectedReturn — surfaced as a "Special Reminder" separate from the batch date.
-    DateOnly? NeededBy = null);
+    DateOnly? NeededBy = null,
+    // Per-item settlement, for batches picked up/settled in stages. The batch's own IsPaid is
+    // derived from this — true only once every item here is.
+    bool IsPaid = false);
 
 public sealed record LaundryBatchDto(
     Guid Id,
@@ -39,3 +42,5 @@ public sealed record SaveLaundryBatchRequest(
 public sealed record MarkPickedUpRequest(decimal? Amount, IReadOnlyList<LaundryItemLine>? Items = null);
 
 public sealed record SetLaundryPaidRequest(bool IsPaid);
+
+public sealed record SetLaundryItemPaidRequest(bool IsPaid);

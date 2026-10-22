@@ -1,0 +1,102 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/provider/milk" />
+    </ion-buttons>
+    <ion-title>{{ detail()?.householdName ?? 'Customer' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && !detail()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (detail(); as d) {
+    <section class="card">
+      <h3>{{ d.householdName }}</h3>
+      @if (d.city) {
+        <p class="muted">{{ d.city }}</p>
+      }
+    </section>
+
+    @if (!d.subscription) {
+      <section class="card">
+        <p class="muted">No milk subscription set up yet.</p>
+      </section>
+    } @else {
+      <section class="card">
+        <h3>Subscription</h3>
+        @if (d.subscription.morningEnabled) {
+          <div class="cust-row">
+            <div class="cust-av">🌅</div>
+            <div class="cust-info">
+              <div class="cust-name">Morning</div>
+              <div class="cust-meta">{{ d.subscription.morningQuantityLtr }} L</div>
+            </div>
+          </div>
+        }
+        @if (d.subscription.eveningEnabled) {
+          <div class="cust-row">
+            <div class="cust-av">🌆</div>
+            <div class="cust-info">
+              <div class="cust-name">Evening</div>
+              <div class="cust-meta">{{ d.subscription.eveningQuantityLtr }} L</div>
+            </div>
+          </div>
+        }
+        <div class="cust-row">
+          <div class="cust-av">💰</div>
+          <div class="cust-info">
+            <div class="cust-name">Rate</div>
+            <div class="cust-meta">{{ rupeeLabel(d.subscription.ratePerLtr) }} / L</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Today's Delivery</h3>
+        <p class="muted">Changes here show up on {{ d.householdName }}'s own Milk page, tagged with your name.</p>
+        @if (d.subscription.morningEnabled) {
+          <div class="action-row">
+            <span>🌅 Morning</span>
+            <div class="action-btns">
+              <ion-button size="small" fill="outline" (click)="markDelivered('Morning')">Delivered</ion-button>
+              <ion-button size="small" fill="outline" color="danger" (click)="markNotDelivered('Morning')">Not Delivered</ion-button>
+            </div>
+          </div>
+        }
+        @if (d.subscription.eveningEnabled) {
+          <div class="action-row">
+            <span>🌆 Evening</span>
+            <div class="action-btns">
+              <ion-button size="small" fill="outline" (click)="markDelivered('Evening')">Delivered</ion-button>
+              <ion-button size="small" fill="outline" color="danger" (click)="markNotDelivered('Evening')">Not Delivered</ion-button>
+            </div>
+          </div>
+        }
+        <ion-button expand="block" size="small" fill="clear" (click)="addExtra()">🥛 Add Extra Milk</ion-button>
+      </section>
+
+      <section class="card">
+        <div class="month-nav">
+          <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
+          <h3>{{ monthLabel() }}</h3>
+          <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+        </div>
+
+        @if (month(); as m) {
+          <app-milk-calendar [days]="m.days" [startDate]="d.subscription.startDate" [baseQuantityLtr]="baseQuantityLtr()" />
+          <div class="summary">
+            <div class="sg-item"><div class="sgl">Planned</div><div class="sgv">{{ m.summary.planned }}</div></div>
+            <div class="sg-item"><div class="sgl">Delivered</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
+            <div class="sg-item"><div class="sgl">Paused</div><div class="sgv o">{{ m.summary.paused }}</div></div>
+            <div class="sg-item"><div class="sgl">Missed</div><div class="sgv r">{{ m.summary.missed }}</div></div>
+          </div>
+        }
+      </section>
+    }
+
+    <p class="detail-note">{{ d.householdName }} sets up their own subscription — you can only log today's delivery status and extras.</p>
+  }
+</ion-content>

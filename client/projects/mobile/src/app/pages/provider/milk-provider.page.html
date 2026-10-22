@@ -1,0 +1,215 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>🥛 My Milk Round</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="pullToRefresh($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  @if (loading() && !dashboard()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (dashboard(); as d) {
+    <section class="card summary-card">
+      <div class="summary-title">Today</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="val">{{ d.plannedLitresToday }} L</div><div class="lbl">Planned</div></div>
+        <div class="summary-item"><div class="val">{{ d.totalLitresToday }} L</div><div class="lbl">Delivered</div></div>
+        <div class="summary-item"><div class="val">{{ rupeeLabel(d.expectedToday) }}</div><div class="lbl">Expected</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>📊 Today at a Glance</h3>
+      <div class="status-grid">
+        <div class="status-item"><div class="val good">{{ d.deliveredCustomers }}</div><div class="lbl">Delivered</div></div>
+        <div class="status-item"><div class="val warn">{{ d.pausedCustomers }}</div><div class="lbl">Paused</div></div>
+        <div class="status-item"><div class="val danger">{{ d.missedCustomers }}</div><div class="lbl">Missed</div></div>
+        <div class="status-item"><div class="val info">{{ d.increasedQuantityCustomers }}</div><div class="lbl">Increased</div></div>
+        <div class="status-item"><div class="val info">{{ d.decreasedQuantityCustomers }}</div><div class="lbl">Reduced</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>💳 UPI Payment Settings</h3>
+        <ion-button size="small" fill="clear" (click)="editUpiId()"><ion-icon slot="icon-only" name="create-outline" /></ion-button>
+      </div>
+      @if (paymentSettings()?.upiId; as upiId) {
+        <p class="muted">Customers pay <strong>{{ upiId }}</strong> directly via their own UPI app.</p>
+      } @else {
+        <p class="muted">Add your UPI ID so customers can pay you directly from the app — tap the pencil above.</p>
+      }
+    </section>
+
+    @if (pendingPayments().length > 0) {
+      <section class="card">
+        <div class="section-head"><h3>⏳ Pending Payment Confirmations</h3><span class="count-chip">{{ pendingPayments().length }}</span></div>
+        <p class="muted">Only confirm after checking your own UPI app/bank for the credit.</p>
+        @for (p of pendingPayments(); track p.id) {
+          <div class="cust-row">
+            <div class="cust-av">💳</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ p.householdName }}</div>
+              <div class="cust-meta">{{ rupeeLabel(p.amount) }} · {{ shortDateLabel(p.date) }}{{ p.note ? ' · ' + p.note : '' }}</div>
+            </div>
+            <div class="cust-right action-btns">
+              <ion-button size="small" fill="outline" color="danger" (click)="rejectPayment(p)">Not Received</ion-button>
+              <ion-button size="small" (click)="confirmPayment(p)">Confirm</ion-button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    <section class="card">
+      <h3>🔗 Link a Customer</h3>
+      <p class="muted">Enter the invite code your customer shared with you.</p>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-input
+            [value]="linkCode()"
+            (ionInput)="setLinkCode($any($event.target).value)"
+            placeholder="GRT-XXXX"
+            [maxlength]="12"
+          />
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" size="small" [disabled]="linking() || !linkCode()" (click)="linkCustomer()">
+        {{ linking() ? 'linking…' : 'Link Customer' }}
+      </ion-button>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><h3>🥛 Deliver Today</h3><span class="count-chip">{{ d.deliverToday.length }}</span></div>
+      @if (d.deliverToday.length === 0) {
+        <p class="muted">No linked customers yet.</p>
+      } @else {
+        @for (item of d.deliverToday; track item.householdUserId) {
+          <div class="cust-row" (click)="openCustomer(item.householdUserId)">
+            <div class="cust-av">{{ statusEmoji(item.status) }}</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ item.householdName }}</div>
+              <div class="cust-meta">{{ item.status === 'Delivered' ? item.quantityLtr + ' L' : item.status }}</div>
+            </div>
+            <div class="cust-right">
+              <div class="qty">{{ item.status === 'Delivered' ? rupeeLabel(item.amount) : '—' }}</div>
+              <div
+                class="paid-chip"
+                [class.paid]="item.status === 'Delivered'"
+                [class.pending]="item.status === 'Paused'"
+                [class.danger]="item.status === 'Missed'"
+              >
+                {{ item.status.toUpperCase() }}
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="card">
+      <h3>💰 This Month</h3>
+      <div class="summary-grid two">
+        <div class="summary-item dark"><div class="val">{{ d.totalLitresThisMonth }} L</div><div class="lbl">Delivered So Far</div></div>
+        <div class="summary-item dark"><div class="val">{{ rupeeLabel(d.expectedThisMonth) }}</div><div class="lbl">Expected by Month End</div></div>
+      </div>
+      <div class="summary-grid two" style="margin-top: 8px;">
+        <div class="summary-item dark"><div class="val good">{{ rupeeLabel(d.receivedThisMonth) }}</div><div class="lbl">Received</div></div>
+        <div class="summary-item dark"><div class="val warn">{{ rupeeLabel(d.pendingThisMonth) }}</div><div class="lbl">Pending</div></div>
+      </div>
+      <div class="status-grid three">
+        <div class="status-item"><div class="val good">{{ d.deliveredDaysThisMonth }}</div><div class="lbl">Delivered Days</div></div>
+        <div class="status-item"><div class="val warn">{{ d.pausedDaysThisMonth }}</div><div class="lbl">Paused Days</div></div>
+        <div class="status-item"><div class="val danger">{{ d.missedDaysThisMonth }}</div><div class="lbl">Missed Days</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><h3>Linked Customers</h3><span class="count-chip">{{ d.customers.length }}</span></div>
+      @if (d.customers.length === 0) {
+        <p class="muted">No customers linked yet — share your invite code above once a customer gives it to you.</p>
+      } @else {
+        @for (c of d.customers; track c.householdUserId) {
+          <div class="cust-row">
+            <div class="cust-av" (click)="openCustomer(c.householdUserId)">🏠</div>
+            <div class="cust-info" (click)="openCustomer(c.householdUserId)">
+              <div class="cust-name">{{ c.householdName }}</div>
+              @if (c.city) {
+                <div class="cust-meta"><ion-icon name="location-outline" /> {{ c.city }}</div>
+              }
+            </div>
+            @if (c.phone) {
+              <ion-button size="small" fill="clear" (click)="askOnWhatsApp(c.householdName, c.phone)">
+                <ion-icon slot="icon-only" name="logo-whatsapp" />
+              </ion-button>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    <section class="card">
+      <div class="month-nav">
+        <button class="icon-btn" (click)="changeMonth(-1)"><ion-icon name="chevron-back" /></button>
+        <h3>📅 All My Shops — {{ monthLabel() }}</h3>
+        <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
+      </div>
+      @if (monthSummary().length === 0 || !hasAnyManualDays()) {
+        <p class="muted">No manual customers with planned orders this month yet.</p>
+      } @else {
+        @for (day of monthSummary(); track day.date) {
+          @if (day.customerCount > 0) {
+            <div class="cust-row" (click)="openDay(day.date)">
+              <div class="cust-av">📅</div>
+              <div class="cust-info">
+                <div class="cust-name">{{ shortDateLabel(day.date) }}</div>
+                <div class="cust-meta">{{ day.customerCount }} shop{{ day.customerCount === 1 ? '' : 's' }} · {{ day.plannedLitres }} L planned</div>
+              </div>
+              <div class="cust-right">
+                <div class="qty">{{ day.loggedLitres }} L logged</div>
+                <div class="paid-chip" [class.paid]="day.loggedLitres >= day.plannedLitres" [class.pending]="day.loggedLitres < day.plannedLitres">
+                  {{ rupeeLabel(day.amount) }}
+                </div>
+              </div>
+            </div>
+          }
+        }
+      }
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>📇 Manual Customers</h3>
+        <ion-button size="small" fill="clear" (click)="addManualCustomer()">
+          <ion-icon slot="icon-only" name="add" />
+        </ion-button>
+      </div>
+      <p class="muted">Shops, hotels, or anyone not on the app — you manage these yourself.</p>
+      @if (manual().length === 0) {
+        <p class="muted">No manual customers yet.</p>
+      } @else {
+        @for (c of manual(); track c.id) {
+          <div class="cust-row">
+            <div class="cust-av" (click)="openManualCustomer(c.id)">🏪</div>
+            <div class="cust-info" (click)="openManualCustomer(c.id)">
+              <div class="cust-name">{{ c.name }}</div>
+              @if (c.address) {
+                <div class="cust-meta"><ion-icon name="location-outline" /> {{ c.address }}</div>
+              }
+            </div>
+            @if (c.phone) {
+              <ion-button size="small" fill="clear" (click)="askOnWhatsApp(c.name, c.phone)">
+                <ion-icon slot="icon-only" name="logo-whatsapp" />
+              </ion-button>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+</ion-content>

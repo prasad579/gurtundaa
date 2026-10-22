@@ -21,6 +21,14 @@
       <ion-label>Contacts</ion-label>
     </ion-item>
 
+    <ion-item [button]="true" [detail]="false" (click)="linkToProvider()">
+      <ion-icon slot="start" name="link-outline" />
+      <ion-label>
+        <h2>Link to a Provider</h2>
+        <p>Have a code from your milkman or dhobi? Enter it here.</p>
+      </ion-label>
+    </ion-item>
+
     <ion-item [button]="true" [detail]="false" (click)="logout()">
       <ion-icon slot="start" name="log-out-outline" color="danger" />
       <ion-label color="danger">Log out</ion-label>

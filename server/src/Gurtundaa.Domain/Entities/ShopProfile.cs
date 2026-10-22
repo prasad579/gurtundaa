@@ -18,5 +18,22 @@ public class ShopProfile
     /// <summary>System.Text.Json-serialized <c>Dictionary&lt;string, decimal&gt;</c> (itemKey -> this shop's saved price) — prefills quote forms.</summary>
     public string PriceListJson { get; set; } = "{}";
 
+    /// <summary>Relative URL under wwwroot (e.g. "/uploads/shops/{userId}.jpg") — null until the shop uploads a photo.</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>System.Text.Json-serialized <c>List&lt;string&gt;</c> of customer-facing contact numbers (may differ from the shop's login phone).</summary>
+    public string ContactPhonesJson { get; set; } = "[]";
+
+    public TimeOnly? OpensAt { get; set; }
+
+    public TimeOnly? ClosesAt { get; set; }
+
+    /// <summary>System.Text.Json-serialized <c>List&lt;int&gt;</c> of <see cref="DayOfWeek"/> values the shop is open — empty means open every day.</summary>
+    public string OpenDaysJson { get; set; } = "[]";
+
+    public decimal? Latitude { get; set; }
+
+    public decimal? Longitude { get; set; }
+
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

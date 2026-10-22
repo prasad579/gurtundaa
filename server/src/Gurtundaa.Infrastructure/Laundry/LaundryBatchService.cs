@@ -96,8 +96,37 @@ public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, Time
             return null;
         }
 
+        // The whole-batch toggle settles every item line too, so the two stay in sync — it's the
+        // "mark everything paid/pending at once" shortcut over the per-item flow.
+        var items = JsonSerializer.Deserialize<List<LaundryItemLine>>(batch.ItemsJson) ?? [];
+        batch.ItemsJson = JsonSerializer.Serialize(items.Select(i => i with { IsPaid = request.IsPaid }));
         batch.IsPaid = request.IsPaid;
         batch.PaidAt = request.IsPaid ? clock.GetUtcNow() : null;
+        batch.UpdatedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+
+        var contact = await LoadContactAsync(batch.ContactId, ct);
+        return ToDto(batch, contact);
+    }
+
+    public async Task<LaundryBatchDto?> SetItemPaidAsync(Guid id, int itemIndex, SetLaundryItemPaidRequest request, CancellationToken ct)
+    {
+        var batch = await Mine.SingleOrDefaultAsync(b => b.Id == id, ct);
+        if (batch is null)
+        {
+            return null;
+        }
+
+        var items = JsonSerializer.Deserialize<List<LaundryItemLine>>(batch.ItemsJson) ?? [];
+        if (itemIndex < 0 || itemIndex >= items.Count)
+        {
+            return null;
+        }
+
+        items[itemIndex] = items[itemIndex] with { IsPaid = request.IsPaid };
+        batch.ItemsJson = JsonSerializer.Serialize(items);
+        batch.IsPaid = items.All(i => i.IsPaid);
+        batch.PaidAt = batch.IsPaid ? clock.GetUtcNow() : null;
         batch.UpdatedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(ct);
 

@@ -8,9 +8,11 @@ namespace Gurtundaa.Infrastructure.Milk;
 
 public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, TimeProvider clock) : IMilkDeliveryService
 {
-    public async Task<MilkMonthDto> GetMonthAsync(int year, int month, CancellationToken ct)
+    public Task<MilkMonthDto> GetMonthAsync(int year, int month, CancellationToken ct) =>
+        GetMonthForUserAsync(currentUser.UserId, year, month, ct);
+
+    public async Task<MilkMonthDto> GetMonthForUserAsync(Guid userId, int year, int month, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
         var subscription = await db.MilkSubscriptions.AsNoTracking().SingleOrDefaultAsync(s => s.UserId == userId, ct);
 
         var firstDay = new DateOnly(year, month, 1);
@@ -47,9 +49,9 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             var dayOverrides = overridesByDay.GetValueOrDefault(date, []);
             var hasExtra = extraSlotsByDay.GetValueOrDefault(date, []);
 
-            var morning = ResolveSlot(MilkSlot.Morning, date, subscription, pauses, dayOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
-            var evening = ResolveSlot(MilkSlot.Evening, date, subscription, pauses, dayOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
-            var dayStatus = CombineStatus(morning, evening);
+            var morning = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Morning, date, subscription, pauses, dayOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
+            var evening = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Evening, date, subscription, pauses, dayOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
+            var dayStatus = MilkDeliveryCalculator.CombineStatus(morning, evening);
 
             days.Add(new MilkCalendarDayDto(date, dayStatus, morning, evening));
 
@@ -78,12 +80,15 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
         var rate = subscription?.RatePerLtr ?? 0;
         var settlement = await db.MilkSettlements.AsNoTracking()
             .SingleOrDefaultAsync(s => s.UserId == userId && s.Year == year && s.Month == month, ct);
+        var paidSoFar = await db.MilkPayments.AsNoTracking()
+            .Where(p => p.UserId == userId && p.Date >= firstDay && p.Date <= lastDay && p.Status == PaymentStatus.Confirmed)
+            .SumAsync(p => p.Amount, ct);
 
         var summary = new MilkMonthSummaryDto(
             trackableDays, delivered, paused, missed,
             regularLitres, extraLitres, rate,
             regularLitres * rate, extraLitres * rate, (regularLitres + extraLitres) * rate,
-            settlement?.IsPaid ?? false, settlement?.PaidAt);
+            settlement?.IsPaid ?? false, settlement?.PaidAt, paidSoFar);
 
         return new MilkMonthDto(days, summary);
     }
@@ -131,8 +136,8 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             .ToListAsync(ct);
         var hasExtra = todaysExtraSlots.ToHashSet();
 
-        var morning = ResolveSlot(MilkSlot.Morning, today, subscription, pauses, todaysOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
-        var evening = ResolveSlot(MilkSlot.Evening, today, subscription, pauses, todaysOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
+        var morning = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Morning, today, subscription, pauses, todaysOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
+        var evening = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Evening, today, subscription, pauses, todaysOverrides, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
         var isAuto = todaysOverrides.Count == 0;
 
         return new MilkTodayDto(today, morning, evening, isAuto);
@@ -174,58 +179,8 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             .ToListAsync(ct);
         var hasExtra = hasExtraSlots.ToHashSet();
 
-        var morning = ResolveSlot(MilkSlot.Morning, date, subscription, pauses, allOverridesForDate, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
-        var evening = ResolveSlot(MilkSlot.Evening, date, subscription, pauses, allOverridesForDate, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
+        var morning = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Morning, date, subscription, pauses, allOverridesForDate, quantityChanges, hasExtra.Contains(MilkSlot.Morning));
+        var evening = MilkDeliveryCalculator.ResolveSlot(MilkSlot.Evening, date, subscription, pauses, allOverridesForDate, quantityChanges, hasExtra.Contains(MilkSlot.Evening));
         return new MilkTodayDto(date, morning, evening, false);
-    }
-
-    private static MilkCalendarStatus CombineStatus(MilkSlotStateDto morning, MilkSlotStateDto evening)
-    {
-        if (morning.Enabled && morning.Status == MilkCalendarStatus.Paused) return MilkCalendarStatus.Paused;
-        if (evening.Enabled && evening.Status == MilkCalendarStatus.Paused) return MilkCalendarStatus.Paused;
-        if (morning.Enabled && morning.Status == MilkCalendarStatus.Missed) return MilkCalendarStatus.Missed;
-        if (evening.Enabled && evening.Status == MilkCalendarStatus.Missed) return MilkCalendarStatus.Missed;
-        return MilkCalendarStatus.Delivered;
-    }
-
-    private static MilkSlotStateDto ResolveSlot(
-        MilkSlot slot,
-        DateOnly date,
-        MilkSubscription? subscription,
-        IReadOnlyCollection<MilkPause> pauses,
-        IReadOnlyCollection<MilkDeliveryOverride> overridesForScope,
-        IReadOnlyCollection<MilkQuantityChange> quantityChanges,
-        bool hasExtra)
-    {
-        var enabled = slot == MilkSlot.Morning ? subscription?.MorningEnabled ?? false : subscription?.EveningEnabled ?? false;
-        var defaultQuantity = slot == MilkSlot.Morning ? subscription?.MorningQuantityLtr ?? 0m : subscription?.EveningQuantityLtr ?? 0m;
-
-        if (!enabled)
-        {
-            return new MilkSlotStateDto(false, MilkCalendarStatus.Delivered, 0m, false);
-        }
-
-        if (pauses.Any(p => p.StartDate <= date && p.EndDate >= date))
-        {
-            return new MilkSlotStateDto(true, MilkCalendarStatus.Paused, 0m, hasExtra);
-        }
-
-        var dayOverride = overridesForScope.FirstOrDefault(o => o.Date == date && o.Slot == slot);
-        if (dayOverride is not null)
-        {
-            if (dayOverride.Status == MilkDeliveryStatus.Missed)
-            {
-                return new MilkSlotStateDto(true, MilkCalendarStatus.Missed, 0m, hasExtra);
-            }
-
-            if (dayOverride.QuantityLtr is { } explicitQuantity)
-            {
-                return new MilkSlotStateDto(true, MilkCalendarStatus.Delivered, explicitQuantity, hasExtra);
-            }
-        }
-
-        var change = quantityChanges.FirstOrDefault(q => q.StartDate <= date && q.EndDate >= date);
-        var quantity = change is null ? defaultQuantity : slot == MilkSlot.Morning ? change.MorningQuantityLtr : change.EveningQuantityLtr;
-        return new MilkSlotStateDto(true, MilkCalendarStatus.Delivered, quantity, hasExtra);
     }
 }

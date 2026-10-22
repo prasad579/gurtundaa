@@ -10,6 +10,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
         builder.Property(u => u.UserType).HasConversion<byte>();
+        builder.Property(u => u.UpiId).HasMaxLength(100);
     }
 }
 
@@ -78,6 +79,11 @@ public class ShopProfileConfiguration : IEntityTypeConfiguration<ShopProfile>
         builder.Property(p => p.Address).HasMaxLength(200);
         builder.Property(p => p.ServedCategoryKeysJson).HasMaxLength(1000).IsRequired().HasDefaultValue("[]");
         builder.Property(p => p.PriceListJson).HasMaxLength(8000).IsRequired().HasDefaultValue("{}");
+        builder.Property(p => p.ImageUrl).HasMaxLength(300);
+        builder.Property(p => p.ContactPhonesJson).HasMaxLength(500).IsRequired().HasDefaultValue("[]");
+        builder.Property(p => p.OpenDaysJson).HasMaxLength(100).IsRequired().HasDefaultValue("[]");
+        builder.Property(p => p.Latitude).HasColumnType("decimal(9,6)");
+        builder.Property(p => p.Longitude).HasColumnType("decimal(9,6)");
 
         builder.HasOne(p => p.User)
             .WithOne()
@@ -162,6 +168,14 @@ public class MilkDeliveryOverrideConfiguration : IEntityTypeConfiguration<MilkDe
             .HasForeignKey(o => o.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // NoAction, not Cascade: same multi-cascade-path issue as ServiceContacts/ProviderLinks ->
+        // AspNetUsers — User already cascades above, so this second, independent FK to AspNetUsers
+        // must not also cascade.
+        builder.HasOne(o => o.AddedByProvider)
+            .WithMany()
+            .HasForeignKey(o => o.AddedByProviderId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasIndex(o => new { o.UserId, o.Date, o.Slot }).IsUnique();
     }
 }
@@ -197,6 +211,12 @@ public class MilkExtraRequestConfiguration : IEntityTypeConfiguration<MilkExtraR
             .WithMany()
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: same multi-cascade-path issue noted on MilkDeliveryOverride.AddedByProvider.
+        builder.HasOne(e => e.AddedByProvider)
+            .WithMany()
+            .HasForeignKey(e => e.AddedByProviderId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasIndex(e => new { e.UserId, e.Date });
     }
@@ -264,6 +284,27 @@ public class MilkSettlementConfiguration : IEntityTypeConfiguration<MilkSettleme
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(s => new { s.UserId, s.Year, s.Month }).IsUnique();
+    }
+}
+
+public class MilkPaymentConfiguration : IEntityTypeConfiguration<MilkPayment>
+{
+    public void Configure(EntityTypeBuilder<MilkPayment> builder)
+    {
+        builder.ToTable("MilkPayments");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Amount).HasColumnType("decimal(10,2)");
+        builder.Property(p => p.Note).HasMaxLength(200);
+        builder.Property(p => p.Method).HasConversion<byte>();
+        builder.Property(p => p.Status).HasConversion<byte>();
+
+        builder.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(p => new { p.UserId, p.Date });
+        builder.HasIndex(p => p.Status);
     }
 }
 
@@ -439,6 +480,144 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
 
         // One quote per shop per request — re-submitting replaces it.
         builder.HasIndex(q => new { q.QuotationRequestId, q.ShopUserId }).IsUnique();
+    }
+}
+
+public class ProviderLinkConfiguration : IEntityTypeConfiguration<ProviderLink>
+{
+    public void Configure(EntityTypeBuilder<ProviderLink> builder)
+    {
+        builder.ToTable("ProviderLinks");
+        builder.HasKey(l => l.Id);
+        builder.Property(l => l.Category).HasConversion<byte>();
+        builder.Property(l => l.InviteCode).HasMaxLength(12).IsRequired();
+        builder.HasIndex(l => l.InviteCode).IsUnique();
+
+        builder.HasOne(l => l.HouseholdUser)
+            .WithMany()
+            .HasForeignKey(l => l.HouseholdUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: same multi-cascade-path issue as MilkSubscription/LaundryBatch ->
+        // ServiceContacts — HouseholdUser already cascades AspNetUsers above. ServiceContactService
+        // deletes any ProviderLinks referencing a contact before the contact itself is removed.
+        builder.HasOne(l => l.ServiceContact)
+            .WithMany()
+            .HasForeignKey(l => l.ServiceContactId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // NoAction for the same reason — a second, independent FK back to AspNetUsers.
+        builder.HasOne(l => l.ProviderUser)
+            .WithMany()
+            .HasForeignKey(l => l.ProviderUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(l => new { l.ProviderUserId, l.Category, l.RevokedAt });
+        builder.HasIndex(l => new { l.HouseholdUserId, l.ServiceContactId });
+    }
+}
+
+public class ProviderCustomerConfiguration : IEntityTypeConfiguration<ProviderCustomer>
+{
+    public void Configure(EntityTypeBuilder<ProviderCustomer> builder)
+    {
+        builder.ToTable("ProviderCustomers");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Category).HasConversion<byte>();
+        builder.Property(c => c.Name).HasMaxLength(100).IsRequired();
+        builder.Property(c => c.Phone).HasMaxLength(20);
+        builder.Property(c => c.Address).HasMaxLength(200);
+        builder.Property(c => c.Notes).HasMaxLength(500);
+        builder.Property(c => c.DefaultQuantityLtr).HasColumnType("decimal(5,2)");
+        builder.Property(c => c.DefaultRatePerLtr).HasColumnType("decimal(8,2)");
+        builder.Property(c => c.DefaultSlot).HasConversion<byte>();
+        builder.Property(c => c.DefaultVariety).HasMaxLength(50);
+        builder.Property(c => c.LinkCode).HasMaxLength(12);
+        builder.HasIndex(c => c.LinkCode).IsUnique().HasFilter("[LinkCode] IS NOT NULL");
+
+        builder.HasOne(c => c.ProviderUser)
+            .WithMany()
+            .HasForeignKey(c => c.ProviderUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: second, independent FK to AspNetUsers — same multi-cascade-path
+        // issue noted throughout (e.g. ProviderLink.ProviderUser).
+        builder.HasOne(c => c.ClaimedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.ClaimedByUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(c => new { c.ProviderUserId, c.ArchivedAt });
+    }
+}
+
+public class ManualMilkEntryConfiguration : IEntityTypeConfiguration<ManualMilkEntry>
+{
+    public void Configure(EntityTypeBuilder<ManualMilkEntry> builder)
+    {
+        builder.ToTable("ManualMilkEntries");
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Slot).HasConversion<byte>();
+        builder.Property(e => e.Variety).HasMaxLength(50);
+        builder.Property(e => e.QuantityLtr).HasColumnType("decimal(5,2)");
+        builder.Property(e => e.RatePerLtr).HasColumnType("decimal(8,2)");
+        builder.Property(e => e.Kind).HasConversion<byte>();
+
+        builder.Property(e => e.Note).HasMaxLength(200);
+
+        builder.HasOne(e => e.ProviderCustomer)
+            .WithMany()
+            .HasForeignKey(e => e.ProviderCustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Not unique: a regular day+slot+variety order (Kind=Regular, upserted) coexists with zero
+        // or more separate ad-hoc Extra/Return rows logged the same day/slot/variety.
+        builder.HasIndex(e => new { e.ProviderCustomerId, e.Date, e.Slot, e.Variety, e.Kind });
+    }
+}
+
+public class ManualLaundryBatchConfiguration : IEntityTypeConfiguration<ManualLaundryBatch>
+{
+    public void Configure(EntityTypeBuilder<ManualLaundryBatch> builder)
+    {
+        builder.ToTable("ManualLaundryBatches");
+        builder.HasKey(b => b.Id);
+        builder.Property(b => b.Status).HasConversion<byte>();
+        builder.Property(b => b.ServiceType).HasConversion<byte>();
+        builder.Property(b => b.Amount).HasColumnType("decimal(8,2)");
+        builder.Property(b => b.ItemsJson).HasMaxLength(2000).IsRequired();
+        builder.Property(b => b.Notes).HasMaxLength(200);
+
+        builder.HasOne(b => b.ProviderCustomer)
+            .WithMany()
+            .HasForeignKey(b => b.ProviderCustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(b => new { b.ProviderCustomerId, b.Status });
+    }
+}
+
+public class LaundryPickupRequestConfiguration : IEntityTypeConfiguration<LaundryPickupRequest>
+{
+    public void Configure(EntityTypeBuilder<LaundryPickupRequest> builder)
+    {
+        builder.ToTable("LaundryPickupRequests");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Note).HasMaxLength(200);
+
+        builder.HasOne(r => r.HouseholdUser)
+            .WithMany()
+            .HasForeignKey(r => r.HouseholdUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // NoAction, not Cascade: second, independent FK to AspNetUsers — same multi-cascade-path
+        // issue noted throughout.
+        builder.HasOne(r => r.ProviderUser)
+            .WithMany()
+            .HasForeignKey(r => r.ProviderUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(r => new { r.ProviderUserId, r.HandledAt });
     }
 }
 

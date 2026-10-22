@@ -41,6 +41,13 @@ export class ShopOnboardingPage {
           city: city.trim() || null,
           address: address.trim() || null,
           servedCategoryKeys: [],
+          imageUrl: null,
+          contactPhones: [],
+          opensAt: null,
+          closesAt: null,
+          openDays: [],
+          latitude: null,
+          longitude: null,
         }),
       );
       await this.router.navigateByUrl('/', { replaceUrl: true });

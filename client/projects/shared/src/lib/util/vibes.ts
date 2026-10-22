@@ -24,6 +24,29 @@ export function shareOnWhatsApp(phone: string, message: string): void {
   window.open(`${waLink(phone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+// ---------- Direct UPI payments — plain `upi://pay` deep link, no gateway/SDK involved ----------
+
+/**
+ * Standard UPI intent link — on Android this resolves straight to the installed app chooser
+ * (PhonePe/GPay/Paytm/etc). There's no callback, so the caller still needs its own "I've paid"
+ * confirmation step; this just builds the link.
+ */
+export function buildUpiPayLink(vpa: string, payeeName: string, amount: number, note?: string | null): string {
+  const params = new URLSearchParams({
+    pa: vpa,
+    pn: payeeName,
+    am: amount.toFixed(2),
+    cu: 'INR',
+    ...(note ? { tn: note } : {}),
+  });
+  return `upi://pay?${params.toString()}`;
+}
+
+/** Opens the UPI app chooser (native only — browsers have nothing registered for the `upi://` scheme). */
+export function payViaUpi(vpa: string, payeeName: string, amount: number, note?: string | null): void {
+  window.location.href = buildUpiPayLink(vpa, payeeName, amount, note);
+}
+
 /** Opens WhatsApp with `message` pre-filled but no fixed recipient — the user picks any chat/contact themselves. */
 export function shareOnWhatsAppAny(message: string): void {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');

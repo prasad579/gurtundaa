@@ -1,0 +1,80 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/provider/laundry" />
+    </ion-buttons>
+    <ion-title>{{ detail()?.householdName ?? 'Customer' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && !detail()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 16px" />
+    </div>
+  } @else if (detail(); as d) {
+    <section class="card">
+      <h3>{{ d.householdName }}</h3>
+      @if (d.city) {
+        <p class="muted">{{ d.city }}</p>
+      }
+    </section>
+
+    <section class="card">
+      <h3>Active Batches</h3>
+      @if (d.active.length === 0) {
+        <p class="muted">Nothing out at the moment.</p>
+      } @else {
+        @for (b of d.active; track b.id) {
+          <div class="cust-row">
+            <div class="cust-av">🧺</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ b.serviceType }} — {{ totalQty(b) }} item{{ totalQty(b) === 1 ? '' : 's' }}</div>
+              <div class="cust-meta">{{ itemsBreakdown(b) }}</div>
+              <div class="cust-meta">
+                Given {{ shortDateLabel(b.givenOn) }}
+                @if (b.expectedReturn) {
+                  · Expected {{ shortDateLabel(b.expectedReturn) }}
+                }
+              </div>
+            </div>
+            <div class="cust-right">
+              @if (b.amount) {
+                <div class="qty">{{ rupeeLabel(b.amount) }}</div>
+              }
+              <div class="paid-chip" [class.paid]="b.isPaid" [class.pending]="!b.isPaid">{{ b.isPaid ? 'PAID' : 'PENDING' }}</div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="card">
+      <h3>History</h3>
+      @if (d.history.length === 0) {
+        <p class="muted">No past entries yet.</p>
+      } @else {
+        @for (b of d.history; track b.id) {
+          <div class="cust-row">
+            <div class="cust-av">🧺</div>
+            <div class="cust-info">
+              <div class="cust-name">{{ b.serviceType }} — {{ totalQty(b) }} item{{ totalQty(b) === 1 ? '' : 's' }}</div>
+              <div class="cust-meta">{{ itemsBreakdown(b) }}</div>
+              @if (b.pickedUpOn) {
+                <div class="cust-meta">Picked up {{ shortDateLabel(b.pickedUpOn) }}</div>
+              }
+            </div>
+            <div class="cust-right">
+              @if (b.amount) {
+                <div class="qty">{{ rupeeLabel(b.amount) }}</div>
+              }
+              <div class="paid-chip" [class.paid]="b.isPaid" [class.pending]="!b.isPaid">{{ b.isPaid ? 'PAID' : 'PENDING' }}</div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <p class="detail-note">{{ d.householdName }} manages these entries — this is a read-only mirror.</p>
+  }
+</ion-content>

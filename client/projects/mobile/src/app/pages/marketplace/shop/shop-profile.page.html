@@ -6,6 +6,19 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <form [formGroup]="form" (ngSubmit)="save()">
+    <h3 class="section-title">Shop Photo</h3>
+    <label class="photo-upload">
+      @if (fullImageUrl(); as url) {
+        <img [src]="url" alt="Shop photo" />
+      } @else {
+        <div class="photo-placeholder"><ion-icon name="camera" /><span>Add photo</span></div>
+      }
+      @if (uploadingImage()) {
+        <div class="photo-overlay">uploading…</div>
+      }
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onImageSelected($event)" />
+    </label>
+
     <ion-list lines="full">
       <ion-item>
         <ion-input label="shop name" labelPlacement="stacked" formControlName="shopName" />
@@ -17,6 +30,60 @@
         <ion-input label="address (optional)" labelPlacement="stacked" formControlName="address" />
       </ion-item>
     </ion-list>
+
+    <h3 class="section-title">Contact Numbers</h3>
+    <p class="hint">Customers can reach you on these — separate from your login number.</p>
+    <div class="phone-chips">
+      @for (phone of contactPhones(); track phone) {
+        <span class="phone-chip">{{ phone }}<ion-icon name="close-circle" (click)="removePhone(phone)" /></span>
+      }
+    </div>
+    <div class="add-row">
+      <ion-input placeholder="add a phone number" [formControl]="newPhone" (keyup.enter)="addPhone()" class="add-input" />
+      <ion-button fill="outline" (click)="addPhone()">Add</ion-button>
+    </div>
+
+    <h3 class="section-title">Shop Timings</h3>
+    <div class="date-row">
+      <div class="date-field">
+        <div class="df-lbl">Opens at</div>
+        <ion-datetime-button datetime="opens-at" />
+      </div>
+      <div class="date-field">
+        <div class="df-lbl">Closes at</div>
+        <ion-datetime-button datetime="closes-at" />
+      </div>
+    </div>
+    <ion-modal #opensModal [keepContentsMounted]="true">
+      <ng-template>
+        <ion-datetime id="opens-at" presentation="time" [value]="opensAt()" (ionChange)="onOpensAtChange($any($event.detail.value)); opensModal.dismiss()" />
+      </ng-template>
+    </ion-modal>
+    <ion-modal #closesModal [keepContentsMounted]="true">
+      <ng-template>
+        <ion-datetime id="closes-at" presentation="time" [value]="closesAt()" (ionChange)="onClosesAtChange($any($event.detail.value)); closesModal.dismiss()" />
+      </ng-template>
+    </ion-modal>
+
+    <p class="hint">Open days</p>
+    <div class="day-chips">
+      @for (d of dayOptions; track d.value) {
+        <button type="button" class="day-chip" [class.sel]="openDays().has(d.value)" (click)="toggleDay(d.value)">{{ d.label }}</button>
+      }
+    </div>
+    @if (openDays().size === 0) {
+      <p class="hint">No days picked — treated as open every day.</p>
+    }
+
+    <h3 class="section-title">Shop Location</h3>
+    <div class="location-row">
+      <ion-icon name="location-outline" />
+      <span>{{ locationLabel() }}</span>
+      <ion-button fill="outline" size="small" [disabled]="locatingMe()" (click)="useMyLocation()">
+        {{ locatingMe() ? 'locating…' : 'Use my location' }}
+      </ion-button>
+    </div>
+    <p class="hint">Helps route nearby customers to you once location-based matching ships.</p>
 
     <h3 class="section-title">What do you sell?</h3>
     <p class="hint">Pick every category you stock — customer orders are only routed to you for these.</p>

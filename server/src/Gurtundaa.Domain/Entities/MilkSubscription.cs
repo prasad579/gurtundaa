@@ -10,6 +10,9 @@ public class MilkSubscription
 
     public ServiceContact? Contact { get; set; }
 
+    /// <summary>True when the household buys/collects milk themselves (no delivery person) — skips the contact requirement and only changes wording on the client; billing/tracking is identical either way.</summary>
+    public bool IsSelfCollected { get; set; }
+
     /// <summary>
     /// The first day delivery is actually tracked from. Days before this are excluded from the
     /// calendar, summary counts, and billed amount entirely — they're neither "delivered" nor

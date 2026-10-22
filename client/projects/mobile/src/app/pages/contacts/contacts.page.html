@@ -41,6 +41,11 @@
                     <ion-icon slot="icon-only" name="star" />
                   </ion-item-option>
                 }
+                @if (cat.value === 'Milk' || cat.value === 'Laundry') {
+                  <ion-item-option color="tertiary" (click)="openInvite(c, sliding)">
+                    <ion-icon slot="icon-only" name="link" />
+                  </ion-item-option>
+                }
                 <ion-item-option color="danger" (click)="remove(c, sliding)">
                   <ion-icon slot="icon-only" name="trash" />
                 </ion-item-option>

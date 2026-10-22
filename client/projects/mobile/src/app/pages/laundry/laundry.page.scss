@@ -18,7 +18,13 @@
 .hint-card {
   background: rgb(255 196 9 / 0.14);
   border-color: rgb(255 196 9 / 0.4);
-  p { margin: 0; font-size: 12.5px; color: #9a6b00; }
+  p { margin: 0 0 10px; font-size: 12.5px; color: #9a6b00; }
+  ion-button { margin: 0; --box-shadow: none; }
+}
+
+.pickup-request-row {
+  margin-top: 8px;
+  ion-button { margin: 0; width: 100%; }
 }
 
 .section-head {
@@ -149,6 +155,25 @@
   cursor: pointer;
 
   &.paid { background: rgb(45 211 111 / 0.15); color: #2e7d32; }
+  &.small { margin-left: 0; font-size: 9px; padding: 1px 6px; }
+}
+
+.item-lines {
+  margin: 6px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--ion-color-step-50, #f7f8fb);
+}
+
+.item-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 11px;
+  color: var(--ion-color-dark, #1f1330);
+
+  .il-name { flex: 1; }
 }
 
 // ---------- Dhobi contact card ----------

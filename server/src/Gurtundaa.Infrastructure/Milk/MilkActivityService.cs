@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gurtundaa.Infrastructure.Milk;
 
-public class MilkActivityService(AppDbContext db, ICurrentUser currentUser) : IMilkActivityService
+public class MilkActivityService(AppDbContext db, ICurrentUser currentUser, TimeProvider clock) : IMilkActivityService
 {
     public async Task<IReadOnlyList<MilkActivityItemDto>> GetRecentAsync(int take, CancellationToken ct)
     {
@@ -17,7 +17,7 @@ public class MilkActivityService(AppDbContext db, ICurrentUser currentUser) : IM
             .Select(o => new MilkActivityItemDto(
                 MilkActivityType.Missed,
                 o.Slot == MilkSlot.Evening ? "Marked as Not Delivered (Evening)" : "Marked as Not Delivered (Morning)",
-                o.Date, null, o.CreatedAt))
+                o.Date, null, o.CreatedAt, o.AddedByProvider!.DisplayName))
             .ToListAsync(ct);
 
         var extras = await db.MilkExtraRequests.AsNoTracking()
@@ -25,7 +25,7 @@ public class MilkActivityService(AppDbContext db, ICurrentUser currentUser) : IM
             .Select(e => new MilkActivityItemDto(
                 MilkActivityType.ExtraAdded,
                 e.Slot == MilkSlot.Evening ? "Extra Milk Added (Evening)" : "Extra Milk Added (Morning)",
-                e.Date, e.QuantityLtr, e.CreatedAt))
+                e.Date, e.QuantityLtr, e.CreatedAt, e.AddedByProvider!.DisplayName))
             .ToListAsync(ct);
 
         var pauses = await db.MilkPauses.AsNoTracking()
@@ -37,5 +37,29 @@ public class MilkActivityService(AppDbContext db, ICurrentUser currentUser) : IM
             .OrderByDescending(a => a.OccurredAt)
             .Take(take)
             .ToList();
+    }
+
+    public async Task<int> GetUnseenProviderActivityCountAsync(CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var unseenOverrides = await db.MilkDeliveryOverrides.AsNoTracking()
+            .CountAsync(o => o.UserId == userId && o.AddedByProviderId != null && o.SeenByHouseholdAt == null, ct);
+        var unseenExtras = await db.MilkExtraRequests.AsNoTracking()
+            .CountAsync(e => e.UserId == userId && e.AddedByProviderId != null && e.SeenByHouseholdAt == null, ct);
+        return unseenOverrides + unseenExtras;
+    }
+
+    public async Task MarkProviderActivitySeenAsync(CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var now = clock.GetUtcNow();
+
+        await db.MilkDeliveryOverrides
+            .Where(o => o.UserId == userId && o.AddedByProviderId != null && o.SeenByHouseholdAt == null)
+            .ExecuteUpdateAsync(o => o.SetProperty(x => x.SeenByHouseholdAt, now), ct);
+
+        await db.MilkExtraRequests
+            .Where(e => e.UserId == userId && e.AddedByProviderId != null && e.SeenByHouseholdAt == null)
+            .ExecuteUpdateAsync(e => e.SetProperty(x => x.SeenByHouseholdAt, now), ct);
     }
 }
