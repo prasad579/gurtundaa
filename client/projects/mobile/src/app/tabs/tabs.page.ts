@@ -4,6 +4,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { AuthService, HouseholdApi, MilkApi } from '@gurtundaa/shared';
 import { IonBadge, IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   cartOutline,
   downloadOutline,
@@ -20,7 +21,7 @@ import { filter, firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-tabs',
-  imports: [IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge],
+  imports: [IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge, TranslatePipe],
   templateUrl: './tabs.page.html',
 })
 export class TabsPage {

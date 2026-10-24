@@ -30,10 +30,17 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { createOutline, logoWhatsapp, pauseOutline, playOutline, refreshOutline, trash } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { MilkPauseEditorComponent } from './milk-pause-editor.component';
 
 const REASONS = ['Out of Station', 'Guests', 'Festival', 'Other'];
+const REASON_KEYS: Record<string, string> = {
+  'Out of Station': 'milkPause.reasonOutOfStation',
+  Guests: 'milkPause.reasonGuests',
+  Festival: 'milkPause.reasonFestival',
+  Other: 'milkPause.reasonOther',
+};
 
 @Component({
   selector: 'app-milk-pause',
@@ -52,6 +59,7 @@ const REASONS = ['Out of Station', 'Guests', 'Festival', 'Other'];
     IonDatetime,
     IonInput,
     IonCheckbox,
+    TranslatePipe,
   ],
   templateUrl: './milk-pause.page.html',
   styleUrl: './milk-pause.page.scss',
@@ -62,6 +70,7 @@ export class MilkPausePage implements ViewWillEnter {
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly pauseRangeLabel = pauseRangeLabel;
   protected readonly shortDateLabel = shortDateLabel;
@@ -121,6 +130,10 @@ export class MilkPausePage implements ViewWillEnter {
     this.selectedReason.set(reason);
   }
 
+  protected reasonLabel(reason: string): string {
+    return this.translate.instant(REASON_KEYS[reason] ?? reason);
+  }
+
   protected onStartDateChange(value: string): void {
     const date = value.slice(0, 10);
     this.startDate.set(date);
@@ -155,13 +168,13 @@ export class MilkPausePage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(this.milk.updatePause(pause.id, data));
-    await this.toast('pause updated');
+    await this.toast(this.translate.instant('milk.pauseUpdated'));
     await this.load();
   }
 
   protected async cancelPause(pause: MilkPause): Promise<void> {
     await firstValueFrom(this.milk.deletePause(pause.id));
-    await this.toast('pause cancelled');
+    await this.toast(this.translate.instant('milk.pauseCancelled'));
     await this.load();
   }
 
@@ -175,7 +188,7 @@ export class MilkPausePage implements ViewWillEnter {
       if (this.notifyOnSave()) {
         this.notifyMilkman(created);
       }
-      await this.toast('delivery paused 🧳');
+      await this.toast(this.translate.instant('milk.deliveryPausedToast'));
       this.selectedReason.set(REASONS[0]);
       this.customReason.set('');
       this.startDate.set(this.today);
@@ -200,7 +213,7 @@ export class MilkPausePage implements ViewWillEnter {
       this.contact.set(contacts[0] ?? null);
       this.pauses.set(pauses);
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('milk.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }

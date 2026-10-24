@@ -3,36 +3,36 @@
     <header class="hero">
       <span class="emoji" aria-hidden="true">{{ brand.emoji }}</span>
       <h1>
-        welcome to <span class="gradient-text">{{ brand.name }}</span>
+        {{ 'welcome.heading' | translate }} <span class="gradient-text">{{ brand.name }}</span>
       </h1>
-      <p>{{ brand.tagline }} — your all-in-one app to manage your home, family and daily life.</p>
+      <p>{{ brand.tagline }} {{ 'welcome.tagline' | translate }}</p>
     </header>
 
     <ul class="features">
       <li>
         <span class="dot">✓</span>
         <div>
-          <strong>organize everything</strong>
-          <p>bills, documents, medicines, events & more</p>
+          <strong>{{ 'welcome.feature1Title' | translate }}</strong>
+          <p>{{ 'welcome.feature1Desc' | translate }}</p>
         </div>
       </li>
       <li>
         <span class="dot">✓</span>
         <div>
-          <strong>get notified</strong>
-          <p>never miss important things again</p>
+          <strong>{{ 'welcome.feature2Title' | translate }}</strong>
+          <p>{{ 'welcome.feature2Desc' | translate }}</p>
         </div>
       </li>
       <li>
         <span class="dot">✓</span>
         <div>
-          <strong>secure & private</strong>
-          <p>your data is always safe with us</p>
+          <strong>{{ 'welcome.feature3Title' | translate }}</strong>
+          <p>{{ 'welcome.feature3Desc' | translate }}</p>
         </div>
       </li>
     </ul>
 
-    <ion-button class="gradient" expand="block" (click)="getStarted()">get started</ion-button>
-    <button class="later" type="button" (click)="later()">i'll do this later</button>
+    <ion-button class="gradient" expand="block" (click)="getStarted()">{{ 'welcome.getStarted' | translate }}</ion-button>
+    <button class="later" type="button" (click)="later()">{{ 'welcome.later' | translate }}</button>
   </div>
 </ion-content>

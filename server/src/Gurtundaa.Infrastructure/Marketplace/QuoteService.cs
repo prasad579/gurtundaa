@@ -249,7 +249,10 @@ public class QuoteService(AppDbContext db, ICurrentUser currentUser, TimeProvide
         QuotationRequest request, QuotationRequestTargetStatus targetStatus, IReadOnlyList<string>? myCategoryKeys, CancellationToken ct)
     {
         var allItems = JsonSerializer.Deserialize<List<QuotationItemLine>>(request.ItemsJson) ?? [];
-        var shownItems = myCategoryKeys is null
+        // Once quoted, show everything regardless of the shop's current served categories — the shop
+        // already committed to these items, and category filtering should only gate NEW quoting, not
+        // hide a past commitment if the shop later edits its served categories.
+        var shownItems = myCategoryKeys is null || targetStatus == QuotationRequestTargetStatus.Quoted
             ? allItems
             : allItems.Where(i => myCategoryKeys.Contains(MarketplaceCategoryHelper.CategoryKeyOf(i.ItemKey))).ToList();
 

@@ -1,7 +1,7 @@
 <app-onboarding-shell
   [step]="2"
-  title="tell us about your household"
-  subtitle="you can always change this later"
+  title="onboarding.household.title"
+  subtitle="onboarding.household.subtitle"
   (back)="back()"
   (continueClick)="continue()"
   (skip)="skip()"
@@ -10,8 +10,8 @@
     <div class="label">
       <span class="icon" aria-hidden="true">🧑‍🤝‍🧑</span>
       <span>
-        <strong>adults</strong>
-        <span class="hint">people ages 18 and above</span>
+        <strong>{{ 'onboarding.household.adults' | translate }}</strong>
+        <span class="hint">{{ 'onboarding.household.adultsHint' | translate }}</span>
       </span>
     </div>
     <div class="stepper">
@@ -25,8 +25,8 @@
     <div class="label">
       <span class="icon" aria-hidden="true">🧒</span>
       <span>
-        <strong>children</strong>
-        <span class="hint">people below 18 years</span>
+        <strong>{{ 'onboarding.household.children' | translate }}</strong>
+        <span class="hint">{{ 'onboarding.household.childrenHint' | translate }}</span>
       </span>
     </div>
     <div class="stepper">
@@ -38,6 +38,6 @@
 
   <p class="note">
     <span aria-hidden="true">🛡️</span>
-    we use this info to create better reminders and suggestions for your family.
+    {{ 'onboarding.household.note' | translate }}
   </p>
 </app-onboarding-shell>

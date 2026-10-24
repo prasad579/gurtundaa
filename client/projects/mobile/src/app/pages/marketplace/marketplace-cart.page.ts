@@ -9,6 +9,7 @@ import {
 } from '@gurtundaa/shared';
 import {
   ActionSheetController,
+  AlertController,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -21,7 +22,7 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, logoWhatsapp, remove, shareSocialOutline, trash } from 'ionicons/icons';
+import { add, logoWhatsapp, pricetagOutline, remove, shareSocialOutline, trash } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { shareText } from '../../services/share';
 import { MarketplaceCart } from '../../services/marketplace-cart';
@@ -41,11 +42,26 @@ export class MarketplaceCartPage {
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly actionSheets = inject(ActionSheetController);
+  private readonly alerts = inject(AlertController);
 
   protected readonly cart = inject(MarketplaceCart);
 
   constructor() {
-    addIcons({ add, remove, trash, shareSocialOutline, logoWhatsapp });
+    addIcons({ add, remove, trash, shareSocialOutline, logoWhatsapp, pricetagOutline });
+  }
+
+  protected async promptBrand(itemKey: string, itemName: string): Promise<void> {
+    const alert = await this.alerts.create({
+      header: `Brand for ${itemName}?`,
+      message: 'Optional — lets the shop know what you prefer.',
+      inputs: [{ name: 'brand', type: 'text', placeholder: 'e.g. Sunflower, Amul…', value: this.cart.brandOf(itemKey) ?? '' }],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Clear', role: 'destructive', handler: () => this.cart.setBrand(itemKey, null) },
+        { text: 'Save', role: 'confirm', handler: (data) => this.cart.setBrand(itemKey, data.brand?.trim() || null) },
+      ],
+    });
+    await alert.present();
   }
 
   protected async openShareSheet(): Promise<void> {

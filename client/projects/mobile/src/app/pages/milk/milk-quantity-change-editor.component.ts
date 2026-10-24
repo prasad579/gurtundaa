@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MilkQuantityChange, MilkSubscription, SaveMilkQuantityChangeRequest, toDateOnlyString } from '@gurtundaa/shared';
+import { MILK_QUANTITY_STEP_LTR, MilkQuantityChange, MilkSubscription, SaveMilkQuantityChangeRequest, toDateOnlyString } from '@gurtundaa/shared';
 import {
   IonButton,
   IonButtons,
@@ -18,6 +18,7 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-milk-quantity-change-editor',
@@ -37,14 +38,15 @@ import {
     IonModal,
     IonDatetime,
     IonTextarea,
+    TranslatePipe,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>{{ change ? 'edit quantity change' : 'change quantity 🥛' }}</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ (change ? 'milkQuantityEditor.editTitle' : 'milkQuantityEditor.newTitle') | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -52,7 +54,7 @@ import {
       <form [formGroup]="form">
         <ion-list lines="none">
           <ion-item>
-            <ion-label>from</ion-label>
+            <ion-label>{{ 'milkQuantityEditor.from' | translate }}</ion-label>
             <ion-datetime-button datetime="qc-start" />
           </ion-item>
           <ion-modal [keepContentsMounted]="true">
@@ -62,7 +64,7 @@ import {
           </ion-modal>
 
           <ion-item>
-            <ion-label>to</ion-label>
+            <ion-label>{{ 'milkQuantityEditor.to' | translate }}</ion-label>
             <ion-datetime-button datetime="qc-end" />
           </ion-item>
           <ion-modal [keepContentsMounted]="true">
@@ -76,9 +78,11 @@ import {
               formControlName="morningQuantityLtr"
               type="number"
               inputmode="decimal"
-              label="🌅 morning quantity (Ltr)"
+              step="0.5"
+              [label]="'milkQuantityEditor.morningLabel' | translate"
               labelPlacement="stacked"
               placeholder="2.0"
+              (ionChange)="snapToMilkStep('morningQuantityLtr')"
             />
           </ion-item>
 
@@ -87,18 +91,20 @@ import {
               formControlName="eveningQuantityLtr"
               type="number"
               inputmode="decimal"
-              label="🌙 evening quantity (Ltr)"
+              step="0.5"
+              [label]="'milkQuantityEditor.eveningLabel' | translate"
               labelPlacement="stacked"
               placeholder="1.0"
+              (ionChange)="snapToMilkStep('eveningQuantityLtr')"
             />
           </ion-item>
 
           <ion-item>
             <ion-textarea
               formControlName="reason"
-              label="reason (optional)"
+              [label]="'milkPauseEditor.reasonLabel' | translate"
               labelPlacement="stacked"
-              placeholder="guests staying over, festival season…"
+              [placeholder]="'milkQuantityEditor.reasonPlaceholder' | translate"
               [autoGrow]="true"
               [maxlength]="200"
             />
@@ -139,6 +145,13 @@ export class MilkQuantityChangeEditorComponent implements OnInit {
         eveningQuantityLtr: this.subscription.eveningEnabled ? this.subscription.eveningQuantityLtr : 0,
       });
     }
+  }
+
+  // Milk only comes in half-litre packets — snap odd decimals (2.1, 2.37) to the nearest 0.5 on commit.
+  protected snapToMilkStep(control: 'morningQuantityLtr' | 'eveningQuantityLtr'): void {
+    const current = this.form.controls[control].value;
+    const snapped = Math.max(0, Math.round(current / MILK_QUANTITY_STEP_LTR) * MILK_QUANTITY_STEP_LTR);
+    if (snapped !== current) this.form.controls[control].setValue(snapped);
   }
 
   protected dismiss(): Promise<boolean> {

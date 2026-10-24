@@ -30,6 +30,7 @@ import {
   randomCheer,
   rupeeLabel,
   shortDateLabel,
+  toDateOnlyString,
 } from '@gurtundaa/shared';
 import {
   IonCheckbox,
@@ -58,6 +59,7 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add, pencil, trash } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { ReminderNotifications } from '../../services/reminder-notifications';
 import { ReminderEditorComponent } from './reminder-editor.component';
@@ -86,6 +88,7 @@ import { ReminderEditorComponent } from './reminder-editor.component';
     IonFab,
     IonFabButton,
     IonSkeletonText,
+    TranslatePipe,
   ],
   templateUrl: './reminders.page.html',
   styleUrl: './reminders.page.scss',
@@ -102,6 +105,7 @@ export class RemindersPage implements ViewWillEnter {
   private readonly billsApi = inject(BillsApi);
   private readonly medicinesApi = inject(MedicinesApi);
   private readonly doseLogApi = inject(DoseLogApi);
+  private readonly translate = inject(TranslateService);
 
   protected readonly brand = BRAND;
   protected readonly priorityLabels = PRIORITY_LABELS;
@@ -116,6 +120,12 @@ export class RemindersPage implements ViewWillEnter {
   protected readonly isOverdue = isOverdue;
   protected readonly rupeeLabel = rupeeLabel;
   protected readonly shortDateLabel = shortDateLabel;
+
+  protected resumeDateLabel(pause: MilkPause): string {
+    const end = new Date(pause.endDate);
+    end.setDate(end.getDate() + 1);
+    return shortDateLabel(toDateOnlyString(end));
+  }
 
   // ---------- Cross-module "what needs attention" cards ----------
   protected readonly milkToday = signal<MilkToday | null>(null);
@@ -187,7 +197,7 @@ export class RemindersPage implements ViewWillEnter {
     }
 
     await firstValueFrom(reminder ? this.api.update(reminder.id, data) : this.api.create(data));
-    await this.toast(reminder ? 'updated ✍️' : "saved. we'll remember 💭");
+    await this.toast(this.translate.instant(reminder ? 'home.toastUpdated' : 'home.toastSaved'));
     await this.load();
   }
 
@@ -204,7 +214,7 @@ export class RemindersPage implements ViewWillEnter {
   protected async remove(reminder: Reminder, sliding: IonItemSliding): Promise<void> {
     await sliding.close();
     await firstValueFrom(this.api.delete(reminder.id));
-    await this.toast('gone 🫥');
+    await this.toast(this.translate.instant('home.toastDeleted'));
     await this.load();
   }
 
@@ -222,7 +232,7 @@ export class RemindersPage implements ViewWillEnter {
       this.stats.set(stats);
       void this.notifications.sync(upcoming ?? list);
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('home.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }

@@ -1,26 +1,26 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-    <ion-title>{{ batch ? 'edit entry' : 'new laundry entry 🧺' }}</ion-title>
+    <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+    <ion-title>{{ (batch ? 'laundryEntryEditor.editTitle' : 'laundryEntryEditor.newTitle') | translate }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button strong="true" [disabled]="!hasAnyItem" (click)="save()">save</ion-button>
+      <ion-button strong="true" [disabled]="!hasAnyItem" (click)="save()">{{ 'common.save' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
   <form [formGroup]="form">
-    <h3 class="section-title">Service Type</h3>
-    <ion-segment [value]="serviceType()" (ionChange)="serviceType.set($any($event.detail.value))" scrollable>
-      <ion-segment-button value="Ironing">Ironing</ion-segment-button>
-      <ion-segment-button value="WashAndIron">Wash &amp; Iron</ion-segment-button>
-      <ion-segment-button value="DryClean">Dry Clean</ion-segment-button>
-      <ion-segment-button value="Other">Other</ion-segment-button>
-    </ion-segment>
+    <h3 class="section-title">{{ 'laundryEntryEditor.serviceType' | translate }}</h3>
+    <div class="toggle-row">
+      <button type="button" class="toggle-btn" [class.sel]="serviceType() === 'Ironing'" (click)="serviceType.set('Ironing')">{{ 'laundry.serviceType.Ironing' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="serviceType() === 'WashAndIron'" (click)="serviceType.set('WashAndIron')">{{ 'laundry.serviceType.WashAndIron' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="serviceType() === 'DryClean'" (click)="serviceType.set('DryClean')">{{ 'laundry.serviceType.DryClean' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="serviceType() === 'Other'" (click)="serviceType.set('Other')">{{ 'laundry.serviceType.Other' | translate }}</button>
+    </div>
 
     <ion-list lines="none">
       <ion-item>
-        <ion-select formControlName="contactId" label="dhobi" labelPlacement="stacked" interface="popover" placeholder="select a dhobi">
+        <ion-select formControlName="contactId" [label]="'laundryEntryEditor.dhobi' | translate" labelPlacement="stacked" interface="popover" [placeholder]="'laundryEntryEditor.selectDhobi' | translate">
           @for (c of contacts; track c.id) {
             <ion-select-option [value]="c.id">{{ c.name }}</ion-select-option>
           }
@@ -28,7 +28,7 @@
       </ion-item>
 
       <ion-item>
-        <ion-label>given on</ion-label>
+        <ion-label>{{ 'laundryEntryEditor.givenOn' | translate }}</ion-label>
         <ion-datetime-button datetime="given-on" />
       </ion-item>
       <ion-modal #givenOnModal [keepContentsMounted]="true">
@@ -45,8 +45,8 @@
 
       <ion-item>
         <ion-label>
-          expected return (optional)
-          <p>When the whole batch should be back. Individual items needing earlier pickup can be flagged below.</p>
+          {{ 'laundryEntryEditor.expectedReturn' | translate }}
+          <p>{{ 'laundryEntryEditor.expectedReturnHint' | translate }}</p>
         </ion-label>
         <ion-datetime-button datetime="expected-return" />
       </ion-item>
@@ -63,8 +63,8 @@
       </ion-modal>
     </ion-list>
 
-    <h3 class="section-title">Items</h3>
-    <p class="hint">Enter the price per item as quoted by the dhobi — optional, leave at 0 if not known yet.</p>
+    <h3 class="section-title">{{ 'laundryEntryEditor.items' | translate }}</h3>
+    <p class="hint">{{ 'laundryEntryEditor.itemsHint' | translate }}</p>
     <div class="item-grid">
       @for (type of itemTypes; track type.label) {
         <div class="item-row">
@@ -95,7 +95,7 @@
               />
             </div>
             <button type="button" class="needed-toggle" (click)="toggleNeededBy(type.label)">
-              ⏰ {{ isNeededByOpen(type.label) ? (neededBy(type.label) ? 'needed by ' + neededBy(type.label) : 'set earlier pickup date') : 'need this sooner?' }}
+              ⏰ {{ isNeededByOpen(type.label) ? (neededBy(type.label) ? ('laundryEntryEditor.neededByDate' | translate: { date: neededBy(type.label) }) : ('laundryEntryEditor.setEarlierDate' | translate)) : ('laundryEntryEditor.needSooner' | translate) }}
             </button>
             @if (isNeededByOpen(type.label)) {
               <input
@@ -111,10 +111,10 @@
       }
     </div>
 
-    <h3 class="section-title">Other item (optional)</h3>
+    <h3 class="section-title">{{ 'laundryEntryEditor.otherItem' | translate }}</h3>
     <div class="other-row">
       <ion-item class="other-input" lines="none">
-        <ion-input formControlName="otherType" placeholder="e.g. Jackets" [maxlength]="50" />
+        <ion-input formControlName="otherType" [placeholder]="'laundryEntryEditor.otherPlaceholder' | translate" [maxlength]="50" />
       </ion-item>
       <div class="stepper">
         <button type="button" (click)="adjustOther(-1)">−</button>
@@ -134,7 +134,7 @@
             formControlName="otherPrice"
             type="number"
             inputmode="decimal"
-            placeholder="₹/item"
+            [placeholder]="'laundryEntryEditor.perItemPlaceholder' | translate"
           />
         </ion-item>
       }
@@ -143,7 +143,7 @@
     @if (total() + otherLineTotal(); as grandTotal) {
       @if (grandTotal > 0) {
         <div class="total-row">
-          <span>Estimated Total</span>
+          <span>{{ 'laundryEntryEditor.estimatedTotal' | translate }}</span>
           <span class="total-val">₹{{ grandTotal }}</span>
         </div>
       }
@@ -153,9 +153,9 @@
       <ion-item>
         <ion-textarea
           formControlName="notes"
-          label="notes (optional)"
+          [label]="'laundryEntryEditor.notesLabel' | translate"
           labelPlacement="stacked"
-          placeholder="pockets empty, handle with care…"
+          [placeholder]="'laundryEntryEditor.notesPlaceholder' | translate"
           [autoGrow]="true"
           [maxlength]="200"
         />
@@ -163,10 +163,26 @@
       @if (!batch) {
         <ion-item lines="none">
           <ion-checkbox formControlName="notifyDhobi" labelPlacement="end" justify="start">
-            Send item list to dhobi via WhatsApp
+            {{ 'laundryEntryEditor.notifyDhobiCheckbox' | translate }}
           </ion-checkbox>
         </ion-item>
       }
     </ion-list>
+
+    <h3 class="section-title">{{ 'laundryEntryEditor.photo' | translate }}</h3>
+    <p class="hint">{{ 'laundryEntryEditor.photoHint' | translate }}</p>
+    <label class="photo-upload">
+      @if (photoPreviewUrl(); as preview) {
+        <img [src]="preview" alt="Laundry photo" />
+      } @else if (batch?.photoUrl; as url) {
+        <img [src]="existingPhotoUrl(url)" alt="Laundry photo" />
+      } @else {
+        <div class="photo-placeholder">
+          <ion-icon name="camera" />
+          <span>{{ 'laundryEntryEditor.photoPlaceholder' | translate }}</span>
+        </div>
+      }
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onPhotoSelected($event)" />
+    </label>
   </form>
 </ion-content>

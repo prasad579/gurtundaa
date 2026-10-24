@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MilkSlot, SaveMilkExtraRequestRequest, parseDateOnly, toDateOnlyString } from '@gurtundaa/shared';
+import { MILK_QUANTITY_STEP_LTR, MilkSlot, SaveMilkExtraRequestRequest, parseDateOnly, toDateOnlyString } from '@gurtundaa/shared';
 
 type ExtraMode = 'Single' | 'Range';
 
@@ -17,13 +17,12 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonTextarea,
   IonTitle,
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-milk-extra-editor',
@@ -43,37 +42,36 @@ import {
     IonModal,
     IonDatetime,
     IonTextarea,
-    IonSegment,
-    IonSegmentButton,
+    TranslatePipe,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>request extra milk 🥛</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ 'milkExtraEditor.title' | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid || rangeTooLong()" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid || rangeTooLong()" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <form [formGroup]="form">
-        <ion-segment formControlName="slot">
-          <ion-segment-button value="Morning">🌅 Morning</ion-segment-button>
-          <ion-segment-button value="Evening">🌙 Evening</ion-segment-button>
-        </ion-segment>
+        <div class="toggle-row">
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.slot.value === 'Morning'" (click)="form.controls.slot.setValue('Morning')">🌅 {{ 'milkExtraEditor.morning' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.slot.value === 'Evening'" (click)="form.controls.slot.setValue('Evening')">🌙 {{ 'milkExtraEditor.evening' | translate }}</button>
+        </div>
 
-        <ion-segment class="mode-segment" [value]="mode()" (ionChange)="setMode($any($event.detail.value))">
-          <ion-segment-button value="Single">Single Day</ion-segment-button>
-          <ion-segment-button value="Range">Date Range</ion-segment-button>
-        </ion-segment>
+        <div class="toggle-row mode-toggle">
+          <button type="button" class="toggle-btn" [class.sel]="mode() === 'Single'" (click)="setMode('Single')">{{ 'milkExtraEditor.singleDay' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="mode() === 'Range'" (click)="setMode('Range')">{{ 'milkExtraEditor.dateRange' | translate }}</button>
+        </div>
 
         <ion-list lines="none">
           @if (mode() === 'Single') {
             <ion-item>
               <ion-label>
-                date
-                <p>Pick a past date to log extra you already consumed, or a future date to give your milkman advance notice.</p>
+                {{ 'milkExtraEditor.date' | translate }}
+                <p>{{ 'milkExtraEditor.dateHint' | translate }}</p>
               </ion-label>
               <ion-datetime-button datetime="extra-date" slot="end" />
             </ion-item>
@@ -84,7 +82,7 @@ import {
             </ion-modal>
           } @else {
             <ion-item>
-              <ion-label>from</ion-label>
+              <ion-label>{{ 'milkExtraEditor.from' | translate }}</ion-label>
               <ion-datetime-button datetime="extra-from" slot="end" />
             </ion-item>
             <ion-modal #fromModal [keepContentsMounted]="true">
@@ -94,7 +92,7 @@ import {
             </ion-modal>
 
             <ion-item>
-              <ion-label>to</ion-label>
+              <ion-label>{{ 'milkExtraEditor.to' | translate }}</ion-label>
               <ion-datetime-button datetime="extra-to" slot="end" />
             </ion-item>
             <ion-modal #toModal [keepContentsMounted]="true">
@@ -111,11 +109,11 @@ import {
 
             @if (rangeDayCount(); as count) {
               <p class="range-hint">
-                {{ count }} day{{ count === 1 ? '' : 's' }} — same extra quantity logged for each day in the range.
+                {{ (count === 1 ? 'milkExtraEditor.rangeHintOne' : 'milkExtraEditor.rangeHintMany') | translate: { count } }}
               </p>
             }
             @if (rangeTooLong()) {
-              <p class="range-error">Keep the range to {{ maxRangeDays }} days or fewer.</p>
+              <p class="range-error">{{ 'milkExtraEditor.rangeError' | translate: { max: maxRangeDays } }}</p>
             }
           }
 
@@ -124,18 +122,20 @@ import {
               formControlName="quantityLtr"
               type="number"
               inputmode="decimal"
-              label="extra quantity (Ltr)"
+              step="0.5"
+              [label]="'milkExtraEditor.quantityLabel' | translate"
               labelPlacement="stacked"
               placeholder="1.0"
+              (ionChange)="snapToMilkStep()"
             />
           </ion-item>
 
           <ion-item>
             <ion-textarea
               formControlName="reason"
-              label="reason (optional)"
+              [label]="'milkExtraEditor.reasonLabel' | translate"
               labelPlacement="stacked"
-              placeholder="guests, function…"
+              [placeholder]="'milkExtraEditor.reasonPlaceholder' | translate"
               [autoGrow]="true"
               [maxlength]="200"
             />
@@ -146,7 +146,27 @@ import {
   `,
   styles: `
     ion-label p { font-size: 10.5px; color: var(--ion-color-medium); white-space: normal; }
-    .mode-segment { margin-top: 10px; }
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 4px;
+    }
+    .mode-toggle { margin-top: 14px; }
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: var(--ion-color-step-50, #f3f0fa);
+      color: var(--ion-color-medium, #8a7fa3);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .toggle-btn.sel {
+      background: var(--ion-color-primary, #7c3aed);
+      color: #fff;
+    }
     .range-hint { font-size: 11px; color: var(--ion-color-medium); margin: 2px 16px 0; }
     .range-error { font-size: 11px; color: var(--ion-color-danger, #eb445a); margin: 2px 16px 0; }
   `,
@@ -165,7 +185,7 @@ export class MilkExtraEditorComponent implements OnInit {
     slot: new FormControl<MilkSlot>('Morning', { nonNullable: true }),
     date: new FormControl(this.today, { nonNullable: true, validators: [Validators.required] }),
     endDate: new FormControl(this.today, { nonNullable: true, validators: [Validators.required] }),
-    quantityLtr: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.1)] }),
+    quantityLtr: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(MILK_QUANTITY_STEP_LTR)] }),
     reason: new FormControl('', { nonNullable: true }),
   });
 
@@ -190,6 +210,13 @@ export class MilkExtraEditorComponent implements OnInit {
   protected rangeTooLong(): boolean {
     const count = this.rangeDayCount();
     return count !== null && count > MAX_RANGE_DAYS;
+  }
+
+  // Milk only comes in half-litre packets — snap odd decimals (2.1, 2.37) to the nearest 0.5 on commit.
+  protected snapToMilkStep(): void {
+    const current = this.form.controls.quantityLtr.value;
+    const snapped = Math.max(MILK_QUANTITY_STEP_LTR, Math.round(current / MILK_QUANTITY_STEP_LTR) * MILK_QUANTITY_STEP_LTR);
+    if (snapped !== current) this.form.controls.quantityLtr.setValue(snapped);
   }
 
   protected dismiss(): Promise<boolean> {

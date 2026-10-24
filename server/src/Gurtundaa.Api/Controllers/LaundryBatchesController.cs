@@ -36,6 +36,27 @@ public class LaundryBatchesController(ILaundryBatchService batches) : Controller
     public async Task<ActionResult<LaundryBatchDto>> SetItemPaid(Guid id, int itemIndex, SetLaundryItemPaidRequest request, CancellationToken ct) =>
         await batches.SetItemPaidAsync(id, itemIndex, request, ct) is { } batch ? Ok(batch) : NotFound();
 
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
+
+    [HttpPost("{id:guid}/photo")]
+    [RequestSizeLimit(5_000_000)] // 5 MB
+    public async Task<ActionResult<LaundryBatchDto>> UploadPhoto(Guid id, IFormFile file, CancellationToken ct)
+    {
+        if (file.Length == 0)
+        {
+            return BadRequest("No file uploaded.");
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            return BadRequest("Only .jpg, .jpeg, .png, or .webp images are allowed.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        return await batches.UploadPhotoAsync(id, stream, extension, ct) is { } batch ? Ok(batch) : NotFound();
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
         await batches.DeleteAsync(id, ct) ? NoContent() : NotFound();

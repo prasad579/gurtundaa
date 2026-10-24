@@ -23,5 +23,7 @@ public interface ILaundryBatchService
     /// <summary>Settles a single item line (by its position in the batch) for batches paid off in stages. The batch's own IsPaid becomes true once every item is.</summary>
     Task<LaundryBatchDto?> SetItemPaidAsync(Guid id, int itemIndex, SetLaundryItemPaidRequest request, CancellationToken ct);
 
+    Task<LaundryBatchDto?> UploadPhotoAsync(Guid id, Stream content, string extension, CancellationToken ct);
+
     Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }

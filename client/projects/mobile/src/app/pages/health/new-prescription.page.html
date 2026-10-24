@@ -3,17 +3,17 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/health" />
     </ion-buttons>
-    <ion-title>New Prescription 📋</ion-title>
+    <ion-title>{{ 'newPrescription.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <section class="card">
-    <h3>Visit Details</h3>
+    <h3>{{ 'newPrescription.visitDetailsTitle' | translate }}</h3>
 
     <ion-select
       class="field"
-      label="For"
+      [label]="'newPrescription.forLabel' | translate"
       labelPlacement="stacked"
       interface="popover"
       [value]="memberId()"
@@ -26,18 +26,18 @@
 
     <ion-input
       class="field"
-      label="Doctor name"
+      [label]="'newPrescription.doctorNameLabel' | translate"
       labelPlacement="stacked"
-      placeholder="Dr. Rao"
+      [placeholder]="'newPrescription.doctorNamePlaceholder' | translate"
       [value]="doctorName()"
       (ionInput)="doctorName.set($any($event.detail.value))"
       [maxlength]="100"
     />
     <ion-input
       class="field"
-      label="Specialty (optional)"
+      [label]="'newPrescription.specialtyLabel' | translate"
       labelPlacement="stacked"
-      placeholder="General Physician"
+      [placeholder]="'newPrescription.specialtyPlaceholder' | translate"
       [value]="doctorSpecialty()"
       (ionInput)="doctorSpecialty.set($any($event.detail.value))"
       [maxlength]="100"
@@ -45,11 +45,11 @@
 
     <div class="date-row">
       <div class="date-field">
-        <div class="df-lbl">Visit Date</div>
+        <div class="df-lbl">{{ 'newPrescription.visitDateLabel' | translate }}</div>
         <ion-datetime-button datetime="visit-date" />
       </div>
       <div class="date-field">
-        <div class="df-lbl">Revisit Date</div>
+        <div class="df-lbl">{{ 'newPrescription.revisitDateLabel' | translate }}</div>
         <ion-datetime-button datetime="revisit-date" />
       </div>
     </div>
@@ -75,37 +75,31 @@
       </ng-template>
     </ion-modal>
 
-    <p class="label">Revisit reminder</p>
+    <p class="label">{{ 'newPrescription.revisitReminderLabel' | translate }}</p>
     <div class="reason-chips">
       @for (p of revisitPresets; track p.days) {
-        <button class="rchip" (click)="selectRevisitPreset(p.days)">{{ p.label }}</button>
+        <button class="rchip" (click)="selectRevisitPreset(p.days)">{{ p.labelKey | translate }}</button>
       }
       @if (revisitDate()) {
-        <button class="rchip" (click)="clearRevisit()">Clear</button>
+        <button class="rchip" (click)="clearRevisit()">{{ 'newPrescription.clearBtn' | translate }}</button>
       }
     </div>
   </section>
 
   <section class="card">
     <div class="sec-head">
-      <h3>Medicines</h3>
+      <h3>{{ 'newPrescription.medicinesTitle' | translate }}</h3>
     </div>
 
     @if (medicines().length === 0) {
-      <p class="muted">No medicines added yet.</p>
+      <p class="muted">{{ 'newPrescription.noMedicines' | translate }}</p>
     } @else {
       @for (med of medicines(); track $index) {
         <div class="med-row">
           <span class="mi"><ion-icon name="medkit" /></span>
           <div class="mt">
             <div class="mn">{{ med.name }}</div>
-            <div class="ms">
-              {{ med.morningQty + med.afternoonQty + med.eveningQty + med.nightQty }} / day ·
-              {{ med.stockCount }} tabs
-              @if (med.mode === 'Course') {
-                · {{ med.courseDays }} day course
-              }
-            </div>
+            <div class="ms">{{ medSummary(med) }}</div>
           </div>
           <button class="del-btn" (click)="removeMedicine($index)"><ion-icon name="trash" /></button>
         </div>
@@ -113,11 +107,11 @@
     }
 
     <ion-button expand="block" fill="outline" class="add-med-btn" (click)="addMedicine()">
-      <ion-icon slot="start" name="add" />Add Medicine
+      <ion-icon slot="start" name="add" />{{ 'newPrescription.addMedicineBtn' | translate }}
     </ion-button>
   </section>
 
   <ion-button expand="block" class="save-btn" [disabled]="!canSave() || saving()" (click)="save()">
-    {{ saving() ? 'saving…' : 'Save Prescription' }}
+    {{ (saving() ? 'common.saving' : 'newPrescription.saveBtn') | translate }}
   </ion-button>
 </ion-content>

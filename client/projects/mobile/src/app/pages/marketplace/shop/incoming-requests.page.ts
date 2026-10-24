@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import {
   IncomingQuotationRequest,
   MARKETPLACE_CATALOG,
+  MARKETPLACE_ITEM_BY_KEY,
   MarketplaceShopApi,
   Quote,
   countdownLabel,
@@ -51,8 +52,13 @@ export class IncomingRequestsPage implements ViewWillEnter {
     void this.load();
   }
 
-  protected itemsSummary(request: IncomingQuotationRequest): string {
-    return request.items.map((i) => `${i.name} (${i.qty} × ${i.pack})`).join(', ');
+  // Requests only carry itemKey/name — look up the catalog's Telugu name and image for shop-friendly display.
+  protected teluguName(itemKey: string): string | null {
+    return MARKETPLACE_ITEM_BY_KEY.get(itemKey)?.teluguName ?? null;
+  }
+
+  protected itemImage(itemKey: string): string | null {
+    return MARKETPLACE_ITEM_BY_KEY.get(itemKey)?.image ?? null;
   }
 
   protected categoryLabel(request: IncomingQuotationRequest): string | null {
@@ -68,6 +74,12 @@ export class IncomingRequestsPage implements ViewWillEnter {
 
   protected countdown(request: IncomingQuotationRequest): string | null {
     return countdownLabel(request.quotesCloseAt);
+  }
+
+  // The raw targetStatus ("Sent"/"Viewed") reads as still-actionable even once the quote window has
+  // closed — show "Missed" instead so a closed, unquoted request doesn't look like it's awaiting you.
+  protected statusBadgeLabel(request: IncomingQuotationRequest): string {
+    return this.countdown(request) === 'Closed' ? 'Missed' : request.targetStatus;
   }
 
   protected myQuote(request: IncomingQuotationRequest): Quote | undefined {

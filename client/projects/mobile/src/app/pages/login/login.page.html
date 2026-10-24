@@ -6,14 +6,14 @@
       <p>{{ brand.tagline }}</p>
     </header>
 
-    <h2>welcome back!</h2>
-    <p class="subtitle">sign in to continue to your account</p>
+    <h2>{{ 'login.heading' | translate }}</h2>
+    <p class="subtitle">{{ 'login.subtitle' | translate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <ion-list lines="none">
         <ion-item>
           <ion-input
-            label="email or mobile number"
+            [label]="'login.identifierLabel' | translate"
             labelPlacement="floating"
             formControlName="identifier"
             autocomplete="username"
@@ -24,7 +24,7 @@
         @if (identifierKind() !== 'phone') {
           <ion-item>
             <ion-input
-              label="password"
+              [label]="'login.passwordLabel' | translate"
               labelPlacement="floating"
               type="password"
               formControlName="password"
@@ -39,12 +39,12 @@
       }
 
       <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
-        {{ busy() ? 'one sec…' : identifierKind() === 'phone' ? 'send otp 📲' : "let's go" }}
+        {{ busy() ? ('common.oneSec' | translate) : identifierKind() === 'phone' ? ('login.submitPhone' | translate) : ('login.submitEmail' | translate) }}
       </ion-button>
     </form>
 
     <p class="switch">
-      don't have an account? <a routerLink="/register">sign up</a>
+      {{ 'login.switchPrompt' | translate }} <a routerLink="/register">{{ 'login.switchLink' | translate }}</a>
     </p>
   </div>
 </ion-content>

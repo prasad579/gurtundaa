@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start"><ion-back-button defaultHref="/bills" /></ion-buttons>
-    <ion-title>All Bills</ion-title>
+    <ion-title>{{ 'bills.allBills' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -12,15 +12,15 @@
     </div>
   } @else {
     <div class="filter-row">
-      <div class="filter-chip" [class.sel]="filter() === 'All'" (click)="setFilter('All')">All ({{ counts().All }})</div>
-      <div class="filter-chip" [class.sel]="filter() === 'Overdue'" (click)="setFilter('Overdue')">Overdue ({{ counts().Overdue }})</div>
-      <div class="filter-chip" [class.sel]="filter() === 'DueSoon'" (click)="setFilter('DueSoon')">Due Soon ({{ counts().DueSoon }})</div>
-      <div class="filter-chip" [class.sel]="filter() === 'Upcoming'" (click)="setFilter('Upcoming')">Upcoming ({{ counts().Upcoming }})</div>
-      <div class="filter-chip" [class.sel]="filter() === 'Paid'" (click)="setFilter('Paid')">Paid ({{ counts().Paid }})</div>
+      <div class="filter-chip" [class.sel]="filter() === 'All'" (click)="setFilter('All')">{{ 'bills.filterAll' | translate: { count: counts().All } }}</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Overdue'" (click)="setFilter('Overdue')">{{ 'bills.filterOverdue' | translate: { count: counts().Overdue } }}</div>
+      <div class="filter-chip" [class.sel]="filter() === 'DueSoon'" (click)="setFilter('DueSoon')">{{ 'bills.filterDueSoon' | translate: { count: counts().DueSoon } }}</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Upcoming'" (click)="setFilter('Upcoming')">{{ 'bills.filterUpcoming' | translate: { count: counts().Upcoming } }}</div>
+      <div class="filter-chip" [class.sel]="filter() === 'Paid'" (click)="setFilter('Paid')">{{ 'bills.filterPaid' | translate: { count: counts().Paid } }}</div>
     </div>
 
     @if (filtered().length === 0) {
-      <p class="muted ion-padding">No bills in this filter.</p>
+      <p class="muted ion-padding">{{ 'bills.noneInFilter' | translate }}</p>
     } @else {
       <section class="card">
         @for (b of filtered(); track b.id) {
@@ -28,7 +28,7 @@
             <div class="bill-icon">{{ categoryLabels[b.category].icon }}</div>
             <div class="bill-info">
               <div class="bill-name">{{ b.name }}</div>
-              <div class="bill-meta">{{ categoryLabels[b.category].label }}</div>
+              <div class="bill-meta">{{ 'bills.category.' + b.category | translate }}</div>
               @if (!b.isPaid) {
                 <div class="bill-due" [class]="urgencyClass(b)">{{ billDueLabel(b) }}</div>
               }
@@ -36,9 +36,9 @@
             <div class="bill-amt">
               <div class="amt">{{ rupeeLabel(b.amount) }}</div>
               @if (b.isPaid) {
-                <span class="paid-chip">PAID</span>
+                <span class="paid-chip">{{ 'bills.paidChip' | translate }}</span>
               } @else {
-                <button class="pay-btn" (click)="markPaid(b)">Mark Paid</button>
+                <button class="pay-btn" (click)="markPaid(b)">{{ 'bills.markPaid' | translate }}</button>
               }
             </div>
           </div>

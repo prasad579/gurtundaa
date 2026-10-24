@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IncomingQuotationRequest, MarketplaceShopApi, PriceListEntry, ShopPriceListApi, rupeeLabel } from '@gurtundaa/shared';
+import { IncomingQuotationRequest, MARKETPLACE_ITEM_BY_KEY, MarketplaceShopApi, PriceListEntry, ShopPriceListApi, rupeeLabel } from '@gurtundaa/shared';
 import {
   IonButton,
   IonButtons,
@@ -11,6 +11,7 @@ import {
   IonLabel,
   IonList,
   IonTextarea,
+  IonThumbnail,
   IonTitle,
   IonToolbar,
   ModalController,
@@ -27,14 +28,14 @@ const VALID_PRESETS: { label: string; hours: number }[] = [
 
 @Component({
   selector: 'app-submit-quote-sheet',
-  imports: [ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonLabel, IonInput, IonTextarea],
+  imports: [ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonLabel, IonInput, IonTextarea, IonThumbnail],
   template: `
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
         <ion-title>submit quote</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="busy()" (click)="submit()">send</ion-button>
+          <ion-button strong="true" [disabled]="busy() || !allPriced()" (click)="submit()">send</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -42,9 +43,22 @@ const VALID_PRESETS: { label: string; hours: number }[] = [
       <ion-list lines="full">
         @for (item of request.items; track item.itemKey) {
           <ion-item>
+            @if (itemImage(item.itemKey); as img) {
+              <ion-thumbnail slot="start">
+                <img [src]="img" [alt]="item.name" loading="lazy" />
+              </ion-thumbnail>
+            }
             <ion-label>
-              <h2>{{ item.name }}</h2>
+              <h2>
+                {{ item.name }}
+                @if (teluguName(item.itemKey); as te) {
+                  <span class="te-name">{{ te }}</span>
+                }
+              </h2>
               <p>{{ item.qty }} × {{ item.pack }}</p>
+              @if (item.brand) {
+                <p class="brand-pref">🏷 wants: {{ item.brand }}</p>
+              }
               @if (lastEntry(item.itemKey); as last) {
                 <p class="prev">Last: {{ rupeeLabel(last.unitPrice) }} · {{ dateLabel(last.updatedAt) }}</p>
               }
@@ -56,7 +70,7 @@ const VALID_PRESETS: { label: string; hours: number }[] = [
               inputmode="decimal"
               placeholder="price"
               style="max-width: 100px; text-align: right"
-              [value]="prices.get(item.itemKey)?.value"
+              [value]="prices.get(item.itemKey)?.value || null"
               (ionInput)="setPrice(item.itemKey, $event)"
             />
           </ion-item>
@@ -73,7 +87,18 @@ const VALID_PRESETS: { label: string; hours: number }[] = [
       <h3 class="section-title">Delivery</h3>
       <div class="chips">
         @for (opt of deliveryOptions; track opt.value) {
-          <button type="button" class="chip" [class.sel]="deliveryCharge() === opt.value" (click)="setDeliveryCharge(opt.value)">{{ opt.label }}</button>
+          <button type="button" class="chip" [class.sel]="!isCustomDelivery() && deliveryCharge() === opt.value" (click)="selectDeliveryPreset(opt.value)">{{ opt.label }}</button>
+        }
+        <button type="button" class="chip" [class.sel]="isCustomDelivery()" (click)="useCustomDelivery()">Custom</button>
+        @if (isCustomDelivery()) {
+          <ion-input
+            type="number"
+            inputmode="decimal"
+            placeholder="₹ amount"
+            class="custom-delivery-input"
+            [value]="deliveryCharge()"
+            (ionInput)="onCustomDeliveryInput($event)"
+          />
         }
       </div>
 
@@ -107,6 +132,17 @@ const VALID_PRESETS: { label: string; hours: number }[] = [
     </ion-content>
   `,
   styles: `
+    .te-name {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--ion-color-medium, #777);
+      margin-left: 6px;
+    }
+    .brand-pref {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #e65100;
+    }
     .prev {
       font-size: 9.5px;
       color: var(--ion-color-medium);
@@ -198,24 +234,41 @@ export class SubmitQuoteSheetComponent implements OnInit {
   protected readonly validPresets = VALID_PRESETS;
 
   protected readonly deliveryCharge = signal(0);
+  protected readonly customDeliverySelected = signal(false);
   protected readonly etaMinutes = signal<number | null>(null);
   protected readonly validHours = signal<number | null>(null);
 
   protected readonly anyPreviousPrices = computed(() => this.priceList().size > 0);
 
+  // A blank field quietly defaults to 0 internally, but ₹0 is never a real price — require every
+  // item to be priced before the shop can send, instead of silently quoting unpriced items free.
+  protected readonly allPriced = computed(() => {
+    this.priceTick();
+    return this.request.items.every((item) => (this.prices.get(item.itemKey)?.value ?? 0) > 0);
+  });
+
   protected readonly changeSummary = computed(() => {
     this.priceTick();
     let changed = 0;
     let same = 0;
+    let entered = 0;
+    let remaining = 0;
     for (const item of this.request.items) {
       const last = this.priceList().get(item.itemKey);
       const current = this.prices.get(item.itemKey)?.value ?? 0;
-      if (!last) continue;
+      if (!last) {
+        current > 0 ? entered++ : remaining++;
+        continue;
+      }
       if (last.unitPrice === current) same++;
       else changed++;
     }
-    if (changed === 0 && same === 0) return 'Enter prices for each item';
-    return changed > 0 ? `${changed} changed · ${same} same as last` : `No changes · ${same} same as last`;
+    const parts: string[] = [];
+    if (changed > 0) parts.push(`${changed} changed`);
+    if (entered > 0) parts.push(`${entered} entered`);
+    if (same > 0) parts.push(`${same} same as last`);
+    if (remaining > 0) parts.push(`${remaining} left to price`);
+    return parts.length > 0 ? parts.join(' · ') : 'Enter prices for each item';
   });
 
   async ngOnInit(): Promise<void> {
@@ -234,15 +287,42 @@ export class SubmitQuoteSheetComponent implements OnInit {
     this.recalculateTotal();
   }
 
+  protected selectDeliveryPreset(value: number): void {
+    this.customDeliverySelected.set(false);
+    this.setDeliveryCharge(value);
+  }
+
+  protected isCustomDelivery(): boolean {
+    return this.customDeliverySelected();
+  }
+
+  protected useCustomDelivery(): void {
+    this.customDeliverySelected.set(true);
+  }
+
+  protected onCustomDeliveryInput(event: Event): void {
+    const value = Number((event as CustomEvent).detail?.value) || 0;
+    this.setDeliveryCharge(value);
+  }
+
   protected lastEntry(itemKey: string): PriceListEntry | null {
     return this.priceList().get(itemKey) ?? null;
+  }
+
+  // The request only carries itemKey/name — look up the catalog's Telugu name and image for shop-friendly display.
+  protected teluguName(itemKey: string): string | null {
+    return MARKETPLACE_ITEM_BY_KEY.get(itemKey)?.teluguName ?? null;
+  }
+
+  protected itemImage(itemKey: string): string | null {
+    return MARKETPLACE_ITEM_BY_KEY.get(itemKey)?.image ?? null;
   }
 
   protected deltaClass(itemKey: string): string {
     this.priceTick();
     const last = this.priceList().get(itemKey);
     const current = this.prices.get(itemKey)?.value ?? 0;
-    if (!last) return 'new';
+    if (!last) return current > 0 ? 'same' : 'new';
     if (current === last.unitPrice) return 'same';
     return current > last.unitPrice ? 'up' : 'dn';
   }
@@ -251,7 +331,7 @@ export class SubmitQuoteSheetComponent implements OnInit {
     this.priceTick();
     const last = this.priceList().get(itemKey);
     const current = this.prices.get(itemKey)?.value ?? 0;
-    if (!last) return "Enter today's price";
+    if (!last) return current > 0 ? '✓ Priced' : "Enter today's price";
     if (current === last.unitPrice) return '✓ Same as last';
     const diff = Math.abs(current - last.unitPrice);
     return current > last.unitPrice ? `↑ ${rupeeLabel(diff)} from last` : `↓ ${rupeeLabel(diff)} from last`;

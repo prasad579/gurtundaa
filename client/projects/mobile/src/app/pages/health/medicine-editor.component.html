@@ -1,9 +1,9 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-    <ion-title>{{ medicine ? 'edit medicine' : 'add medicine 💊' }}</ion-title>
+    <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+    <ion-title>{{ (medicine ? 'medicineEditor.editTitle' : 'medicineEditor.newTitle') | translate }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+      <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -12,26 +12,41 @@
   <form [formGroup]="form">
     <ion-list lines="none">
       <ion-item>
-        <ion-select formControlName="memberId" label="for" labelPlacement="stacked" interface="popover">
+        <ion-select formControlName="memberId" [label]="'medicineEditor.forLabel' | translate" labelPlacement="stacked" interface="popover">
           @for (m of members; track m.id) {
             <ion-select-option [value]="m.id">{{ m.avatarEmoji }} {{ m.name }}</ion-select-option>
           }
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-input formControlName="name" label="medicine name" labelPlacement="stacked" placeholder="Metformin 500mg" [maxlength]="100" />
+        <ion-input
+          formControlName="name"
+          [label]="'medicineEditor.nameLabel' | translate"
+          labelPlacement="stacked"
+          [placeholder]="'medicineEditor.namePlaceholder' | translate"
+          [maxlength]="100"
+        />
+      </ion-item>
+      <ion-item>
+        <ion-input
+          formControlName="purpose"
+          [label]="'medicineEditor.purposeLabel' | translate"
+          labelPlacement="stacked"
+          [placeholder]="'medicineEditor.purposePlaceholder' | translate"
+          [maxlength]="100"
+        />
       </ion-item>
     </ion-list>
 
-    <h3 class="section-title">How long to take?</h3>
-    <ion-segment formControlName="mode">
-      <ion-segment-button value="Daily"><ion-label>Daily</ion-label></ion-segment-button>
-      <ion-segment-button value="Course"><ion-label>Course</ion-label></ion-segment-button>
-    </ion-segment>
+    <h3 class="section-title">{{ 'medicineEditor.durationTitle' | translate }}</h3>
+    <div class="toggle-row">
+      <button type="button" class="toggle-btn" [class.sel]="form.controls.mode.value === 'Daily'" (click)="form.controls.mode.setValue('Daily')">{{ 'medicineEditor.daily' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="form.controls.mode.value === 'Course'" (click)="form.controls.mode.setValue('Course')">{{ 'medicineEditor.course' | translate }}</button>
+    </div>
 
     @if (form.controls.mode.value === 'Course') {
       <div class="big-step">
-        <div class="bl">Course length<small>as told by doctor</small></div>
+        <div class="bl">{{ 'medicineEditor.courseLengthLabel' | translate }}<small>{{ 'medicineEditor.courseLengthHint' | translate }}</small></div>
         <div class="stepper">
           <button type="button" (click)="adjustCourseDays(-1)">−</button>
           <span class="val">{{ form.controls.courseDays.value }}</span>
@@ -40,10 +55,10 @@
       </div>
     }
 
-    <h3 class="section-title">Tablets per time</h3>
+    <h3 class="section-title">{{ 'medicineEditor.tabletsPerTimeTitle' | translate }}</h3>
     <div class="slot-row">
       <span class="slot-ic">🌅</span>
-      <span class="slot-lbl">Morning</span>
+      <span class="slot-lbl">{{ 'medicineEditor.morning' | translate }}</span>
       <div class="stepper">
         <button type="button" (click)="adjustSlot('morningQty', -1)">−</button>
         <span class="val">{{ form.controls.morningQty.value }}</span>
@@ -52,7 +67,7 @@
     </div>
     <div class="slot-row">
       <span class="slot-ic">☀️</span>
-      <span class="slot-lbl">Afternoon</span>
+      <span class="slot-lbl">{{ 'medicineEditor.afternoon' | translate }}</span>
       <div class="stepper">
         <button type="button" (click)="adjustSlot('afternoonQty', -1)">−</button>
         <span class="val">{{ form.controls.afternoonQty.value }}</span>
@@ -61,7 +76,7 @@
     </div>
     <div class="slot-row">
       <span class="slot-ic">🌇</span>
-      <span class="slot-lbl">Evening</span>
+      <span class="slot-lbl">{{ 'medicineEditor.evening' | translate }}</span>
       <div class="stepper">
         <button type="button" (click)="adjustSlot('eveningQty', -1)">−</button>
         <span class="val">{{ form.controls.eveningQty.value }}</span>
@@ -70,7 +85,7 @@
     </div>
     <div class="slot-row">
       <span class="slot-ic">🌙</span>
-      <span class="slot-lbl">Night</span>
+      <span class="slot-lbl">{{ 'medicineEditor.night' | translate }}</span>
       <div class="stepper">
         <button type="button" (click)="adjustSlot('nightQty', -1)">−</button>
         <span class="val">{{ form.controls.nightQty.value }}</span>
@@ -78,15 +93,15 @@
       </div>
     </div>
 
-    <ion-segment class="food-seg" formControlName="foodTiming">
-      <ion-segment-button value="BeforeFood"><ion-label>Before Food</ion-label></ion-segment-button>
-      <ion-segment-button value="AfterFood"><ion-label>After Food</ion-label></ion-segment-button>
-      <ion-segment-button value="AnyTime"><ion-label>Any Time</ion-label></ion-segment-button>
-    </ion-segment>
+    <div class="toggle-row food-seg">
+      <button type="button" class="toggle-btn" [class.sel]="form.controls.foodTiming.value === 'BeforeFood'" (click)="form.controls.foodTiming.setValue('BeforeFood')">{{ 'medicineEditor.beforeFood' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="form.controls.foodTiming.value === 'AfterFood'" (click)="form.controls.foodTiming.setValue('AfterFood')">{{ 'medicineEditor.afterFood' | translate }}</button>
+      <button type="button" class="toggle-btn" [class.sel]="form.controls.foodTiming.value === 'AnyTime'" (click)="form.controls.foodTiming.setValue('AnyTime')">{{ 'medicineEditor.anyTime' | translate }}</button>
+    </div>
 
-    <h3 class="section-title">Stock</h3>
+    <h3 class="section-title">{{ 'medicineEditor.stockTitle' | translate }}</h3>
     <div class="big-step">
-      <div class="bl">Tablets bought / given<small>count from strips</small></div>
+      <div class="bl">{{ 'medicineEditor.stockLabel' | translate }}<small>{{ 'medicineEditor.stockHint' | translate }}</small></div>
       <div class="stepper">
         <button type="button" (click)="adjustStock(-5)">−</button>
         <span class="val">{{ form.controls.stockCount.value }}</span>
@@ -96,7 +111,7 @@
 
     <ion-list lines="none">
       <ion-item>
-        <ion-label>start taking from</ion-label>
+        <ion-label>{{ 'medicineEditor.startDateLabel' | translate }}</ion-label>
         <ion-datetime-button datetime="start-date" />
       </ion-item>
       <ion-modal #startModal [keepContentsMounted]="true">
@@ -104,20 +119,38 @@
           <ion-datetime id="start-date" formControlName="startDate" presentation="date" (ionChange)="startModal.dismiss()" />
         </ng-template>
       </ion-modal>
+
+      <ion-item>
+        <ion-label>
+          {{ 'medicineEditor.nextVisitLabel' | translate }}
+          <p>{{ 'medicineEditor.nextVisitHint' | translate }}</p>
+        </ion-label>
+        @if (form.controls.nextVisitDate.value) {
+          <ion-datetime-button datetime="next-visit-date" slot="end" />
+          <button type="button" class="clear-date-btn" slot="end" (click)="form.controls.nextVisitDate.setValue(null)">{{ 'common.clear' | translate }}</button>
+        } @else {
+          <ion-datetime-button datetime="next-visit-date" slot="end" />
+        }
+      </ion-item>
+      <ion-modal #nextVisitModal [keepContentsMounted]="true">
+        <ng-template>
+          <ion-datetime id="next-visit-date" formControlName="nextVisitDate" presentation="date" [min]="today" (ionChange)="nextVisitModal.dismiss()" />
+        </ng-template>
+      </ion-modal>
     </ion-list>
 
     @if (perDayQty() > 0) {
       <div class="calc">
-        <div class="calc-row"><span>Tablets per day</span><span>{{ perDayQty() }}</span></div>
-        <div class="calc-row"><span>Stock lasts</span><span>{{ plan().days }} days</span></div>
+        <div class="calc-row"><span>{{ 'medicineEditor.perDayLabel' | translate }}</span><span>{{ perDayQty() }}</span></div>
+        <div class="calc-row"><span>{{ 'medicineEditor.stockLastsLabel' | translate }}</span><span>{{ 'medicineEditor.daysSuffix' | translate: { days: plan().days } }}</span></div>
         @if (plan().last; as last) {
-          <div class="calc-row"><span>Last dose on</span><span>{{ last }}</span></div>
+          <div class="calc-row"><span>{{ 'medicineEditor.lastDoseLabel' | translate }}</span><span>{{ last }}</span></div>
         }
         <div class="calc-div"></div>
-        <div class="calc-row hl"><span>⏰ Refill reminder</span><span>{{ plan().remind }}</span></div>
+        <div class="calc-row hl"><span>{{ 'medicineEditor.refillReminderLabel' | translate }}</span><span>{{ plan().remind }}</span></div>
       </div>
     } @else {
-      <p class="hint">Set at least one tablet in a time slot.</p>
+      <p class="hint">{{ 'medicineEditor.hintNoTablets' | translate }}</p>
     }
   </form>
 </ion-content>

@@ -13,9 +13,9 @@
     <h1>{{ hello() }}</h1>
     @if (stats(); as s) {
       <div class="stats">
-        <div class="stat"><strong>{{ s.upcoming }}</strong><span>coming up</span></div>
-        <div class="stat" [class.hot]="s.overdue > 0"><strong>{{ s.overdue }}</strong><span>overdue</span></div>
-        <div class="stat"><strong>{{ s.doneToday }}</strong><span>done today</span></div>
+        <div class="stat"><strong>{{ s.upcoming }}</strong><span>{{ 'home.upcoming' | translate }}</span></div>
+        <div class="stat" [class.hot]="s.overdue > 0"><strong>{{ s.overdue }}</strong><span>{{ 'home.overdue' | translate }}</span></div>
+        <div class="stat"><strong>{{ s.doneToday }}</strong><span>{{ 'home.doneToday' | translate }}</span></div>
       </div>
     }
   </section>
@@ -25,11 +25,11 @@
       <span class="ic">🥛</span>
       <div class="txt">
         @if (milkPause(); as p) {
-          <div class="t">Milk paused</div>
-          <div class="s">Resumes {{ shortDateLabel(p.endDate) }}</div>
+          <div class="t">{{ 'home.milkPaused' | translate }}</div>
+          <div class="s">{{ 'home.milkResumes' | translate: { date: resumeDateLabel(p) } }}</div>
         } @else {
-          <div class="t">Milk — {{ milkMissedSlots().join(' & ') }} missed today</div>
-          <div class="s">Tap to mark delivered or notify the milkman</div>
+          <div class="t">{{ 'home.milkMissed' | translate: { slots: milkMissedSlots().join(' & ') } }}</div>
+          <div class="s">{{ 'home.milkMissedHint' | translate }}</div>
         }
       </div>
     </a>
@@ -39,8 +39,8 @@
     <a routerLink="/laundry" class="attn-card laundry">
       <span class="ic">🧺</span>
       <div class="txt">
-        <div class="t">Laundry pickup {{ shortDateLabel(b.expectedReturn!) }}</div>
-        <div class="s">{{ b.contactName ?? 'Dhobi' }} · {{ laundryActive().length }} active batch{{ laundryActive().length === 1 ? '' : 'es' }}</div>
+        <div class="t">{{ 'home.laundryPickup' | translate: { date: shortDateLabel(b.expectedReturn!) } }}</div>
+        <div class="s">{{ b.contactName ?? ('home.dhobi' | translate) }} · {{ laundryActive().length === 1 ? ('home.activeBatchOne' | translate: { count: laundryActive().length }) : ('home.activeBatchMany' | translate: { count: laundryActive().length }) }}</div>
       </div>
     </a>
   }
@@ -49,8 +49,8 @@
     <a routerLink="/bills" class="attn-card bills">
       <span class="ic">🧾</span>
       <div class="txt">
-        <div class="t">{{ billsNeedingAttention().length }} bill{{ billsNeedingAttention().length === 1 ? '' : 's' }} need{{ billsNeedingAttention().length === 1 ? 's' : '' }} attention</div>
-        <div class="s">{{ rupeeLabel(billsPendingAmount()) }} pending</div>
+        <div class="t">{{ (billsNeedingAttention().length === 1 ? 'home.billOne' : 'home.billMany') | translate: { count: billsNeedingAttention().length } }}</div>
+        <div class="s">{{ 'home.pending' | translate: { amount: rupeeLabel(billsPendingAmount()) } }}</div>
       </div>
     </a>
   }
@@ -60,20 +60,20 @@
       <span class="ic">💊</span>
       <div class="txt">
         @if (healthPendingCount() > 0) {
-          <div class="t">{{ healthPendingCount() }} dose{{ healthPendingCount() === 1 ? '' : 's' }} pending today</div>
+          <div class="t">{{ (healthPendingCount() === 1 ? 'home.doseOne' : 'home.doseMany') | translate: { count: healthPendingCount() } }}</div>
         }
         @if (healthLowStock().length > 0) {
-          <div class="s">{{ healthLowStock().length }} medicine{{ healthLowStock().length === 1 ? '' : 's' }} running low</div>
+          <div class="s">{{ (healthLowStock().length === 1 ? 'home.lowStockOne' : 'home.lowStockMany') | translate: { count: healthLowStock().length } }}</div>
         }
       </div>
     </a>
   }
 
   <ion-segment class="filters" [value]="filter()" (ionChange)="setFilter($event.detail.value)" [scrollable]="true">
-    <ion-segment-button value="Upcoming"><ion-label>upcoming</ion-label></ion-segment-button>
-    <ion-segment-button value="Overdue"><ion-label>overdue</ion-label></ion-segment-button>
-    <ion-segment-button value="Done"><ion-label>done</ion-label></ion-segment-button>
-    <ion-segment-button value="All"><ion-label>all</ion-label></ion-segment-button>
+    <ion-segment-button value="Upcoming"><ion-label>{{ 'home.filterUpcoming' | translate }}</ion-label></ion-segment-button>
+    <ion-segment-button value="Overdue"><ion-label>{{ 'home.filterOverdue' | translate }}</ion-label></ion-segment-button>
+    <ion-segment-button value="Done"><ion-label>{{ 'home.filterDone' | translate }}</ion-label></ion-segment-button>
+    <ion-segment-button value="All"><ion-label>{{ 'home.filterAll' | translate }}</ion-label></ion-segment-button>
   </ion-segment>
 
   @if (loading() && reminders().length === 0) {

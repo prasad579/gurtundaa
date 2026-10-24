@@ -21,11 +21,13 @@ import {
   IonSkeletonText,
   IonTitle,
   IonToolbar,
+  ToastController,
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { logoWhatsapp, shareSocialOutline } from 'ionicons/icons';
+import { logoWhatsapp, refreshOutline, shareSocialOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
+import { MarketplaceCart } from '../../services/marketplace-cart';
 import { shareText } from '../../services/share';
 
 @Component({
@@ -50,6 +52,8 @@ export class MyRequestsPage implements ViewWillEnter {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly actionSheets = inject(ActionSheetController);
+  private readonly cart = inject(MarketplaceCart);
+  private readonly toasts = inject(ToastController);
 
   protected readonly rupeeLabel = rupeeLabel;
 
@@ -57,7 +61,14 @@ export class MyRequestsPage implements ViewWillEnter {
   protected readonly requests = signal<QuotationRequest[]>([]);
 
   constructor() {
-    addIcons({ logoWhatsapp, shareSocialOutline });
+    addIcons({ logoWhatsapp, shareSocialOutline, refreshOutline });
+  }
+
+  protected async reorder(request: QuotationRequest): Promise<void> {
+    this.cart.addFromLines(request.items);
+    const toast = await this.toasts.create({ message: 'added to cart 🛒', duration: 1500, position: 'bottom' });
+    await toast.present();
+    await this.router.navigateByUrl('/marketplace/cart');
   }
 
   ionViewWillEnter(): void {

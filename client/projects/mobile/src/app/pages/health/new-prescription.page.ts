@@ -30,14 +30,15 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add, medkit, trash } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { MedicineEditorComponent } from './medicine-editor.component';
 
-const REVISIT_PRESETS: { label: string; days: number }[] = [
-  { label: '7 days', days: 7 },
-  { label: '15 days', days: 15 },
-  { label: '1 month', days: 30 },
-  { label: '3 months', days: 90 },
+const REVISIT_PRESETS: { labelKey: string; days: number }[] = [
+  { labelKey: 'newPrescription.preset7d', days: 7 },
+  { labelKey: 'newPrescription.preset15d', days: 15 },
+  { labelKey: 'newPrescription.preset1m', days: 30 },
+  { labelKey: 'newPrescription.preset3m', days: 90 },
 ];
 
 @Component({
@@ -57,6 +58,7 @@ const REVISIT_PRESETS: { label: string; days: number }[] = [
     IonDatetimeButton,
     IonModal,
     IonDatetime,
+    TranslatePipe,
   ],
   templateUrl: './new-prescription.page.html',
   styleUrl: './new-prescription.page.scss',
@@ -67,6 +69,7 @@ export class NewPrescriptionPage implements ViewWillEnter {
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly today = toDateOnlyString(new Date());
   protected readonly revisitPresets = REVISIT_PRESETS;
@@ -114,7 +117,7 @@ export class NewPrescriptionPage implements ViewWillEnter {
   protected async addMedicine(): Promise<void> {
     const member = this.selectedMember();
     if (!member) {
-      await this.toast('pick who this is for first', 'danger');
+      await this.toast(this.translate.instant('newPrescription.toastPickMemberFirst'), 'danger');
       return;
     }
 
@@ -135,6 +138,13 @@ export class NewPrescriptionPage implements ViewWillEnter {
     this.medicines.update((list) => list.filter((_, i) => i !== index));
   }
 
+  protected medSummary(med: SaveMedicineRequest): string {
+    const perDay = med.morningQty + med.afternoonQty + med.eveningQty + med.nightQty;
+    const base = this.translate.instant('newPrescription.medSummaryBase', { qty: perDay, stock: med.stockCount });
+    const course = med.mode === 'Course' ? this.translate.instant('newPrescription.courseSuffix', { days: med.courseDays }) : '';
+    return `${base}${course}`;
+  }
+
   protected async save(): Promise<void> {
     if (!this.canSave()) return;
 
@@ -149,10 +159,10 @@ export class NewPrescriptionPage implements ViewWillEnter {
         medicines: this.medicines(),
       };
       await firstValueFrom(this.prescriptionsApi.create(request));
-      await this.toast('prescription saved 📋');
+      await this.toast(this.translate.instant('newPrescription.toastSaved'));
       await this.router.navigateByUrl('/health');
     } catch {
-      await this.toast("couldn't save, try again", 'danger');
+      await this.toast(this.translate.instant('newPrescription.toastSaveError'), 'danger');
     } finally {
       this.saving.set(false);
     }

@@ -24,7 +24,21 @@
 
 .pickup-request-row {
   margin-top: 8px;
-  ion-button { margin: 0; width: 100%; }
+
+  .btn-pickup {
+    width: 100%;
+    border-radius: 8px;
+    padding: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: transparent;
+    color: var(--ion-color-primary, #6b3fa0);
+    border: 1.5px solid var(--ion-color-primary, #6b3fa0);
+  }
 }
 
 .section-head {
@@ -327,6 +341,14 @@
   font-size: 15px;
 }
 
+.batch-thumb {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .ab {
   .abt { font-size: 10px; font-weight: 700; color: var(--ion-color-primary); }
   .abq { font-size: 17px; font-weight: 800; line-height: 1.2; }
@@ -373,6 +395,7 @@
 
   &.g { background: #43a047; color: #fff; border-color: #43a047; flex: 1.4; }
   &.danger { flex: 0; color: #c62828; border-color: rgb(235 68 90 / 0.3); }
+  &.paid { color: #43a047; border-color: #43a047; }
 }
 
 .pause-box {

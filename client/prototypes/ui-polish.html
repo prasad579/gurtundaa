@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>UI Polish — Home &amp; Milk — Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0f0a1a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  h1 { color: #e9e4f5; font-size: 20px; width: 100%; margin: 0 0 4px; }
+  .sub { color: #a89dc4; font-size: 13px; width: 100%; margin: 0 0 20px; max-width: 820px; }
+  .label-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .label-title.before { color: #a89dc4; }
+  .label-title.after { color: #00c48c; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; width: 100%; margin-bottom: 8px; }
+
+  .phone {
+    width: 340px;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 6px solid #1a1428;
+  }
+  .statusbar { display: flex; justify-content: space-between; padding: 8px 16px 2px; font-size: 11px; font-weight: 600; color: #333; font-family: 'Segoe UI', sans-serif; }
+  .scroll { padding: 0 14px 16px; height: 660px; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  /* ================= BEFORE (current app, as-is) ================= */
+  .before-screen { font-family: 'Segoe UI', sans-serif; color: #1f1330; }
+  .before-screen .topbar { padding: 10px 2px 4px; font-size: 20px; font-weight: 700; }
+  .before-screen .gradient-text { background: linear-gradient(120deg,#7c3aed,#ec4899,#f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .before-screen h1.hello { font-size: 26px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.02em; }
+  .before-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .before-stat { background: rgb(124 58 237 / 0.08); border-radius: 18px; padding: 11px; }
+  .before-stat strong { font-size: 22px; display: block; line-height: 1.1; }
+  .before-stat span { font-size: 11px; color: #8a7fa3; }
+  .before-attn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: rgb(124 58 237 / 0.06); border: 1px solid #efeaf9; border-left: 3px solid #2dd36f; margin-bottom: 8px; }
+  .before-attn .ic { font-size: 22px; }
+  .before-attn .t { font-size: 12.5px; font-weight: 700; }
+  .before-attn .s { font-size: 10.5px; color: #8a7fa3; margin-top: 1px; }
+  .before-seg { display: flex; gap: 0; border-bottom: 1px solid #eee; margin: 14px 0 10px; }
+  .before-seg span { flex: 1; text-align: center; padding: 8px 2px; font-size: 11px; color: #8a7fa3; font-weight: 600; }
+  .before-seg span.sel { color: #7c3aed; border-bottom: 2px solid #7c3aed; }
+  .before-empty { text-align: center; padding: 60px 20px; color: #8a7fa3; }
+  .before-empty .ic2 { font-size: 36px; display: block; margin-bottom: 8px; }
+  .before-fab { position: absolute; right: 20px; bottom: 20px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(120deg,#7c3aed,#ec4899,#f97316); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 10px 20px rgb(124 58 237 / 0.5); }
+
+  .before-month { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 10px; }
+  .before-month button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e8e8e8; background: #fff; color: #7c3aed; font-size: 12px; }
+  .before-month h3 { margin: 0; font-size: 14px; }
+  .before-hint { font-size: 10.5px; color: #8a7fa3; margin: 0 0 10px; }
+  .before-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .before-sgitem { background: #f7f8fb; border-radius: 9px; padding: 8px; text-align: center; }
+  .before-sgitem .l { font-size: 10px; color: #8a7fa3; }
+  .before-sgitem .v { font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .before-amt { display: flex; justify-content: space-between; font-size: 12px; margin-top: 10px; padding: 4px 0; }
+  .before-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; padding-top: 8px; border-top: 1px solid #eee; margin-top: 6px; }
+  .before-pay { display: flex; align-items: center; justify-content: space-between; background: rgb(235 68 90 / 0.08); border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+  .before-pay .pl { font-size: 10px; color: #8a7fa3; }
+  .before-pay .pv { font-size: 13px; font-weight: 700; color: #c62828; }
+  .before-pay button { background: #f57c00; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 700; }
+
+  /* ================= AFTER (polished) ================= */
+  .after-screen { font-family: 'Inter', 'Segoe UI', sans-serif; color: #1a1025; }
+  .after-screen .topbar { padding: 14px 2px 6px; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .after-screen .gradient-text { background: linear-gradient(120deg,#7c3aed,#ec4899,#f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .after-screen h1.hello { font-size: 25px; font-weight: 800; margin: 2px 0 16px; letter-spacing: -0.03em; }
+  .after-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+  .after-stat { background: #fff; border-radius: 16px; padding: 13px 10px; box-shadow: 0 2px 12px rgba(124,58,237,0.08), 0 0 0 1px rgba(124,58,237,0.06); transition: transform .15s; }
+  .after-stat strong { font-size: 23px; font-weight: 800; display: block; line-height: 1.1; background: linear-gradient(120deg,#7c3aed,#9f5ff0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .after-stat span { font-size: 10.5px; color: #8a7fa3; font-weight: 600; }
+  .after-stat.hot strong { background: linear-gradient(120deg,#eb445a,#f97316); -webkit-background-clip: text; background-clip: text; }
+
+  .after-attn { display: flex; align-items: center; gap: 12px; padding: 13px; border-radius: 18px; background: #fff; box-shadow: 0 2px 14px rgba(45,211,111,0.12); margin-bottom: 10px; position: relative; overflow: hidden; }
+  .after-attn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #2dd36f; border-radius: 0 4px 4px 0; }
+  .after-attn .ic-chip { width: 38px; height: 38px; border-radius: 12px; background: rgba(45,211,111,0.12); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+  .after-attn .t { font-size: 12.5px; font-weight: 700; }
+  .after-attn .s { font-size: 10.5px; color: #8a7fa3; margin-top: 2px; }
+  .after-attn .chev { color: #d8cdf0; font-size: 16px; }
+
+  .after-seg { display: flex; gap: 4px; background: #f3f0fa; border-radius: 14px; padding: 4px; margin: 16px 0 14px; }
+  .after-seg span { flex: 1; text-align: center; padding: 8px 2px; font-size: 11px; color: #8a7fa3; font-weight: 700; border-radius: 10px; }
+  .after-seg span.sel { background: #fff; color: #7c3aed; box-shadow: 0 2px 8px rgba(124,58,237,0.18); }
+  .after-empty { text-align: center; padding: 56px 20px; color: #8a7fa3; }
+  .after-empty .ic2 { font-size: 40px; display: block; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(124,58,237,0.25)); }
+  .after-empty .msg { font-size: 12.5px; font-weight: 600; color: #5a4e75; }
+  .after-fab { position: absolute; right: 18px; bottom: 18px; width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(135deg,#7c3aed,#ec4899); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 14px 28px -8px rgba(124,58,237,0.55); }
+
+  .after-card { background: #fff; border-radius: 18px; padding: 14px; box-shadow: 0 2px 14px rgba(31,19,48,0.06); margin-bottom: 12px; }
+  .after-month { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .after-month button { width: 28px; height: 28px; border-radius: 10px; border: none; background: #f3f0fa; color: #7c3aed; font-size: 12px; font-weight: 700; }
+  .after-month h3 { margin: 0; font-size: 14.5px; font-weight: 800; }
+  .after-hint { font-size: 10.5px; color: #a79bc4; margin: 2px 0 12px; }
+  .after-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .after-sgitem { background: #f8f7fc; border: 1.5px solid transparent; border-radius: 12px; padding: 10px 8px; text-align: center; transition: border-color .15s; }
+  .after-sgitem:hover, .after-sgitem.tap { border-color: #c9b8f5; background: #f3eefd; }
+  .after-sgitem .l { font-size: 10px; color: #8a7fa3; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .after-sgitem .v { font-size: 17px; font-weight: 800; margin-top: 2px; }
+  .after-amt-rows { margin-top: 14px; }
+  .after-amt { display: flex; justify-content: space-between; font-size: 12px; color: #5a4e75; padding: 5px 0; }
+  .after-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; padding-top: 10px; margin-top: 4px; border-top: 1.5px dashed #ece7f7; }
+  .after-pay { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(235,68,90,0.08), rgba(249,115,22,0.08)); border-radius: 14px; padding: 12px 14px; margin-top: 14px; }
+  .after-pay .pl { font-size: 10px; color: #8a7fa3; font-weight: 600; }
+  .after-pay .pv { font-size: 14px; font-weight: 800; color: #c62828; }
+  .after-pay button { background: linear-gradient(135deg,#f97316,#f59e0b); color: #fff; border: none; border-radius: 10px; padding: 9px 14px; font-size: 11px; font-weight: 700; box-shadow: 0 6px 14px -4px rgba(249,115,22,0.6); }
+
+  .legend-note { background: #1a1428; border: 1px dashed #3a2f55; border-radius: 12px; padding: 10px 12px; font-size: 10.5px; color: #c6b8e8; margin-top: 14px; width: 100%; max-width: 340px; }
+  .legend-note b { color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>UI Polish — Home &amp; Milk — Before / After Prototype</h1>
+<p class="sub">Same content, same layout and information architecture — nothing moves or disappears. Changes are purely visual: consistent rounded-card elevation (soft shadow instead of flat tint), a tighter spacing rhythm, gradient accents on key numbers/buttons, icon chips instead of bare emoji, and clearer tap affordances. This keeps the app feeling like itself, just more finished.</p>
+
+<!-- ============ HOME ============ -->
+<div class="row">
+  <div>
+    <div class="label-title before">Home — Before (current)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="scroll before-screen" style="position:relative;">
+        <div class="topbar"><span class="gradient-text">gurtundaa?</span></div>
+        <h1 class="hello">gm srinivas 🌤️</h1>
+        <div class="before-stats">
+          <div class="before-stat"><strong>0</strong><span>coming up</span></div>
+          <div class="before-stat"><strong>0</strong><span>overdue</span></div>
+          <div class="before-stat"><strong>0</strong><span>done today</span></div>
+        </div>
+        <a class="before-attn">
+          <span class="ic">🥛</span>
+          <div class="txt"><div class="t">Milk paused</div><div class="s">Resumes Sat, Oct 24</div></div>
+        </a>
+        <div class="before-seg">
+          <span class="sel">upcoming</span><span>overdue</span><span>done</span><span>all</span>
+        </div>
+        <div class="before-empty">
+          <span class="ic2">🫧</span>
+          calendar clear. touch grass 🌱
+        </div>
+        <div class="before-fab">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label-title after">Home — After (polished)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="scroll after-screen" style="position:relative;">
+        <div class="topbar"><span class="gradient-text">gurtundaa?</span></div>
+        <h1 class="hello">gm srinivas 🌤️</h1>
+        <div class="after-stats">
+          <div class="after-stat"><strong>0</strong><span>coming up</span></div>
+          <div class="after-stat hot"><strong>0</strong><span>overdue</span></div>
+          <div class="after-stat"><strong>0</strong><span>done today</span></div>
+        </div>
+        <a class="after-attn">
+          <span class="ic-chip">🥛</span>
+          <div class="txt"><div class="t">Milk paused</div><div class="s">Resumes Sat, Oct 24</div></div>
+          <span class="chev">›</span>
+        </a>
+        <div class="after-seg">
+          <span class="sel">upcoming</span><span>overdue</span><span>done</span><span>all</span>
+        </div>
+        <div class="after-empty">
+          <span class="ic2">🫧</span>
+          <div class="msg">calendar clear. touch grass 🌱</div>
+        </div>
+        <div class="after-fab">+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend-note">
+  <b>What changed on Home:</b> stat tiles get a soft shadow + gradient-tinted numbers instead of a flat purple wash; the attention card gets an icon "chip" background and a chevron so it reads as tappable; the filter segment becomes a pill-track (like iOS segmented control) instead of an underline-tab row; the empty state gets a touch more breathing room and a drop-shadow under the emoji; the FAB becomes a rounded square (matches the card radius language) with a stronger shadow.
+</div>
+
+<!-- ============ MILK ============ -->
+<div class="row">
+  <div>
+    <div class="label-title before">Milk — Before (current)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="scroll before-screen">
+        <div class="topbar">Milk 🥛</div>
+
+        <div class="before-month"><button>‹</button><h3>October 2026</h3><button>›</button></div>
+        <div class="before-hint">Tap a day to see quantity &amp; extras</div>
+
+        <div class="before-summary">
+          <div class="before-sgitem"><div class="l">Planned</div><div class="v">13</div></div>
+          <div class="before-sgitem"><div class="l">Delivered</div><div class="v" style="color:#2e7d32;">1</div></div>
+          <div class="before-sgitem"><div class="l">Paused</div><div class="v" style="color:#f57c00;">3</div></div>
+          <div class="before-sgitem"><div class="l">Missed</div><div class="v" style="color:#c62828;">0</div></div>
+        </div>
+
+        <div class="before-amt"><span>Regular (1 days delivered, 2.0 Ltr × ₹80)</span><span>₹160</span></div>
+        <div class="before-amt"><span>Extra (1.0 Ltr × ₹80)</span><span>₹80</span></div>
+        <div class="before-total"><span>Total Amount</span><span>₹240</span></div>
+
+        <div class="before-pay">
+          <div><div class="pl">Payment Status</div><div class="pv">PENDING</div></div>
+          <button>Mark as Paid</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label-title after">Milk — After (polished)</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+      <div class="scroll after-screen">
+        <div class="topbar">Milk 🥛</div>
+
+        <div class="after-card">
+          <div class="after-month"><button>‹</button><h3>October 2026</h3><button>›</button></div>
+          <div class="after-hint">Tap a day to see quantity &amp; extras</div>
+
+          <div class="after-summary">
+            <div class="after-sgitem"><div class="l">Planned</div><div class="v">13</div></div>
+            <div class="after-sgitem"><div class="l">Delivered</div><div class="v" style="color:#2e7d32;">1</div></div>
+            <div class="after-sgitem tap"><div class="l">Paused 👆</div><div class="v" style="color:#f57c00;">3</div></div>
+            <div class="after-sgitem"><div class="l">Missed</div><div class="v" style="color:#c62828;">0</div></div>
+          </div>
+
+          <div class="after-amt-rows">
+            <div class="after-amt"><span>Regular (1 days delivered, 2.0 Ltr × ₹80)</span><span>₹160</span></div>
+            <div class="after-amt"><span>Extra (1.0 Ltr × ₹80)</span><span>₹80</span></div>
+            <div class="after-total"><span>Total Amount</span><span>₹240</span></div>
+          </div>
+
+          <div class="after-pay">
+            <div><div class="pl">Payment Status</div><div class="pv">PENDING</div></div>
+            <button>Mark as Paid</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend-note">
+  <b>What changed on Milk:</b> the whole calendar block becomes one elevated card (currently it's borderless, floating directly on the page background); month-nav arrows become rounded squares matching the FAB's new shape language; stat tiles get a visible border/tint on hover-or-tap (ties into the new tap-to-see-days feature); the total row gets a dashed divider instead of a plain line to separate it from the line items; the "Mark as Paid" button becomes a warm gradient with a lifted shadow instead of flat orange, and the payment-status strip gets a subtle gradient wash instead of flat red tint.
+</div>
+
+</body>
+</html>

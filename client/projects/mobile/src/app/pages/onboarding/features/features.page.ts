@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FEATURE_OPTIONS, FeatureKey, OnboardingState } from '../../../services/onboarding-state';
 import { OnboardingShell } from '../onboarding-shell';
 
 @Component({
   selector: 'app-onboarding-features',
-  imports: [OnboardingShell],
+  imports: [OnboardingShell, TranslatePipe],
   templateUrl: './features.page.html',
   styleUrl: './features.page.scss',
 })

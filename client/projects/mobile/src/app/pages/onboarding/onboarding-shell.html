@@ -6,16 +6,16 @@
       } @else {
         <span class="spacer"></span>
       }
-      <span class="step">step {{ step() }} of {{ totalSteps() }}</span>
+      <span class="step">{{ 'onboarding.stepOf' | translate: { step: step(), total: totalSteps() } }}</span>
     </header>
 
     <div class="progress">
       <div class="bar" [style.width.%]="(step() / totalSteps()) * 100"></div>
     </div>
 
-    <h1>{{ title() }}</h1>
+    <h1>{{ title() | translate }}</h1>
     @if (subtitle(); as text) {
-      <p class="subtitle">{{ text }}</p>
+      <p class="subtitle">{{ text | translate }}</p>
     }
 
     <div class="body">
@@ -23,9 +23,9 @@
     </div>
 
     <ion-button class="gradient" expand="block" [disabled]="continueDisabled()" (click)="continueClick.emit()">
-      {{ continueLabel() }}
+      {{ continueLabel() | translate }}
     </ion-button>
 
-    <button class="skip" type="button" (click)="skip.emit()">i'll do this later</button>
+    <button class="skip" type="button" (click)="skip.emit()">{{ 'onboarding.skipLater' | translate }}</button>
   </div>
 </ion-content>

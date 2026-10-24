@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Laundry 🧺</ion-title>
+    <ion-title>{{ 'laundry.pageTitle' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -16,10 +16,10 @@
   } @else {
     @if (contacts().length === 0) {
       <div class="card hint-card">
-        <p>No dhobi contacts yet — add one to start creating entries.</p>
+        <p>{{ 'laundry.noDhobiContacts' | translate }}</p>
         <ion-button size="small" (click)="addDhobiContact()">
           <ion-icon slot="start" name="add" />
-          Add dhobi contact
+          {{ 'laundry.addDhobiContact' | translate }}
         </ion-button>
       </div>
     }
@@ -32,7 +32,7 @@
             <div class="nm">
               {{ c.name }}
               @if (c.isDefault) {
-                <span class="badge-blue">Default</span>
+                <span class="badge-blue">{{ 'laundry.default' | translate }}</span>
               }
             </div>
             <div class="mt"><ion-icon name="call-outline" /> {{ c.phone }}</div>
@@ -46,14 +46,14 @@
           </div>
         </div>
         <div class="pickup-request-row">
-          <ion-button size="small" fill="outline" (click)="requestPickup(c.id)">📬 Request Pickup</ion-button>
+          <button class="btn-pickup" (click)="requestPickup(c.id)">{{ 'laundry.requestPickupBtn' | translate }}</button>
         </div>
         <div class="stats4">
-          <div class="s4i"><div class="lbl">With Dhobi</div><div class="val">{{ withDhobiQty() }}</div><div class="sub">Clothes</div></div>
-          <div class="s4i"><div class="lbl">Active Batches</div><div class="val">{{ active().length }}</div></div>
-          <div class="s4i"><div class="lbl">This Month</div><div class="val small">{{ rupeeLabel(monthPaymentSummary().total) }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'laundry.withDhobi' | translate }}</div><div class="val">{{ withDhobiQty() }}</div><div class="sub">{{ 'laundry.clothes' | translate }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'laundry.activeBatches' | translate }}</div><div class="val">{{ active().length }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'laundry.thisMonth' | translate }}</div><div class="val small">{{ rupeeLabel(monthPaymentSummary().total) }}</div></div>
           <div class="s4i">
-            <div class="lbl">Next Pickup</div>
+            <div class="lbl">{{ 'laundry.nextPickup' | translate }}</div>
             @if (nextPickupBatch(); as nb) {
               <div class="val small">{{ shortDateLabel(nb.expectedReturn!) }}</div>
             } @else {
@@ -67,31 +67,35 @@
     <div class="row2" [class.full]="!nextPickupBatch()">
       <section class="card">
         <div class="section-head">
-          <h3>Active Laundry</h3>
+          <h3>{{ 'laundry.activeLaundry' | translate }}</h3>
           <ion-button size="small" fill="clear" (click)="openEntryEditor()">
             <ion-icon slot="icon-only" name="add" />
           </ion-button>
         </div>
 
         @if (active().length === 0) {
-          <p class="muted">Nothing out at the moment.</p>
+          <p class="muted">{{ 'laundry.nothingOut' | translate }}</p>
         } @else {
           @for (b of active(); track b.id) {
             <div class="active-batch">
               <div class="act-box" (click)="openEntryEditor(b)">
-                <div class="shirt-c"><ion-icon name="shirt-outline" /></div>
+                @if (photoThumbUrl(b); as thumb) {
+                  <img class="batch-thumb" [src]="thumb" alt="" />
+                } @else {
+                  <div class="shirt-c"><ion-icon name="shirt-outline" /></div>
+                }
                 <div class="ab">
-                  <div class="abt">{{ serviceTypeLabels[b.serviceType] }}</div>
-                  <div class="abq">{{ itemsCount(b) }} Items</div>
+                  <div class="abt">{{ 'laundry.serviceType.' + b.serviceType | translate }}</div>
+                  <div class="abq">{{ 'laundry.itemsCountLabel' | translate: { count: itemsCount(b) } }}</div>
                   @if (batchAmount(b); as amount) {
                     <div class="aba">
-                      Amount: {{ rupeeLabel(amount) }}
+                      {{ 'laundry.amountLabel' | translate: { amount: rupeeLabel(amount) } }}
                       <button
                         class="paid-badge"
                         [class.paid]="b.isPaid"
                         (click)="setPaid(b, !b.isPaid); $event.stopPropagation()"
                       >
-                        {{ b.isPaid ? 'PAID' : 'PENDING' }}
+                        {{ (b.isPaid ? 'laundry.paid' : 'laundry.pending') | translate }}
                       </button>
                     </div>
                   }
@@ -99,9 +103,9 @@
                 <ion-icon class="edit-hint" name="pencil" />
               </div>
               <div class="dates">
-                <div class="dline"><span class="k">Given</span><span class="v">{{ shortDateLabel(b.givenOn) }}</span></div>
+                <div class="dline"><span class="k">{{ 'laundry.given' | translate }}</span><span class="v">{{ shortDateLabel(b.givenOn) }}</span></div>
                 @if (b.expectedReturn) {
-                  <div class="dline"><span class="k">Return</span><span class="v">{{ shortDateLabel(b.expectedReturn) }}</span></div>
+                  <div class="dline"><span class="k">{{ 'laundry.returnLabel' | translate }}</span><span class="v">{{ shortDateLabel(b.expectedReturn) }}</span></div>
                 }
               </div>
               @if (hasPricedItems(b)) {
@@ -111,7 +115,7 @@
                       <span class="il-name">{{ item.itemType }} ×{{ item.quantity }}</span>
                       @if (item.pricePerItem) {
                         <button class="paid-badge small" [class.paid]="item.isPaid" (click)="toggleItemPaid(b, i)">
-                          {{ item.isPaid ? 'PAID' : 'PENDING' }}
+                          {{ (item.isPaid ? 'laundry.paid' : 'laundry.pending') | translate }}
                         </button>
                       }
                     </div>
@@ -119,8 +123,14 @@
                 </div>
               }
               <div class="act-btns">
-                <button class="mbtn g" (click)="markPickedUp(b)"><ion-icon name="checkmark-done-outline" />Picked</button>
-                <button class="mbtn" (click)="openShareSheet(b)"><ion-icon name="share-social-outline" />Share</button>
+                <button class="mbtn g" (click)="markPickedUp(b)"><ion-icon name="checkmark-done-outline" />{{ 'laundry.picked' | translate }}</button>
+                <button class="mbtn" (click)="openShareSheet(b)"><ion-icon name="share-social-outline" />{{ 'laundry.share' | translate }}</button>
+                @if (batchAmount(b)) {
+                  <button class="mbtn" [class.paid]="b.isPaid" (click)="setPaid(b, !b.isPaid)">
+                    <ion-icon [name]="b.isPaid ? 'close' : 'checkmark-done-outline'" />
+                    {{ (b.isPaid ? 'laundry.markPending' : 'laundry.markPaid') | translate }}
+                  </button>
+                }
                 <button class="mbtn danger" (click)="remove(b)"><ion-icon name="trash" /></button>
               </div>
             </div>
@@ -131,17 +141,17 @@
       @if (nextPickupBatch(); as nb) {
         <section class="card">
           <div class="section-head">
-            <h3><ion-icon name="alarm-outline" />Pickup Reminder</h3>
+            <h3><ion-icon name="alarm-outline" />{{ 'laundry.pickupReminder' | translate }}</h3>
           </div>
           <div class="pause-box">
             <div class="pb-range">{{ shortDateLabel(nb.expectedReturn!) }}</div>
-            <div class="pb-detail">{{ itemsCount(nb) }} items at {{ nb.contactName ?? 'dhobi' }}</div>
+            <div class="pb-detail">{{ 'laundry.itemsAtDhobi' | translate: { count: itemsCount(nb), name: nb.contactName ?? ('laundry.dhobiFallback' | translate) } }}</div>
             <div class="pb-resume"><ion-icon name="time-outline" /> {{ daysUntilLabel(nb.expectedReturn!) }}</div>
             <div class="pb-btns">
               @if (nb.contactPhone) {
-                <button class="btn-wa" (click)="notifyPickup(nb)"><ion-icon name="logo-whatsapp" />Ask</button>
+                <button class="btn-wa" (click)="notifyPickup(nb)"><ion-icon name="logo-whatsapp" />{{ 'laundry.ask' | translate }}</button>
               }
-              <button class="btn-edit" (click)="openEntryEditor(nb)"><ion-icon name="pencil" />Change</button>
+              <button class="btn-edit" (click)="openEntryEditor(nb)"><ion-icon name="pencil" />{{ 'laundry.change' | translate }}</button>
             </div>
           </div>
         </section>
@@ -150,14 +160,14 @@
 
     @if (specialReminders().length > 0) {
       <section class="card">
-        <div class="section-head"><h3>Special Reminders</h3></div>
+        <div class="section-head"><h3>{{ 'laundry.specialReminders' | translate }}</h3></div>
         <div class="uc-scroll">
           @for (r of specialReminders(); track r.item.itemType + r.batch.id) {
             <div class="uc-item">
               <div class="uc-tp"><ion-icon name="alarm-outline" />{{ r.item.itemType }}</div>
-              <div class="uc-dt">Need by {{ shortDateLabel(r.item.neededBy!) }}</div>
-              <div class="uc-qty">{{ r.item.quantity }} {{ r.item.quantity === 1 ? 'pc' : 'pcs' }}</div>
-              <div class="uc-rsn">{{ daysUntilLabel(r.item.neededBy!) }} · at {{ r.batch.contactName ?? 'dhobi' }}</div>
+              <div class="uc-dt">{{ 'laundry.needBy' | translate: { date: shortDateLabel(r.item.neededBy!) } }}</div>
+              <div class="uc-qty">{{ (r.item.quantity === 1 ? 'laundry.pcOne' : 'laundry.pcMany') | translate: { count: r.item.quantity } }}</div>
+              <div class="uc-rsn">{{ daysUntilLabel(r.item.neededBy!) }} {{ 'laundry.atDhobiSuffix' | translate: { name: r.batch.contactName ?? ('laundry.dhobiFallback' | translate) } }}</div>
             </div>
           }
         </div>
@@ -172,19 +182,19 @@
       </div>
 
       <div class="sum-grid">
-        <div class="sg-item"><div class="sgl">Entries</div><div class="sgv b">{{ monthEntries() }}</div></div>
-        <div class="sg-item"><div class="sgl">Total Items</div><div class="sgv">{{ monthTotalItems() }}</div></div>
-        <div class="sg-item"><div class="sgl">Picked Up</div><div class="sgv g">{{ monthPickedUp() }}</div></div>
-        <div class="sg-item"><div class="sgl">With Dhobi</div><div class="sgv o">{{ monthWithDhobi() }}</div></div>
+        <div class="sg-item"><div class="sgl">{{ 'laundry.entries' | translate }}</div><div class="sgv b">{{ monthEntries() }}</div></div>
+        <div class="sg-item"><div class="sgl">{{ 'laundry.totalItems' | translate }}</div><div class="sgv">{{ monthTotalItems() }}</div></div>
+        <div class="sg-item"><div class="sgl">{{ 'laundry.pickedUp' | translate }}</div><div class="sgv g">{{ monthPickedUp() }}</div></div>
+        <div class="sg-item"><div class="sgl">{{ 'laundry.withDhobi' | translate }}</div><div class="sgv o">{{ monthWithDhobi() }}</div></div>
       </div>
 
       @if (categoryTotals().length === 0) {
-        <p class="muted">No laundry spend this month.</p>
+        <p class="muted">{{ 'laundry.noSpend' | translate }}</p>
       } @else {
         <div class="cat-totals">
           @for (c of categoryTotals(); track c.serviceType) {
             <div class="cat-row">
-              <span class="cat-lbl">{{ serviceTypeLabels[c.serviceType] }}</span>
+              <span class="cat-lbl">{{ 'laundry.serviceType.' + c.serviceType | translate }}</span>
               <span class="cat-val">{{ rupeeLabel(c.amount) }}</span>
             </div>
           }
@@ -192,17 +202,17 @@
 
         <div class="pay-status">
           <div class="ps-left">
-            <div class="psl">Pending</div>
+            <div class="psl">{{ 'laundry.pendingAmt' | translate }}</div>
             <div class="pss">{{ rupeeLabel(monthPaymentSummary().pending) }}</div>
           </div>
           <div class="ps-right">
-            <div class="psl">Paid</div>
+            <div class="psl">{{ 'laundry.paidAmt' | translate }}</div>
             <div class="pss paid">{{ rupeeLabel(monthPaymentSummary().paid) }}</div>
           </div>
         </div>
 
         @if (monthPaymentSummary().pending > 0) {
-          <button class="mpaid-btn" (click)="markAllPaidThisMonth()">Mark all as Paid</button>
+          <button class="mpaid-btn" (click)="markAllPaidThisMonth()">{{ 'laundry.markAllPaid' | translate }}</button>
         }
       }
     </section>
@@ -210,8 +220,8 @@
     @if (contacts().length > 0) {
       <section class="card">
         <div class="section-head">
-          <h3>Dhobi Contacts</h3>
-          <a routerLink="/contacts" class="manage-link">Manage</a>
+          <h3>{{ 'laundry.dhobiContacts' | translate }}</h3>
+          <a routerLink="/contacts" class="manage-link">{{ 'laundry.manage' | translate }}</a>
         </div>
         <div class="ct-scroll">
           @for (c of contacts(); track c.id) {
@@ -230,9 +240,9 @@
     }
 
     <section class="card">
-      <h3>History</h3>
+      <h3>{{ 'laundry.history' | translate }}</h3>
       @if (history().length === 0) {
-        <p class="muted">No past entries yet.</p>
+        <p class="muted">{{ 'laundry.noPastEntries' | translate }}</p>
       } @else {
         <ion-list [inset]="true">
           @for (b of history(); track b.id) {
@@ -241,15 +251,15 @@
                 <ion-label>
                   <h2>
                     {{ itemsSummary(b) }}
-                    <span class="service-badge">{{ serviceTypeLabels[b.serviceType] }}</span>
+                    <span class="service-badge">{{ 'laundry.serviceType.' + b.serviceType | translate }}</span>
                     @if (b.amount) {
-                      <span class="paid-badge" [class.paid]="b.isPaid">{{ b.isPaid ? 'PAID' : 'PENDING' }}</span>
+                      <span class="paid-badge" [class.paid]="b.isPaid">{{ (b.isPaid ? 'laundry.paid' : 'laundry.pending') | translate }}</span>
                     }
                   </h2>
                   <p>
-                    Given {{ shortDateLabel(b.givenOn) }}
+                    {{ 'laundry.givenDate' | translate: { date: shortDateLabel(b.givenOn) } }}
                     @if (b.pickedUpOn) {
-                      · Picked up {{ shortDateLabel(b.pickedUpOn) }}
+                      {{ 'laundry.pickedUpDate' | translate: { date: shortDateLabel(b.pickedUpOn) } }}
                     }
                   </p>
                   @if (priceBreakdown(b); as breakdown) {
@@ -262,7 +272,7 @@
                           <span class="il-name">{{ item.itemType }} ×{{ item.quantity }}</span>
                           @if (item.pricePerItem) {
                             <button class="paid-badge small" [class.paid]="item.isPaid" (click)="toggleItemPaid(b, i)">
-                              {{ item.isPaid ? 'PAID' : 'PENDING' }}
+                              {{ (item.isPaid ? 'laundry.paid' : 'laundry.pending') | translate }}
                             </button>
                           }
                         </div>
@@ -271,15 +281,15 @@
                   }
                   <div class="item-actions">
                     @if (b.contactPhone) {
-                      <button class="mini-btn wa" (click)="shareBill(b)"><ion-icon name="logo-whatsapp" />Share</button>
+                      <button class="mini-btn wa" (click)="shareBill(b)"><ion-icon name="logo-whatsapp" />{{ 'laundry.share' | translate }}</button>
                     }
                     <button class="mini-btn" (click)="shareBillWithOthers(b)">
-                      <ion-icon name="share-social-outline" />Share
+                      <ion-icon name="share-social-outline" />{{ 'laundry.share' | translate }}
                     </button>
                     @if (b.amount) {
                       <button class="mini-btn" (click)="setPaid(b, !b.isPaid)">
                         <ion-icon [name]="b.isPaid ? 'close' : 'checkmark-done-outline'" />
-                        {{ b.isPaid ? 'Mark Pending' : 'Mark Paid' }}
+                        {{ (b.isPaid ? 'laundry.markPending' : 'laundry.markPaid') | translate }}
                       </button>
                     }
                   </div>

@@ -1,6 +1,13 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MilkSubscription, SaveMilkSubscriptionRequest, SaveServiceContactRequest, ServiceContact, toDateOnlyString } from '@gurtundaa/shared';
+import {
+  MILK_QUANTITY_STEP_LTR,
+  MilkSubscription,
+  SaveMilkSubscriptionRequest,
+  SaveServiceContactRequest,
+  ServiceContact,
+  toDateOnlyString,
+} from '@gurtundaa/shared';
 import {
   IonButton,
   IonButtons,
@@ -13,13 +20,12 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonTitle,
   IonToggle,
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export interface SaveMilkSubscriptionFormResult {
   contact: SaveServiceContactRequest | null;
@@ -41,36 +47,35 @@ export interface SaveMilkSubscriptionFormResult {
     IonLabel,
     IonInput,
     IonToggle,
-    IonSegment,
-    IonSegmentButton,
     IonDatetimeButton,
     IonModal,
     IonDatetime,
+    TranslatePipe,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>{{ subscription ? 'edit subscription' : 'set up milk tracking 🥛' }}</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ (subscription ? 'milkSubscriptionEditor.editTitle' : 'milkSubscriptionEditor.newTitle') | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <form [formGroup]="form">
-        <p class="label">how do you get your milk?</p>
-        <ion-segment [value]="form.controls.isSelfCollected.value" (ionChange)="setSelfCollected($any($event.detail.value))">
-          <ion-segment-button [value]="false"><ion-label>🧑‍🍼 delivered to me</ion-label></ion-segment-button>
-          <ion-segment-button [value]="true"><ion-label>🛒 i collect it myself</ion-label></ion-segment-button>
-        </ion-segment>
+        <p class="label">{{ 'milkSubscriptionEditor.howQuestion' | translate }}</p>
+        <div class="toggle-row">
+          <button type="button" class="toggle-btn" [class.sel]="!form.controls.isSelfCollected.value" (click)="setSelfCollected(false)">🧑‍🍼 {{ 'milkSubscriptionEditor.deliveredToMe' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.isSelfCollected.value" (click)="setSelfCollected(true)">🛒 {{ 'milkSubscriptionEditor.collectMyself' | translate }}</button>
+        </div>
 
         <ion-list lines="none">
           @if (!form.controls.isSelfCollected.value) {
             <ion-item>
               <ion-input
                 formControlName="name"
-                label="milk delivery person name"
+                [label]="'milkSubscriptionEditor.personName' | translate"
                 labelPlacement="stacked"
                 placeholder="Raju Milkman"
                 [maxlength]="100"
@@ -79,7 +84,7 @@ export interface SaveMilkSubscriptionFormResult {
             <ion-item>
               <ion-input
                 formControlName="phone"
-                label="phone number"
+                [label]="'milkSubscriptionEditor.phoneNumber' | translate"
                 labelPlacement="stacked"
                 placeholder="98765 43210"
                 [maxlength]="20"
@@ -88,9 +93,9 @@ export interface SaveMilkSubscriptionFormResult {
             <ion-item>
               <ion-input
                 formControlName="address"
-                label="address (optional)"
+                [label]="'milkSubscriptionEditor.addressLabel' | translate"
                 labelPlacement="stacked"
-                placeholder="near temple…"
+                [placeholder]="'milkSubscriptionEditor.addressPlaceholder' | translate"
                 [maxlength]="200"
               />
             </ion-item>
@@ -100,18 +105,16 @@ export interface SaveMilkSubscriptionFormResult {
               formControlName="ratePerLtr"
               type="number"
               inputmode="decimal"
-              label="rate per litre (₹)"
+              [label]="'milkSubscriptionEditor.rateLabel' | translate"
               labelPlacement="stacked"
               placeholder="60"
             />
           </ion-item>
           <ion-item>
             <ion-label>
-              tracking starts from
+              {{ 'milkSubscriptionEditor.trackingStarts' | translate }}
               <p>
-                Pick an earlier date if you already
-                {{ form.controls.isSelfCollected.value ? 'collect milk daily' : 'get milk delivered' }}
-                and want this month billed from day 1.
+                {{ 'milkSubscriptionEditor.trackingHint' | translate: { verb: (form.controls.isSelfCollected.value ? 'milkSubscriptionEditor.collectDaily' : 'milkSubscriptionEditor.getDelivered') | translate } }}
               </p>
             </ion-label>
             <ion-datetime-button datetime="start-date" slot="end" />
@@ -123,10 +126,10 @@ export interface SaveMilkSubscriptionFormResult {
           </ion-modal>
         </ion-list>
 
-        <h2 class="section-title">🌅 {{ form.controls.isSelfCollected.value ? 'morning pickup' : 'morning delivery' }}</h2>
+        <h2 class="section-title">🌅 {{ (form.controls.isSelfCollected.value ? 'milk.morningPickup' : 'milk.morningDelivery') | translate }}</h2>
         <ion-list lines="none">
           <ion-item>
-            <ion-toggle formControlName="morningEnabled">{{ form.controls.isSelfCollected.value ? 'pick up in the morning' : 'deliver in the morning' }}</ion-toggle>
+            <ion-toggle formControlName="morningEnabled">{{ (form.controls.isSelfCollected.value ? 'milkSubscriptionEditor.pickUpMorning' : 'milkSubscriptionEditor.deliverMorning') | translate }}</ion-toggle>
           </ion-item>
           @if (form.controls.morningEnabled.value) {
             <ion-item>
@@ -134,16 +137,18 @@ export interface SaveMilkSubscriptionFormResult {
                 formControlName="morningQuantityLtr"
                 type="number"
                 inputmode="decimal"
-                label="quantity (Ltr)"
+                step="0.5"
+                [label]="'milkSubscriptionEditor.quantityLabel' | translate"
                 labelPlacement="stacked"
                 placeholder="2.0"
+                (ionChange)="snapToMilkStep('morningQuantityLtr')"
               />
             </ion-item>
             <ion-item>
               <ion-input
                 formControlName="morningWindowStart"
                 type="time"
-                [label]="(form.controls.isSelfCollected.value ? 'pickup timings' : 'delivery timings') + ' — from (optional)'"
+                [label]="timingsLabel('from')"
                 labelPlacement="stacked"
               />
             </ion-item>
@@ -151,17 +156,17 @@ export interface SaveMilkSubscriptionFormResult {
               <ion-input
                 formControlName="morningWindowEnd"
                 type="time"
-                [label]="(form.controls.isSelfCollected.value ? 'pickup timings' : 'delivery timings') + ' — to (optional)'"
+                [label]="timingsLabel('to')"
                 labelPlacement="stacked"
               />
             </ion-item>
           }
         </ion-list>
 
-        <h2 class="section-title">🌙 {{ form.controls.isSelfCollected.value ? 'evening pickup' : 'evening delivery' }}</h2>
+        <h2 class="section-title">🌙 {{ (form.controls.isSelfCollected.value ? 'milk.eveningPickup' : 'milk.eveningDelivery') | translate }}</h2>
         <ion-list lines="none">
           <ion-item>
-            <ion-toggle formControlName="eveningEnabled">{{ form.controls.isSelfCollected.value ? 'pick up in the evening' : 'deliver in the evening' }}</ion-toggle>
+            <ion-toggle formControlName="eveningEnabled">{{ (form.controls.isSelfCollected.value ? 'milkSubscriptionEditor.pickUpEvening' : 'milkSubscriptionEditor.deliverEvening') | translate }}</ion-toggle>
           </ion-item>
           @if (form.controls.eveningEnabled.value) {
             <ion-item>
@@ -169,16 +174,18 @@ export interface SaveMilkSubscriptionFormResult {
                 formControlName="eveningQuantityLtr"
                 type="number"
                 inputmode="decimal"
-                label="quantity (Ltr)"
+                step="0.5"
+                [label]="'milkSubscriptionEditor.quantityLabel' | translate"
                 labelPlacement="stacked"
                 placeholder="1.0"
+                (ionChange)="snapToMilkStep('eveningQuantityLtr')"
               />
             </ion-item>
             <ion-item>
               <ion-input
                 formControlName="eveningWindowStart"
                 type="time"
-                [label]="(form.controls.isSelfCollected.value ? 'pickup timings' : 'delivery timings') + ' — from (optional)'"
+                [label]="timingsLabel('from')"
                 labelPlacement="stacked"
               />
             </ion-item>
@@ -186,7 +193,7 @@ export interface SaveMilkSubscriptionFormResult {
               <ion-input
                 formControlName="eveningWindowEnd"
                 type="time"
-                [label]="(form.controls.isSelfCollected.value ? 'pickup timings' : 'delivery timings') + ' — to (optional)'"
+                [label]="timingsLabel('to')"
                 labelPlacement="stacked"
               />
             </ion-item>
@@ -199,10 +206,24 @@ export interface SaveMilkSubscriptionFormResult {
     .section-title { margin: 20px 0 4px; padding: 0 16px; font-size: 13px; font-weight: 700; color: var(--ion-color-medium); }
     ion-label p { font-size: 10.5px; color: var(--ion-color-medium); white-space: normal; }
     .label { margin: 0 0 6px; padding: 0 2px; font-size: 11px; font-weight: 700; color: var(--ion-color-medium); }
+    .toggle-row { display: flex; gap: 8px; margin: 0 0 4px; }
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: var(--ion-color-step-50, #f3f0fa);
+      color: var(--ion-color-medium, #8a7fa3);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .toggle-btn.sel { background: var(--ion-color-primary, #7c3aed); color: #fff; }
   `,
 })
 export class MilkSubscriptionEditorComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
+  private readonly translate = inject(TranslateService);
 
   @Input() subscription?: MilkSubscription | null;
   @Input() contact?: ServiceContact | null;
@@ -264,6 +285,19 @@ export class MilkSubscriptionEditorComponent implements OnInit {
     this.form.controls.phone.setValidators(phoneValidators);
     this.form.controls.name.updateValueAndValidity();
     this.form.controls.phone.updateValueAndValidity();
+  }
+
+  protected timingsLabel(which: 'from' | 'to'): string {
+    const kind = this.translate.instant(this.form.controls.isSelfCollected.value ? 'milkSubscriptionEditor.pickupTimings' : 'milkSubscriptionEditor.deliveryTimings');
+    const suffix = this.translate.instant(which === 'from' ? 'milkSubscriptionEditor.fromOptional' : 'milkSubscriptionEditor.toOptional');
+    return `${kind} — ${suffix}`;
+  }
+
+  // Milk only comes in half-litre packets — snap odd decimals (2.1, 2.37) to the nearest 0.5 on commit.
+  protected snapToMilkStep(control: 'morningQuantityLtr' | 'eveningQuantityLtr'): void {
+    const current = this.form.controls[control].value;
+    const snapped = Math.max(0, Math.round(current / MILK_QUANTITY_STEP_LTR) * MILK_QUANTITY_STEP_LTR);
+    if (snapped !== current) this.form.controls[control].setValue(snapped);
   }
 
   protected dismiss(): Promise<boolean> {

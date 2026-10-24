@@ -13,25 +13,26 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 const AVATAR_OPTIONS = ['🧑', '👨', '👩', '👴', '👵', '👦', '👧', '👶'];
 const RELATION_OPTIONS = ['Self', 'Spouse', 'Child', 'Parent', 'Other'];
 
 @Component({
   selector: 'app-member-editor',
-  imports: [ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonInput],
+  imports: [ReactiveFormsModule, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonInput, TranslatePipe],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>{{ member ? 'edit member' : 'add family member' }}</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ (member ? 'memberEditor.editTitle' : 'memberEditor.newTitle') | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <h3 class="section-title">Avatar</h3>
+      <h3 class="section-title">{{ 'memberEditor.avatarTitle' | translate }}</h3>
       <div class="avatar-grid">
         @for (a of avatarOptions; track a) {
           <button type="button" class="avatar-chip" [class.sel]="avatar() === a" (click)="avatar.set(a)">{{ a }}</button>
@@ -41,15 +42,21 @@ const RELATION_OPTIONS = ['Self', 'Spouse', 'Child', 'Parent', 'Other'];
       <form [formGroup]="form">
         <ion-list lines="none">
           <ion-item>
-            <ion-input formControlName="name" label="name" labelPlacement="stacked" placeholder="Suresh" [maxlength]="50" />
+            <ion-input
+              formControlName="name"
+              [label]="'memberEditor.nameLabel' | translate"
+              labelPlacement="stacked"
+              [placeholder]="'memberEditor.namePlaceholder' | translate"
+              [maxlength]="50"
+            />
           </ion-item>
         </ion-list>
 
-        <h3 class="section-title">Relation</h3>
+        <h3 class="section-title">{{ 'memberEditor.relationTitle' | translate }}</h3>
         <div class="chips">
           @for (r of relationOptions; track r) {
             <button type="button" class="chip" [class.sel]="form.controls.relation.value === r" (click)="form.controls.relation.setValue(r)">
-              {{ r }}
+              {{ 'memberEditor.relations.' + r | translate }}
             </button>
           }
         </div>

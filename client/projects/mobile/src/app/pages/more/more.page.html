@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>More</ion-title>
+    <ion-title>{{ 'more.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -9,7 +9,7 @@
     <ion-item [button]="true" [detail]="true" (click)="openProfile()">
       <ion-icon slot="start" name="home-outline" />
       <ion-label>
-        <h2>Household Profile</h2>
+        <h2>{{ 'more.householdProfile' | translate }}</h2>
         @if (email) {
           <p>{{ email }}</p>
         }
@@ -18,20 +18,25 @@
 
     <ion-item [button]="true" [detail]="true" (click)="openContacts()">
       <ion-icon slot="start" name="people-outline" />
-      <ion-label>Contacts</ion-label>
+      <ion-label>{{ 'more.contacts' | translate }}</ion-label>
     </ion-item>
 
     <ion-item [button]="true" [detail]="false" (click)="linkToProvider()">
       <ion-icon slot="start" name="link-outline" />
       <ion-label>
-        <h2>Link to a Provider</h2>
-        <p>Have a code from your milkman or dhobi? Enter it here.</p>
+        <h2>{{ 'more.linkProvider.row' | translate }}</h2>
+        <p>{{ 'more.linkProvider.hint' | translate }}</p>
       </ion-label>
+    </ion-item>
+
+    <ion-item [button]="true" [detail]="true" (click)="openLanguagePicker()">
+      <ion-icon slot="start" name="language-outline" />
+      <ion-label>{{ 'more.language.row' | translate }}</ion-label>
     </ion-item>
 
     <ion-item [button]="true" [detail]="false" (click)="logout()">
       <ion-icon slot="start" name="log-out-outline" color="danger" />
-      <ion-label color="danger">Log out</ion-label>
+      <ion-label color="danger">{{ 'more.logout' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

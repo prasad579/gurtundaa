@@ -4,10 +4,11 @@ using Gurtundaa.Application.Laundry;
 using Gurtundaa.Domain.Entities;
 using Gurtundaa.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace Gurtundaa.Infrastructure.Laundry;
 
-public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, TimeProvider clock) : ILaundryBatchService
+public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, TimeProvider clock, IHostEnvironment env) : ILaundryBatchService
 {
     private IQueryable<LaundryBatch> Mine => db.LaundryBatches.Where(b => b.UserId == currentUser.UserId);
 
@@ -134,6 +135,32 @@ public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, Time
         return ToDto(batch, contact);
     }
 
+    public async Task<LaundryBatchDto?> UploadPhotoAsync(Guid id, Stream content, string extension, CancellationToken ct)
+    {
+        var batch = await Mine.SingleOrDefaultAsync(b => b.Id == id, ct);
+        if (batch is null)
+        {
+            return null;
+        }
+
+        var uploadsDir = Path.Combine(env.ContentRootPath, "wwwroot", "uploads", "laundry");
+        Directory.CreateDirectory(uploadsDir);
+
+        var fileName = $"{batch.Id}{extension}";
+        var fullPath = Path.Combine(uploadsDir, fileName);
+        await using (var fileStream = new FileStream(fullPath, FileMode.Create))
+        {
+            await content.CopyToAsync(fileStream, ct);
+        }
+
+        batch.PhotoUrl = $"/uploads/laundry/{fileName}";
+        batch.UpdatedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+
+        var contact = await LoadContactAsync(batch.ContactId, ct);
+        return ToDto(batch, contact);
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct) =>
         await Mine.Where(b => b.Id == id).ExecuteDeleteAsync(ct) > 0;
 
@@ -172,6 +199,7 @@ public class LaundryBatchService(AppDbContext db, ICurrentUser currentUser, Time
             batch.PaidAt,
             items,
             batch.Notes,
+            batch.PhotoUrl,
             batch.CreatedAt);
     }
 }

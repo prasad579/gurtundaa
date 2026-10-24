@@ -3,6 +3,7 @@ import { MilkCalendarDay, isFutureDate, parseDateOnly, toDateOnlyString } from '
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { checkmark, chevronBack, chevronForward, close, pause } from 'ionicons/icons';
+import { TranslatePipe } from '@ngx-translate/core';
 
 const WEEKDAY_ABBREV = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 // .day-col width (44px) + .strip gap (14px) — kept as a constant so scrollStrip() can page by a
@@ -11,7 +12,7 @@ const STRIP_DAY_WIDTH = 58;
 
 @Component({
   selector: 'app-milk-calendar',
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
   template: `
     <div class="strip-wrap">
       <button class="strip-nav left" aria-label="scroll to earlier days" (click)="scrollStrip(-1)">
@@ -46,13 +47,13 @@ const STRIP_DAY_WIDTH = 58;
 
           <div class="day-sub">
             @if (isToday(day.date) && cellClass(day) !== 'missed' && cellClass(day) !== 'paused') {
-              <span class="sub today-tag">Today</span>
+              <span class="sub today-tag">{{ 'milk.today' | translate }}</span>
             } @else if (cellClass(day) === 'not-tracked') {
               <span class="sub dim">—</span>
             } @else if (cellClass(day) === 'missed') {
-              <span class="sub missed-text">Miss</span>
+              <span class="sub missed-text">{{ 'milk.missShort' | translate }}</span>
             } @else if (cellClass(day) === 'paused') {
-              <span class="sub paused-text">Paused</span>
+              <span class="sub paused-text">{{ 'milk.paused' | translate }}</span>
             } @else {
               <span class="sub">{{ dayQuantity(day) }}</span>
             }
@@ -65,14 +66,14 @@ const STRIP_DAY_WIDTH = 58;
       </button>
     </div>
     <div class="legend">
-      <span class="legend-item"><i class="dot delivered"></i>delivered</span>
-      <span class="legend-item"><i class="dot planned"></i>planned</span>
-      <span class="legend-item"><i class="dot missed"></i>missed</span>
-      <span class="legend-item"><i class="dot paused"></i>paused</span>
-      <span class="legend-item"><i class="dot extra"></i>extra</span>
-      <span class="legend-item"><i class="dot qty-changed"></i>qty changed</span>
+      <span class="legend-item"><i class="dot delivered"></i>{{ 'milk.legendDelivered' | translate }}</span>
+      <span class="legend-item"><i class="dot planned"></i>{{ 'milk.legendPlanned' | translate }}</span>
+      <span class="legend-item"><i class="dot missed"></i>{{ 'milk.legendMissed' | translate }}</span>
+      <span class="legend-item"><i class="dot paused"></i>{{ 'milk.legendPaused' | translate }}</span>
+      <span class="legend-item"><i class="dot extra"></i>{{ 'milk.legendExtra' | translate }}</span>
+      <span class="legend-item"><i class="dot qty-changed"></i>{{ 'milk.legendQtyChanged' | translate }}</span>
       @if (startDate) {
-        <span class="legend-item"><i class="dot not-tracked"></i>not tracked yet</span>
+        <span class="legend-item"><i class="dot not-tracked"></i>{{ 'milk.legendNotTracked' | translate }}</span>
       }
     </div>
   `,
@@ -137,9 +138,11 @@ const STRIP_DAY_WIDTH = 58;
       background: var(--ion-color-step-50, rgb(124 58 237 / 0.06));
       color: var(--ion-color-dark, #1f1330);
     }
-    .day-col.today .circle { background: #fff; border: 2px solid var(--ion-color-step-150, #c9c3dd); }
+    // A ring, not a background reset — today still needs to show its real status color (paused/
+    // missed/delivered), not just the default "planned" look.
+    .day-col.today .circle { box-shadow: 0 0 0 2px var(--ion-color-step-150, #c9c3dd); }
     .circle.delivered { background: #2dd36f; color: #fff; }
-    .circle.planned { background: #fff; border: 1.5px solid rgb(124 58 237 / 0.35); color: var(--ion-color-primary, #7c3aed); }
+    .circle.planned { background: rgb(124 58 237 / 0.16); border: 1.5px solid rgb(124 58 237 / 0.45); color: var(--ion-color-primary, #7c3aed); }
     .circle.missed { background: #eb445a; color: #fff; }
     .circle.paused { background: #ffc409; color: #7a5200; }
     .circle.not-tracked { background: transparent; }

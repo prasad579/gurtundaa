@@ -29,6 +29,7 @@ public sealed record LaundryBatchDto(
     DateTimeOffset? PaidAt,
     IReadOnlyList<LaundryItemLine> Items,
     string? Notes,
+    string? PhotoUrl,
     DateTimeOffset CreatedAt);
 
 public sealed record SaveLaundryBatchRequest(

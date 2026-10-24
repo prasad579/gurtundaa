@@ -21,17 +21,17 @@
   } @else {
     <div class="list">
       @for (r of requests(); track r.id) {
-        <div class="card" (click)="openQuoteSheet(r)">
+        <div class="card" [class.is-quoted]="r.hasQuoted" [class.is-missed]="!r.hasQuoted && statusBadgeLabel(r) === 'Missed'" (click)="openQuoteSheet(r)">
           <div class="head">
             <span class="date">{{ dateLabel(r.createdAt) }}</span>
             <div class="head-right">
               @if (r.hasQuoted) {
-                <span class="badge quoted">Quoted</span>
+                <span class="badge quoted">✓ Quoted</span>
                 <ion-button class="share-btn" fill="clear" size="small" (click)="openShareSheet(r); $event.stopPropagation()">
                   <ion-icon slot="icon-only" name="share-social-outline" />
                 </ion-button>
               } @else {
-                <span class="badge">{{ r.targetStatus }}</span>
+                <span class="badge" [class.missed]="statusBadgeLabel(r) === 'Missed'">{{ statusBadgeLabel(r) }}</span>
               }
             </div>
           </div>
@@ -46,7 +46,25 @@
               <span class="comp-pill">{{ r.competingShopCount }} other shop{{ r.competingShopCount === 1 ? '' : 's' }} quoting</span>
             }
           </div>
-          <p class="items">{{ itemsSummary(r) }}</p>
+          <div class="item-chips">
+            @for (i of r.items; track i.itemKey) {
+              <span class="item-chip">
+                @if (itemImage(i.itemKey); as img) {
+                  <img [src]="img" [alt]="i.name" loading="lazy" />
+                }
+                <span class="ic-text">
+                  {{ i.name }}
+                  @if (teluguName(i.itemKey); as te) {
+                    <span class="te">{{ te }}</span>
+                  }
+                  <b>{{ i.qty }} × {{ i.pack }}</b>
+                  @if (i.brand) {
+                    <span class="brand">🏷 {{ i.brand }}</span>
+                  }
+                </span>
+              </span>
+            }
+          </div>
           @if (r.notes) {
             <p class="notes">Note: {{ r.notes }}</p>
           }

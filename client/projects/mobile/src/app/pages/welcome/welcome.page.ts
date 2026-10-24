@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BRAND } from '@gurtundaa/shared';
 import { IonButton, IonContent } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-welcome',
-  imports: [IonContent, IonButton],
+  imports: [IonContent, IonButton, TranslatePipe],
   templateUrl: './welcome.page.html',
   styleUrl: './welcome.page.scss',
 })

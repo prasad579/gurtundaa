@@ -5,11 +5,11 @@
       <h1 class="gradient-text">{{ brand.name }}</h1>
     </header>
 
-    <h2>verify your number</h2>
-    <p class="subtitle">enter the code we sent to {{ phone() }}</p>
+    <h2>{{ 'otp.heading' | translate }}</h2>
+    <p class="subtitle">{{ 'otp.subtitle' | translate: { phone: phone() } }}</p>
 
     <form [formGroup]="form" (ngSubmit)="verify()" novalidate>
-      <p class="otp-label">enter the 6-digit code</p>
+      <p class="otp-label">{{ 'otp.enterCode' | translate }}</p>
       <div class="otp-boxes">
         @for (i of digitIndices; track i) {
           <input
@@ -32,15 +32,15 @@
       }
 
       <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
-        {{ busy() ? 'one sec…' : 'verify & continue' }}
+        {{ busy() ? ('common.oneSec' | translate) : ('otp.submit' | translate) }}
       </ion-button>
     </form>
 
     <p class="switch">
       @if (resendCooldown() > 0) {
-        resend code in {{ resendCooldown() }}s
+        {{ 'otp.resendIn' | translate: { seconds: resendCooldown() } }}
       } @else {
-        didn't get it? <a (click)="resend()">resend code</a>
+        {{ 'otp.noCode' | translate }} <a (click)="resend()">{{ 'otp.resendLink' | translate }}</a>
       }
     </p>
   </div>

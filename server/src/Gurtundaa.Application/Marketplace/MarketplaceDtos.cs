@@ -7,7 +7,9 @@ public sealed record QuotationItemLine(
     [Required, MaxLength(50)] string ItemKey,
     [Required, MaxLength(100)] string Name,
     [Range(1, 999)] int Qty,
-    [MaxLength(30)] string Pack);
+    [MaxLength(30)] string Pack,
+    // Customer's optional brand preference (e.g. "Sunflower", "Amul") — passed through to the shop as-is.
+    [MaxLength(50)] string? Brand = null);
 
 public sealed record QuoteItemLine(string ItemKey, string Name, int Qty, string Pack, decimal UnitPrice);
 
@@ -83,7 +85,7 @@ public sealed record PriceComparisonDto(
 
 public sealed record AcceptQuoteRequest(Guid QuoteId);
 
-public sealed record ShopSummaryDto(Guid UserId, string ShopName, string? City, IReadOnlyList<string> ServedCategoryKeys);
+public sealed record ShopSummaryDto(Guid UserId, string ShopName, string? City, IReadOnlyList<string> ServedCategoryKeys, decimal? Latitude, decimal? Longitude, string? ImageUrl);
 
 public sealed record SubmitQuoteItemLine([Required, MaxLength(50)] string ItemKey, [Range(0.01, 10_000_000)] decimal UnitPrice);
 

@@ -27,6 +27,13 @@
             @if (!cart.isScalable(line.itemKey)) {
               <div class="pack">{{ line.pack }}</div>
             }
+            <button class="brand-btn" (click)="promptBrand(line.itemKey, line.name)">
+              @if (line.brand; as brand) {
+                <ion-icon name="pricetag-outline" /> {{ brand }}
+              } @else {
+                <ion-icon name="pricetag-outline" /> add brand
+              }
+            </button>
           </div>
 
           @if (cart.isScalable(line.itemKey)) {

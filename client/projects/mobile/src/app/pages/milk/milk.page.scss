@@ -268,10 +268,17 @@
 }
 
 .sg-item {
+  display: block;
+  width: 100%;
   background: var(--ion-color-step-50, #f7f8fb);
+  border: 1.5px solid transparent;
   border-radius: 9px;
   padding: 8px;
   text-align: center;
+  font: inherit;
+  cursor: pointer;
+
+  &:active { border-color: var(--ion-color-primary, #7c3aed); }
 
   .sgl { font-size: 10px; color: var(--ion-color-medium); }
   .sgv { font-size: 16px; font-weight: 700; margin-top: 1px; }
@@ -350,7 +357,30 @@
     display: flex;
     gap: 6px;
     margin-top: 8px;
-    ion-button { margin: 0; flex: 1; font-size: 10.5px; }
+
+    button {
+      flex: 1;
+      border-radius: 8px;
+      padding: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn-upi {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+    }
+
+    .btn-record {
+      background: transparent;
+      color: var(--ion-color-primary, #6b3fa0);
+      border: 1.5px solid var(--ion-color-primary, #6b3fa0);
+    }
   }
 
   .pss.good { color: #2e7d32; }

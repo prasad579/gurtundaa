@@ -71,6 +71,7 @@ public class MedicineService(AppDbContext db, ICurrentUser currentUser, TimeProv
     {
         medicine.MemberId = request.MemberId;
         medicine.Name = request.Name.Trim();
+        medicine.Purpose = string.IsNullOrWhiteSpace(request.Purpose) ? null : request.Purpose.Trim();
         medicine.Mode = request.Mode;
         medicine.CourseDays = request.Mode == MedicineMode.Course ? request.CourseDays : null;
         medicine.MorningQty = request.MorningQty;
@@ -80,6 +81,7 @@ public class MedicineService(AppDbContext db, ICurrentUser currentUser, TimeProv
         medicine.FoodTiming = request.FoodTiming;
         medicine.StockCount = request.StockCount;
         medicine.StartDate = request.StartDate;
+        medicine.NextVisitDate = request.NextVisitDate;
         medicine.UpdatedAt = now;
     }
 
@@ -114,6 +116,7 @@ public class MedicineService(AppDbContext db, ICurrentUser currentUser, TimeProv
             medicine.Member?.Name ?? string.Empty,
             medicine.Member?.AvatarEmoji ?? "🧑",
             medicine.Name,
+            medicine.Purpose,
             medicine.Mode,
             medicine.CourseDays,
             medicine.MorningQty,
@@ -123,6 +126,7 @@ public class MedicineService(AppDbContext db, ICurrentUser currentUser, TimeProv
             medicine.FoodTiming,
             medicine.StockCount,
             medicine.StartDate,
+            medicine.NextVisitDate,
             medicine.IsActive,
             perDay,
             days,

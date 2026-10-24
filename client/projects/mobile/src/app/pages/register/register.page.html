@@ -6,21 +6,14 @@
       <p>{{ brand.tagline }}</p>
     </header>
 
-    <h2>create account</h2>
-    <p class="subtitle">let's get started with your account</p>
-
-    <ion-segment [value]="userType()" (ionChange)="setUserType($event.detail.value)" scrollable="true">
-      <ion-segment-button value="Customer"><ion-label>shopping for my home</ion-label></ion-segment-button>
-      <ion-segment-button value="Shop"><ion-label>i run a shop</ion-label></ion-segment-button>
-      <ion-segment-button value="MilkProvider"><ion-label>🥛 i deliver milk</ion-label></ion-segment-button>
-      <ion-segment-button value="LaundryProvider"><ion-label>🧺 i run a laundry</ion-label></ion-segment-button>
-    </ion-segment>
+    <h2>{{ 'register.heading' | translate }}</h2>
+    <p class="subtitle">{{ 'register.subtitle' | translate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <ion-list lines="none">
         <ion-item>
           <ion-input
-            label="full name"
+            [label]="'register.fullName' | translate"
             labelPlacement="floating"
             formControlName="displayName"
             autocomplete="name"
@@ -28,7 +21,7 @@
         </ion-item>
         <ion-item>
           <ion-input
-            label="email address"
+            [label]="'register.email' | translate"
             labelPlacement="floating"
             type="email"
             inputmode="email"
@@ -38,7 +31,7 @@
         </ion-item>
         <ion-item>
           <ion-input
-            label="mobile number"
+            [label]="'register.mobile' | translate"
             labelPlacement="floating"
             type="tel"
             inputmode="tel"
@@ -48,7 +41,7 @@
         </ion-item>
         <ion-item>
           <ion-input
-            label="create password"
+            [label]="'register.password' | translate"
             labelPlacement="floating"
             type="password"
             formControlName="password"
@@ -57,7 +50,7 @@
         </ion-item>
         <ion-item>
           <ion-input
-            label="confirm password"
+            [label]="'register.confirmPassword' | translate"
             labelPlacement="floating"
             type="password"
             formControlName="confirmPassword"
@@ -66,9 +59,32 @@
         </ion-item>
       </ion-list>
 
+      <fieldset class="role-section">
+        <legend class="role-title">{{ 'register.roleQuestion' | translate: { brand: brand.name } }}</legend>
+        <div class="role-options" role="radiogroup">
+          @for (option of userTypeOptions; track option.value) {
+            <button
+              type="button"
+              class="role-option"
+              role="radio"
+              [attr.aria-checked]="userType() === option.value"
+              [class.selected]="userType() === option.value"
+              (click)="setUserType(option.value)"
+            >
+              <span class="radio-dot" aria-hidden="true"></span>
+              <span class="icon" aria-hidden="true">{{ option.icon }}</span>
+              <span class="text">
+                <strong>{{ 'register.userTypes.' + option.value + '.label' | translate }}</strong>
+                <span class="hint">{{ 'register.userTypes.' + option.value + '.hint' | translate }}</span>
+              </span>
+            </button>
+          }
+        </div>
+      </fieldset>
+
       <label class="terms">
         <ion-checkbox (ionChange)="setAgreed($event.detail.checked)" />
-        <span>i agree to the Terms of Service and Privacy Policy</span>
+        <span>{{ 'register.terms' | translate }}</span>
       </label>
 
       @if (error(); as message) {
@@ -76,12 +92,12 @@
       }
 
       <ion-button class="gradient" expand="block" type="submit" [disabled]="busy()">
-        {{ busy() ? 'one sec…' : 'create account ✨' }}
+        {{ busy() ? ('common.oneSec' | translate) : ('register.submit' | translate) }}
       </ion-button>
     </form>
 
     <p class="switch">
-      already have an account? <a routerLink="/login">sign in</a>
+      {{ 'register.switchPrompt' | translate }} <a routerLink="/login">{{ 'register.switchLink' | translate }}</a>
     </p>
   </div>
 </ion-content>

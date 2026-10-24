@@ -18,6 +18,9 @@ public class Medicine
 
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>What it's for (e.g. "sugar control", "BP") — optional, just a memory aid for the household.</summary>
+    public string? Purpose { get; set; }
+
     public MedicineMode Mode { get; set; } = MedicineMode.Daily;
 
     public int? CourseDays { get; set; }
@@ -36,6 +39,9 @@ public class Medicine
     public int StockCount { get; set; }
 
     public DateOnly StartDate { get; set; }
+
+    /// <summary>Optional reminder of when to see the doctor next for this medicine/condition.</summary>
+    public DateOnly? NextVisitDate { get; set; }
 
     public bool IsActive { get; set; } = true;
 

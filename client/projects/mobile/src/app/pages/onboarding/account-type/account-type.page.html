@@ -1,8 +1,8 @@
 <app-onboarding-shell
   [step]="1"
   [showBack]="false"
-  title="let's get to know you"
-  subtitle="this helps us personalize gurtundaa for your needs"
+  title="onboarding.accountType.title"
+  subtitle="onboarding.accountType.subtitle"
   (continueClick)="continue()"
   (skip)="skip()"
 >
@@ -16,8 +16,8 @@
       >
         <span class="icon" aria-hidden="true">{{ option.icon }}</span>
         <span class="text">
-          <strong>{{ option.label }}</strong>
-          <span class="hint">{{ option.hint }}</span>
+          <strong>{{ 'onboarding.accountTypes.' + option.value + '.label' | translate }}</strong>
+          <span class="hint">{{ 'onboarding.accountTypes.' + option.value + '.hint' | translate }}</span>
         </span>
       </button>
     }

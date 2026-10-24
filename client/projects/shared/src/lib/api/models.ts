@@ -372,6 +372,7 @@ export interface LaundryBatch {
   paidAt: string | null;
   items: LaundryItemLine[];
   notes: string | null;
+  photoUrl: string | null;
   createdAt: string;
 }
 
@@ -449,6 +450,8 @@ export interface QuotationItemLine {
   name: string;
   qty: number;
   pack: string;
+  /** Customer's optional brand preference for this item (e.g. "Sunflower", "Amul") — shown to the shop as-is. */
+  brand?: string | null;
 }
 
 export interface QuoteItemLine {
@@ -544,6 +547,9 @@ export interface ShopSummary {
   shopName: string;
   city: string | null;
   servedCategoryKeys: string[];
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
 }
 
 export interface SubmitQuoteItemLine {
@@ -629,6 +635,7 @@ export interface Medicine {
   memberName: string;
   memberAvatarEmoji: string;
   name: string;
+  purpose: string | null;
   mode: MedicineMode;
   courseDays: number | null;
   morningQty: number;
@@ -638,6 +645,7 @@ export interface Medicine {
   foodTiming: FoodTiming;
   stockCount: number;
   startDate: string;
+  nextVisitDate: string | null;
   isActive: boolean;
   perDayQty: number;
   daysRemaining: number;
@@ -658,6 +666,8 @@ export interface SaveMedicineRequest {
   foodTiming: FoodTiming;
   stockCount: number;
   startDate: string;
+  purpose?: string | null;
+  nextVisitDate?: string | null;
 }
 
 export type DoseSlot = 'Morning' | 'Afternoon' | 'Evening' | 'Night';

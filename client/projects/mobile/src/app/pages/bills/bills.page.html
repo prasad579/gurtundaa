@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Bills 🧾</ion-title>
+    <ion-title>{{ 'bills.pageTitle' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -15,22 +15,22 @@
     </div>
   } @else {
     <section class="card summary-card">
-      <div class="summary-title">This Month</div>
+      <div class="summary-title">{{ 'bills.thisMonth' | translate }}</div>
       <div class="summary-grid">
-        <div class="summary-item"><div class="val">{{ rupeeLabel(totalDue()) }}</div><div class="lbl">Total Due</div></div>
-        <div class="summary-item"><div class="val">{{ overdue().length }}</div><div class="lbl">Overdue</div></div>
-        <div class="summary-item"><div class="val">{{ dueSoon().length + upcoming().length }}</div><div class="lbl">Pending</div></div>
+        <div class="summary-item"><div class="val">{{ rupeeLabel(totalDue()) }}</div><div class="lbl">{{ 'bills.totalDue' | translate }}</div></div>
+        <div class="summary-item"><div class="val">{{ overdue().length }}</div><div class="lbl">{{ 'bills.overdue' | translate }}</div></div>
+        <div class="summary-item"><div class="val">{{ dueSoon().length + upcoming().length }}</div><div class="lbl">{{ 'bills.pending' | translate }}</div></div>
       </div>
     </section>
 
     <div class="section-head">
       <ion-button size="small" fill="solid" (click)="openEditor()">
-        <ion-icon slot="start" name="add" />Add Bill
+        <ion-icon slot="start" name="add" />{{ 'bills.addBill' | translate }}
       </ion-button>
     </div>
 
     @if (overdue().length > 0) {
-      <div class="section-title">🔴 Overdue <span class="count-chip">{{ overdue().length }}</span></div>
+      <div class="section-title">🔴 {{ 'bills.overdue' | translate }} <span class="count-chip">{{ overdue().length }}</span></div>
       <section class="card">
         @for (b of overdue().slice(0, visiblePerSection); track b.id) {
           <div class="bill-row">
@@ -41,18 +41,18 @@
             </div>
             <div class="bill-amt">
               <div class="amt">{{ rupeeLabel(b.amount) }}</div>
-              <button class="pay-btn" (click)="markPaid(b)">Mark Paid</button>
+              <button class="pay-btn" (click)="markPaid(b)">{{ 'bills.markPaid' | translate }}</button>
             </div>
           </div>
         }
         @if (overdue().length > visiblePerSection) {
-          <div class="view-all"><a (click)="viewAll()">View all {{ overdue().length }} overdue →</a></div>
+          <div class="view-all"><a (click)="viewAll()">{{ 'bills.viewAllOverdue' | translate: { count: overdue().length } }}</a></div>
         }
       </section>
     }
 
     @if (dueSoon().length > 0) {
-      <div class="section-title">🟠 Due Soon <span class="count-chip">{{ dueSoon().length }}</span></div>
+      <div class="section-title">🟠 {{ 'bills.dueSoon' | translate }} <span class="count-chip">{{ dueSoon().length }}</span></div>
       <section class="card">
         @for (b of dueSoon().slice(0, visiblePerSection); track b.id) {
           <div class="bill-row">
@@ -63,18 +63,18 @@
             </div>
             <div class="bill-amt">
               <div class="amt">{{ rupeeLabel(b.amount) }}</div>
-              <button class="pay-btn" (click)="markPaid(b)">Mark Paid</button>
+              <button class="pay-btn" (click)="markPaid(b)">{{ 'bills.markPaid' | translate }}</button>
             </div>
           </div>
         }
         @if (dueSoon().length > visiblePerSection) {
-          <div class="view-all"><a (click)="viewAll()">View all {{ dueSoon().length }} due soon →</a></div>
+          <div class="view-all"><a (click)="viewAll()">{{ 'bills.viewAllDueSoon' | translate: { count: dueSoon().length } }}</a></div>
         }
       </section>
     }
 
     @if (upcoming().length > 0) {
-      <div class="section-title">🟢 Upcoming <span class="count-chip">{{ upcoming().length }}</span></div>
+      <div class="section-title">🟢 {{ 'bills.upcoming' | translate }} <span class="count-chip">{{ upcoming().length }}</span></div>
       <section class="card">
         @for (b of upcoming().slice(0, visiblePerSection); track b.id) {
           <div class="bill-row">
@@ -87,13 +87,13 @@
           </div>
         }
         @if (upcoming().length > visiblePerSection) {
-          <div class="view-all"><a (click)="viewAll()">View all {{ upcoming().length }} upcoming →</a></div>
+          <div class="view-all"><a (click)="viewAll()">{{ 'bills.viewAllUpcoming' | translate: { count: upcoming().length } }}</a></div>
         }
       </section>
     }
 
     @if (paidThisMonth().length > 0) {
-      <div class="section-title">✅ Paid This Month</div>
+      <div class="section-title">✅ {{ 'bills.paidThisMonth' | translate }}</div>
       <section class="card">
         @for (b of paidThisMonth().slice(0, visiblePerSection); track b.id) {
           <div class="bill-row">
@@ -101,7 +101,7 @@
             <div class="bill-info" (click)="openEditor(b)">
               <div class="bill-name">{{ b.name }}</div>
             </div>
-            <div class="bill-amt"><div class="amt">{{ rupeeLabel(b.amount) }}</div><span class="paid-chip">PAID</span></div>
+            <div class="bill-amt"><div class="amt">{{ rupeeLabel(b.amount) }}</div><span class="paid-chip">{{ 'bills.paidChip' | translate }}</span></div>
           </div>
         }
       </section>
@@ -110,11 +110,11 @@
     @if (bills().length === 0) {
       <div class="empty ion-padding">
         <span aria-hidden="true">🧾</span>
-        <p>No bills tracked yet.</p>
-        <ion-button (click)="openEditor()">Add your first bill</ion-button>
+        <p>{{ 'bills.noneTracked' | translate }}</p>
+        <ion-button (click)="openEditor()">{{ 'bills.addFirstBill' | translate }}</ion-button>
       </div>
     } @else {
-      <div class="view-all" style="margin: 4px 16px 20px;"><a (click)="viewAll()">📋 View All Bills</a></div>
+      <div class="view-all" style="margin: 4px 16px 20px;"><a (click)="viewAll()">{{ 'bills.viewAllBills' | translate }}</a></div>
     }
   }
 </ion-content>

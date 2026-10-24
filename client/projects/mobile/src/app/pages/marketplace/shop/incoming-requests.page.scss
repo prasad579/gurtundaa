@@ -24,8 +24,18 @@
 .card {
   background: var(--ion-color-light, #fff);
   border: 1px solid var(--ion-color-step-100, #ece7f6);
+  border-left: 3px solid var(--ion-color-step-150, #c5cae9);
   border-radius: 14px;
   padding: 12px 14px;
+
+  &.is-quoted {
+    border-left-color: #22c55e;
+  }
+
+  &.is-missed {
+    border-left-color: #c62828;
+    opacity: 0.75;
+  }
 
   .head {
     display: flex;
@@ -67,6 +77,11 @@
       &.quoted {
         background: rgb(34 197 94 / 0.15);
         color: #15803d;
+      }
+
+      &.missed {
+        background: rgb(198 40 40 / 0.1);
+        color: #c62828;
       }
     }
   }
@@ -113,9 +128,53 @@
     color: var(--ion-color-medium, #888);
   }
 
-  .items {
-    font-size: 13px;
-    margin: 0 0 4px;
+  .item-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 6px;
+  }
+
+  .item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    background: var(--ion-color-step-50, #f7f8fb);
+    border: 1px solid var(--ion-color-step-100, #ece7f6);
+    border-radius: 8px;
+    padding: 3px 8px 3px 3px;
+
+    img {
+      width: 24px;
+      height: 24px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .ic-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.35;
+    }
+
+    .te {
+      font-size: 10px;
+      color: var(--ion-color-medium, #777);
+    }
+
+    .brand {
+      font-size: 10px;
+      font-weight: 700;
+      color: #e65100;
+    }
+
+    b {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ion-color-medium, #777);
+    }
   }
 
   .notes {

@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { LaundryBatch, LaundryItemLine, MarkPickedUpRequest, rupeeLabel } from '@gurtundaa/shared';
 import { IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, ModalController } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 interface PriceRow {
   itemType: string;
@@ -10,7 +11,7 @@ interface PriceRow {
 
 @Component({
   selector: 'app-laundry-pickup',
-  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, TranslatePipe],
   templateUrl: './laundry-pickup.component.html',
   styleUrl: './laundry-pickup.component.scss',
 })

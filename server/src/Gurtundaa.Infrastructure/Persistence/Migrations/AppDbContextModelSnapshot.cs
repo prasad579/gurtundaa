@@ -290,6 +290,10 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("PaidAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<DateOnly?>("PickedUpOn")
                         .HasColumnType("date");
 
@@ -486,11 +490,18 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateOnly?>("NextVisitDate")
+                        .HasColumnType("date");
+
                     b.Property<int>("NightQty")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("PrescriptionId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Purpose")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");

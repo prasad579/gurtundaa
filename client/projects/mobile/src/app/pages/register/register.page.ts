@@ -2,50 +2,43 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, BRAND, UserType } from '@gurtundaa/shared';
-import {
-  IonButton,
-  IonCheckbox,
-  IonContent,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSegment,
-  IonSegmentButton,
-  IonText,
-} from '@ionic/angular';
+import { IonButton, IonCheckbox, IonContent, IonInput, IonItem, IonList, IonText } from '@ionic/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+
+interface UserTypeOption {
+  value: UserType;
+  icon: string;
+}
+
+// label/hint for each option live in i18n (`register.userTypes.<value>.label/.hint`), keyed
+// dynamically off `value` in the template, rather than duplicated here.
+const USER_TYPE_OPTIONS: UserTypeOption[] = [
+  { value: 'Customer', icon: '🛍️' },
+  { value: 'Shop', icon: '🏪' },
+  { value: 'MilkProvider', icon: '🥛' },
+  { value: 'LaundryProvider', icon: '🧺' },
+];
 
 @Component({
   selector: 'app-register',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    IonContent,
-    IonList,
-    IonItem,
-    IonInput,
-    IonButton,
-    IonCheckbox,
-    IonText,
-    IonSegment,
-    IonSegmentButton,
-    IonLabel,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, IonContent, IonList, IonItem, IonInput, IonButton, IonCheckbox, IonText, TranslatePipe],
   templateUrl: './register.page.html',
   styleUrl: './register.page.scss',
 })
 export class RegisterPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly brand = BRAND;
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly agreed = signal(false);
   protected readonly userType = signal<UserType>('Customer');
+  protected readonly userTypeOptions = USER_TYPE_OPTIONS;
 
-  protected setUserType(value: unknown): void {
-    this.userType.set(value as UserType);
+  protected setUserType(value: UserType): void {
+    this.userType.set(value);
   }
 
   protected readonly form = new FormGroup({
@@ -64,19 +57,19 @@ export class RegisterPage {
     const { displayName, email, phoneNumber, password, confirmPassword } = this.form.getRawValue();
 
     if (!displayName.trim() || !email.trim() || !phoneNumber.trim()) {
-      this.error.set('fill in all the fields above');
+      this.error.set(this.translate.instant('register.errorFillFields'));
       return;
     }
     if (password.length < 8) {
-      this.error.set('password needs 8+ characters');
+      this.error.set(this.translate.instant('register.errorShortPassword'));
       return;
     }
     if (password !== confirmPassword) {
-      this.error.set("passwords don't match");
+      this.error.set(this.translate.instant('register.errorPasswordMismatch'));
       return;
     }
     if (!this.agreed()) {
-      this.error.set('agree to the terms to continue');
+      this.error.set(this.translate.instant('register.errorAgreeTerms'));
       return;
     }
 

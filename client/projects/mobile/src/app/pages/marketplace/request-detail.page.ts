@@ -113,7 +113,7 @@ export class RequestDetailPage implements ViewWillEnter {
   }
 
   protected itemsSummary(detail: QuotationRequestDetail): string {
-    return detail.items.map((i) => `${i.name} (${i.qty > 1 ? i.qty + ' × ' : ''}${i.pack})`).join(', ');
+    return detail.items.map((i) => `${i.name}${i.brand ? ' [' + i.brand + ']' : ''} (${i.qty > 1 ? i.qty + ' × ' : ''}${i.pack})`).join(', ');
   }
 
   protected async openShareSheet(): Promise<void> {

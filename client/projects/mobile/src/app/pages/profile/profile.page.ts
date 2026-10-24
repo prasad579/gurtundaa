@@ -2,12 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HouseholdApi } from '@gurtundaa/shared';
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, ToastController, ViewWillEnter } from '@ionic/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { ACCOUNT_TYPES, AccountType, FEATURE_OPTIONS, FeatureKey } from '../../services/onboarding-state';
 
 @Component({
   selector: 'app-profile',
-  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, TranslatePipe],
   templateUrl: './profile.page.html',
   styleUrl: './profile.page.scss',
 })
@@ -15,6 +16,7 @@ export class ProfilePage implements ViewWillEnter {
   private readonly household = inject(HouseholdApi);
   private readonly router = inject(Router);
   private readonly toasts = inject(ToastController);
+  private readonly translate = inject(TranslateService);
 
   protected readonly options = ACCOUNT_TYPES;
   protected readonly featureOptions = FEATURE_OPTIONS;
@@ -78,9 +80,9 @@ export class ProfilePage implements ViewWillEnter {
         }),
       );
       this.hasProfile.set(true);
-      await this.toast('saved ✍️');
+      await this.toast(this.translate.instant('profile.toastSaved'));
     } catch {
-      await this.toast("couldn't save, try again", 'danger');
+      await this.toast(this.translate.instant('profile.toastSaveError'), 'danger');
     } finally {
       this.busy.set(false);
     }
@@ -99,7 +101,7 @@ export class ProfilePage implements ViewWillEnter {
         this.enabledFeatures.set(new Set(profile.enabledFeatures as FeatureKey[]));
       }
     } catch {
-      await this.toast("couldn't load your household details", 'danger');
+      await this.toast(this.translate.instant('profile.toastLoadError'), 'danger');
     } finally {
       this.loading.set(false);
     }

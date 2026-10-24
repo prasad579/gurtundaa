@@ -513,3 +513,8 @@ export const MARKETPLACE_CATALOG: MarketplaceCategory[] = [
     ['household:hou050', 'Reusable Food Container', 'ఫుడ్ కంటైనర్', '1 pc', '/marketplace/household/HOU050_reusable_food_container.png'],
   ]),
 ];
+
+/** Looks up an item's catalog metadata (Telugu name, image, pack) by its itemKey — requests/quotes only carry the key. */
+export const MARKETPLACE_ITEM_BY_KEY = new Map<string, MarketplaceCatalogItem>(
+  MARKETPLACE_CATALOG.flatMap((c) => c.items.map((i) => [i.key, i] as const)),
+);

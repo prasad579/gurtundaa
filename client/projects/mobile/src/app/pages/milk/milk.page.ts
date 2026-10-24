@@ -4,7 +4,6 @@ import {
   BillData,
   BillLineItem,
   MILK_SLOT_LABELS,
-  MILK_STATUS_LABELS,
   MilkActivityItem,
   MilkApi,
   MilkCalendarDay,
@@ -70,9 +69,11 @@ import {
   shareSocialOutline,
   trash,
 } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { shareText } from '../../services/share';
 import { MilkCalendarComponent } from './milk-calendar.component';
+import { MilkDayListSheetComponent } from './milk-day-list-sheet.component';
 import { MilkExtraEditorComponent } from './milk-extra-editor.component';
 import { MilkPauseEditorComponent } from './milk-pause-editor.component';
 import { MilkQuantityChangeEditorComponent } from './milk-quantity-change-editor.component';
@@ -97,6 +98,7 @@ type UpcomingCard =
     IonIcon,
     IonSkeletonText,
     MilkCalendarComponent,
+    TranslatePipe,
   ],
   templateUrl: './milk.page.html',
   styleUrl: './milk.page.scss',
@@ -109,6 +111,7 @@ export class MilkPage implements ViewWillEnter {
   private readonly alerts = inject(AlertController);
   private readonly actionSheets = inject(ActionSheetController);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly slotLabels = MILK_SLOT_LABELS;
   protected readonly litresLabel = litresLabel;
@@ -164,9 +167,9 @@ export class MilkPage implements ViewWillEnter {
   protected slotHint(slot: MilkSlotState): string | null {
     switch (slot.status) {
       case 'Delivered':
-        return "Great! You're on track for this month. 🎉";
+        return this.translate.instant('milk.onTrackHint');
       case 'Missed':
-        return 'No worries — you can request extra milk later to make up for it.';
+        return this.translate.instant('milk.missedHint');
       default:
         return null;
     }
@@ -237,9 +240,9 @@ export class MilkPage implements ViewWillEnter {
   }
 
   protected statusLabelFor(status: MilkCalendarDay['status']): string {
-    if (status === 'Delivered') return this.isSelfCollected() ? 'Picked Up ✅' : 'Delivered ✅';
-    if (status === 'Missed') return this.isSelfCollected() ? 'Not Picked Up ❌' : 'Missed ❌';
-    return MILK_STATUS_LABELS[status];
+    if (status === 'Delivered') return this.translate.instant(this.isSelfCollected() ? 'milk.pickedUpCheck' : 'milk.deliveredCheck');
+    if (status === 'Missed') return this.translate.instant(this.isSelfCollected() ? 'milk.notPickedUpCross' : 'milk.missedCross');
+    return this.translate.instant('milk.pausedCheck');
   }
 
   private isBeforeStart(date: string): boolean {
@@ -247,11 +250,51 @@ export class MilkPage implements ViewWillEnter {
     return !!startDate && date < startDate;
   }
 
+  // Mirrors app-milk-calendar's own cellClass() so the "which days" list matches exactly what's
+  // drawn on the calendar strip — a day isn't "delivered" just because its status says so if the
+  // date hasn't happened yet (it's "planned") or tracking hadn't started yet (it's "not-tracked").
+  private dayDisplayStatus(day: MilkCalendarDay): 'not-tracked' | 'planned' | 'delivered' | 'missed' | 'paused' {
+    if (this.isBeforeStart(day.date)) {
+      return 'not-tracked';
+    }
+    if (day.status === 'Delivered' && isFutureDate(day.date)) {
+      return 'planned';
+    }
+    return day.status.toLowerCase() as 'delivered' | 'missed' | 'paused';
+  }
+
+  protected async showDaysForStatus(status: 'planned' | 'delivered' | 'missed' | 'paused'): Promise<void> {
+    // Delivered/Paused/Missed are "already happened" tallies — matches MilkDeliveryService's own
+    // `date > today` cutoff server-side, since that count also drives billing. A future day inside
+    // e.g. a pause range still shows as paused on the calendar itself, but hasn't "happened" yet,
+    // so it's excluded here too — otherwise this list's count would never match the stat card's.
+    const today = toDateOnlyString(new Date());
+    const days = (this.month()?.days ?? []).filter(
+      (d) => this.dayDisplayStatus(d) === status && (status === 'planned' || d.date <= today),
+    );
+    if (days.length === 0) return;
+
+    const statusKey =
+      status === 'delivered' ? (this.isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') : `milk.${status}`;
+    const modal = await this.modals.create({
+      component: MilkDayListSheetComponent,
+      componentProps: { title: this.translate.instant('milk.daysTitle', { status: this.translate.instant(statusKey) }), days },
+      breakpoints: [0, 0.6, 0.95],
+      initialBreakpoint: 0.6,
+    });
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss<MilkCalendarDay>();
+    if (role === 'select' && data) {
+      await this.showDayDetail(data);
+    }
+  }
+
   protected async showDayDetail(day: MilkCalendarDay): Promise<void> {
     if (this.isBeforeStart(day.date)) {
       const alert = await this.alerts.create({
         header: shortDateLabel(day.date),
-        message: "Tracking hadn't started yet on this day.",
+        message: this.translate.instant('milk.trackingNotStarted'),
         buttons: ['OK'],
       });
       await alert.present();
@@ -259,7 +302,7 @@ export class MilkPage implements ViewWillEnter {
     }
 
     const isPlanned = day.status === 'Delivered' && isFutureDate(day.date);
-    const statusLabel = isPlanned ? 'Planned 📅' : this.statusLabelFor(day.status);
+    const statusLabel = isPlanned ? this.translate.instant('milk.plannedChip') : this.statusLabelFor(day.status);
 
     const lines: string[] = [];
     for (const [slotName, slot] of [
@@ -269,16 +312,27 @@ export class MilkPage implements ViewWillEnter {
       if (!slot.enabled) continue;
       const slotIsPlanned = slot.status === 'Delivered' && isFutureDate(day.date);
       if (slot.status === 'Paused') {
-        lines.push(`${this.slotLabels[slotName]}: Paused`);
+        lines.push(this.translate.instant('milk.slotPaused', { slot: this.slotLabels[slotName] }));
       } else if (slot.status === 'Missed') {
-        lines.push(`${this.slotLabels[slotName]}: ${this.isSelfCollected() ? 'Not picked up' : 'Missed'}`);
+        lines.push(
+          this.translate.instant(this.isSelfCollected() ? 'milk.slotMissed' : 'milk.slotMissedDelivery', {
+            slot: this.slotLabels[slotName],
+          }),
+        );
       } else {
-        const verb = slotIsPlanned ? 'Expected' : this.isSelfCollected() ? 'Picked up' : 'Delivered';
-        lines.push(`${this.slotLabels[slotName]}: ${verb} ${litresLabel(slot.quantityLtr)}`);
+        const verb = this.translate.instant(
+          slotIsPlanned ? 'milk.expectedVerb' : this.isSelfCollected() ? 'milk.pickedUpLower' : 'milk.deliveredLower',
+        );
+        lines.push(
+          this.translate.instant('milk.slotStatusQty', { slot: this.slotLabels[slotName], verb, qty: litresLabel(slot.quantityLtr) }),
+        );
       }
     }
     for (const extra of this.allExtras().filter((e) => e.date === day.date)) {
-      lines.push(`Extra (${this.slotLabels[extra.slot]}): +${litresLabel(extra.quantityLtr)}${extra.reason ? ` (${extra.reason})` : ''}`);
+      lines.push(
+        this.translate.instant('milk.extraMilkLabel', { slot: this.slotLabels[extra.slot] }) +
+          `: +${litresLabel(extra.quantityLtr)}${extra.reason ? ` (${extra.reason})` : ''}`,
+      );
     }
 
     // Past (and today's) days get quick toggle buttons per enabled, non-paused slot so you can
@@ -298,9 +352,15 @@ export class MilkPage implements ViewWillEnter {
       ? []
       : slotEntries.map(([slotName, slot]) => {
           const self = this.isSelfCollected();
-          const text = slot.status === 'Missed'
-            ? `Mark ${slotName} ${self ? 'Picked Up' : 'Delivered'}`
-            : `Mark ${slotName} ${self ? 'Not Picked Up' : 'Missed'}`;
+          const key =
+            slot.status === 'Missed'
+              ? self
+                ? 'milk.markSlotPickedUp'
+                : 'milk.markSlotDelivered'
+              : self
+                ? 'milk.markSlotNotPickedUp'
+                : 'milk.markSlotMissed';
+          const text = this.translate.instant(key, { slot: slotName });
           return { text, handler: () => void this.toggleDaySlot(day.date, slotName, slot.status) };
         });
 
@@ -310,7 +370,7 @@ export class MilkPage implements ViewWillEnter {
       ? slotEntries
           .filter(([, slot]) => slot.status === 'Missed')
           .map(([slotName]) => ({
-            text: `Notify (${slotName})`,
+            text: this.translate.instant('milk.notifySlot', { slot: slotName }),
             icon: 'logo-whatsapp',
             handler: () => this.notifyMissed(slotName, day.date),
           }))
@@ -319,7 +379,7 @@ export class MilkPage implements ViewWillEnter {
     // Lets you log extra consumed on this exact day — past or future — without re-picking the
     // date in a separate sheet.
     const addExtraButton = {
-      text: 'Add Extra',
+      text: this.translate.instant('milk.addExtra'),
       icon: 'add',
       handler: () => void this.openExtraEditor(day.date),
     };
@@ -332,7 +392,7 @@ export class MilkPage implements ViewWillEnter {
       subHeader: statusLabel,
       message: lines.join('\n'),
       cssClass: 'day-detail-alert',
-      buttons: [...toggleButtons, addExtraButton, ...notifyButtons, 'Close'],
+      buttons: [...toggleButtons, addExtraButton, ...notifyButtons, this.translate.instant('milk.close')],
     });
     await alert.present();
   }
@@ -341,9 +401,11 @@ export class MilkPage implements ViewWillEnter {
     const status = currentStatus === 'Missed' ? 'Delivered' : 'Missed';
     await firstValueFrom(this.milk.setDeliveryOverride(date, { slot, status, quantityLtr: null }));
     await this.toast(
-      status === 'Missed'
-        ? this.isSelfCollected() ? 'marked as not picked up' : 'marked as not delivered'
-        : this.isSelfCollected() ? 'marked as picked up ✅' : 'marked as delivered ✅',
+      this.translate.instant(
+        status === 'Missed'
+          ? this.isSelfCollected() ? 'milk.notPickedUpToast' : 'milk.notDeliveredToast'
+          : this.isSelfCollected() ? 'milk.pickedUpToast' : 'milk.deliveredToast',
+      ),
     );
     await this.load();
   }
@@ -361,7 +423,7 @@ export class MilkPage implements ViewWillEnter {
     const isPaid = !m.summary.isPaid;
     const summary = await firstValueFrom(this.milk.setSettlementPaid(d.getFullYear(), d.getMonth() + 1, { isPaid }));
     this.month.set({ ...m, summary });
-    await this.toast(isPaid ? 'marked as paid ✅' : 'marked as pending');
+    await this.toast(this.translate.instant(isPaid ? 'milk.markedPaidToast' : 'milk.markedPendingToast'));
   }
 
   protected async payViaUpi(): Promise<void> {
@@ -370,12 +432,12 @@ export class MilkPage implements ViewWillEnter {
     if (!info?.upiId || balance <= 0) return;
 
     const amountAlert = await this.alerts.create({
-      header: 'Pay via UPI',
-      message: `Opens your UPI app to pay ${info.providerDisplayName ?? 'your milkman'} directly — Gurtundaa never touches the money.`,
+      header: this.translate.instant('milk.payUpiTitle'),
+      message: this.translate.instant('milk.payUpiMessage', { name: info.providerDisplayName ?? this.translate.instant('milk.defaultMilkman') }),
       inputs: [{ name: 'amount', type: 'number', value: balance, min: 0.01 }],
       buttons: [
-        { text: 'cancel', role: 'cancel' },
-        { text: 'continue', role: 'confirm' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('milk.continueBtn'), role: 'confirm' },
       ],
     });
     await amountAlert.present();
@@ -386,11 +448,11 @@ export class MilkPage implements ViewWillEnter {
     payViaUpi(info.upiId, info.providerDisplayName ?? 'Milk Provider', amount, 'Gurtundaa milk payment');
 
     const confirmAlert = await this.alerts.create({
-      header: 'Did you complete the payment?',
-      message: "Only confirm if the UPI app showed your payment went through. This stays pending until your milkman confirms they received it.",
+      header: this.translate.instant('milk.confirmPaymentTitle'),
+      message: this.translate.instant('milk.confirmPaymentMessage'),
       buttons: [
-        { text: "I didn't pay", role: 'cancel' },
-        { text: "Yes, I've paid", role: 'confirm' },
+        { text: this.translate.instant('milk.didntPay'), role: 'cancel' },
+        { text: this.translate.instant('milk.yesPaid'), role: 'confirm' },
       ],
     });
     await confirmAlert.present();
@@ -398,7 +460,7 @@ export class MilkPage implements ViewWillEnter {
     if (confirmRole !== 'confirm') return;
 
     await firstValueFrom(this.milk.initiateUpiPayment({ amount, note: 'Paid via UPI' }));
-    await this.toast('payment recorded — awaiting confirmation ⏳');
+    await this.toast(this.translate.instant('milk.paymentRecordedAwaiting'));
     await this.loadMonth();
   }
 
@@ -408,18 +470,18 @@ export class MilkPage implements ViewWillEnter {
     const balance = this.balanceDue();
 
     const alert = await this.alerts.create({
-      header: 'Record a Payment',
-      message: "Log what you paid — today, this week, or any custom amount — without waiting for month-end.",
+      header: this.translate.instant('milk.recordPaymentTitle'),
+      message: this.translate.instant('milk.recordPaymentMessage'),
       inputs: [
-        ...(todayAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: `Today (${rupeeLabel(todayAmt)})`, value: String(todayAmt) }] : []),
-        ...(weekAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: `This week so far (${rupeeLabel(weekAmt)})`, value: String(weekAmt) }] : []),
-        ...(balance > 0 ? [{ name: 'preset', type: 'radio' as const, label: `Full balance (${rupeeLabel(balance)})`, value: String(balance) }] : []),
-        { name: 'amount', type: 'number', placeholder: 'or enter a custom amount (₹)', min: 0.01 },
-        { name: 'note', type: 'text', placeholder: 'note (optional)' },
+        ...(todayAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.todayPreset', { amount: rupeeLabel(todayAmt) }), value: String(todayAmt) }] : []),
+        ...(weekAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.weekPreset', { amount: rupeeLabel(weekAmt) }), value: String(weekAmt) }] : []),
+        ...(balance > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.fullBalancePreset', { amount: rupeeLabel(balance) }), value: String(balance) }] : []),
+        { name: 'amount', type: 'number', placeholder: this.translate.instant('milk.customAmountPlaceholder'), min: 0.01 },
+        { name: 'note', type: 'text', placeholder: this.translate.instant('milk.notePlaceholder') },
       ],
       buttons: [
-        { text: 'cancel', role: 'cancel' },
-        { text: 'save', role: 'confirm' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('common.save'), role: 'confirm' },
       ],
     });
     await alert.present();
@@ -430,13 +492,13 @@ export class MilkPage implements ViewWillEnter {
     if (!amount || amount <= 0) return;
 
     await firstValueFrom(this.milk.createPayment({ date: toDateOnlyString(new Date()), amount, note: data.values.note || null }));
-    await this.toast('payment recorded 💰');
+    await this.toast(this.translate.instant('milk.paymentRecorded'));
     await this.loadMonth();
   }
 
   protected async deletePayment(payment: MilkPayment): Promise<void> {
     await firstValueFrom(this.milk.deletePayment(payment.id));
-    await this.toast('payment removed');
+    await this.toast(this.translate.instant('milk.paymentRemoved'));
     await this.loadMonth();
   }
 
@@ -531,7 +593,7 @@ export class MilkPage implements ViewWillEnter {
       ? (await firstValueFrom(existingContact ? this.contacts.update(existingContact.id, data.contact) : this.contacts.create(data.contact))).id
       : null;
     await firstValueFrom(this.milk.saveSubscription({ ...data.subscription, contactId }));
-    await this.toast('milk subscription saved 🥛');
+    await this.toast(this.translate.instant('milk.subscriptionSaved'));
     await this.load();
   }
 
@@ -542,10 +604,10 @@ export class MilkPage implements ViewWillEnter {
     await this.load();
 
     const toast = await this.toasts.create({
-      message: this.isSelfCollected() ? 'marked as not picked up' : 'marked as not delivered',
+      message: this.translate.instant(this.isSelfCollected() ? 'milk.notPickedUpToast' : 'milk.notDeliveredToast'),
       duration: 4000,
       position: 'bottom',
-      buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyMissed(slot) }] : [],
+      buttons: this.contact() ? [{ icon: 'logo-whatsapp', text: this.translate.instant('milk.notify'), handler: () => this.notifyMissed(slot) }] : [],
     });
     await toast.present();
   }
@@ -554,7 +616,7 @@ export class MilkPage implements ViewWillEnter {
     const t = this.today();
     if (!t) return;
     await firstValueFrom(this.milk.setDeliveryOverride(t.date, { slot, status: 'Delivered', quantityLtr: null }));
-    await this.toast('marked as delivered ✅');
+    await this.toast(this.translate.instant('milk.deliveredToast'));
     await this.load();
   }
 
@@ -563,11 +625,11 @@ export class MilkPage implements ViewWillEnter {
     if (!t) return;
 
     const alert = await this.alerts.create({
-      header: `${slot.toLowerCase()}'s quantity`,
+      header: this.translate.instant('milk.quantityLabel', { slot: this.translate.instant(slot === 'Morning' ? 'milk.morningLower' : 'milk.eveningLower') }),
       inputs: [{ name: 'qty', type: 'number', value: current.quantityLtr, min: 0.1 }],
       buttons: [
-        { text: 'cancel', role: 'cancel' },
-        { text: 'save', role: 'confirm' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('common.save'), role: 'confirm' },
       ],
     });
     await alert.present();
@@ -576,7 +638,7 @@ export class MilkPage implements ViewWillEnter {
     if (role !== 'confirm' || !qty || qty <= 0) return;
 
     await firstValueFrom(this.milk.setDeliveryOverride(t.date, { slot, status: 'Delivered', quantityLtr: qty }));
-    await this.toast('quantity updated');
+    await this.toast(this.translate.instant('milk.quantityUpdated'));
     await this.load();
   }
 
@@ -593,14 +655,14 @@ export class MilkPage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(pause ? this.milk.updatePause(pause.id, data) : this.milk.createPause(data));
-    await this.toast(pause ? 'pause updated' : 'delivery paused 🧳');
+    await this.toast(this.translate.instant(pause ? 'milk.pauseUpdated' : 'milk.deliveryPausedToast'));
     await this.load();
   }
 
   protected async cancelPause(pause: MilkPause): Promise<void> {
-    if (!(await this.confirmDelete('Cancel this pause?'))) return;
+    if (!(await this.confirmDelete(this.translate.instant('milk.cancelPauseConfirm')))) return;
     await firstValueFrom(this.milk.deletePause(pause.id));
-    await this.toast('pause cancelled');
+    await this.toast(this.translate.instant('milk.pauseCancelled'));
     await this.load();
   }
 
@@ -669,23 +731,26 @@ export class MilkPage implements ViewWillEnter {
     const created = await Promise.all(data.map((request) => firstValueFrom(this.milk.createExtraRequest(request))));
     await this.load();
 
-    const message = created.length === 1 ? 'extra milk requested 🥛' : `extra milk requested for ${created.length} days 🥛`;
+    const message =
+      created.length === 1
+        ? this.translate.instant('milk.extraRequestedOne')
+        : this.translate.instant('milk.extraRequestedMany', { count: created.length });
     const toast = await this.toasts.create({
       message,
       duration: 4000,
       position: 'bottom',
       buttons:
         created.length === 1 && this.contact()
-          ? [{ icon: 'logo-whatsapp', text: 'Notify', handler: () => this.notifyExtra(created[0]) }]
+          ? [{ icon: 'logo-whatsapp', text: this.translate.instant('milk.notify'), handler: () => this.notifyExtra(created[0]) }]
           : [],
     });
     await toast.present();
   }
 
   protected async cancelExtra(extra: MilkExtraRequestItem): Promise<void> {
-    if (!(await this.confirmDelete('Remove this extra milk request?'))) return;
+    if (!(await this.confirmDelete(this.translate.instant('milk.removeExtraConfirm')))) return;
     await firstValueFrom(this.milk.deleteExtraRequest(extra.id));
-    await this.toast('extra request cancelled');
+    await this.toast(this.translate.instant('milk.extraCancelled'));
     await this.load();
   }
 
@@ -702,29 +767,29 @@ export class MilkPage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(change ? this.milk.updateQuantityChange(change.id, data) : this.milk.createQuantityChange(data));
-    await this.toast(change ? 'quantity change updated' : 'quantity change scheduled 🥛');
+    await this.toast(this.translate.instant(change ? 'milk.quantityChangeUpdated' : 'milk.quantityChangeScheduled'));
     await this.load();
   }
 
   protected async cancelQuantityChange(change: MilkQuantityChange): Promise<void> {
-    if (!(await this.confirmDelete('Cancel this quantity change?'))) return;
+    if (!(await this.confirmDelete(this.translate.instant('milk.cancelQuantityChangeConfirm')))) return;
     await firstValueFrom(this.milk.deleteQuantityChange(change.id));
-    await this.toast('quantity change cancelled');
+    await this.toast(this.translate.instant('milk.quantityChangeCancelled'));
     await this.load();
   }
 
   protected async openAddSheet(): Promise<void> {
     const sheet = await this.actionSheets.create({
-      header: 'Add to schedule',
+      header: this.translate.instant('milk.addToSchedule'),
       buttons: [
-        { text: 'Request Extra Milk', icon: 'add-outline', handler: () => void this.openExtraEditor() },
-        { text: 'Change Quantity', icon: 'create-outline', handler: () => void this.openQuantityChangeEditor() },
+        { text: this.translate.instant('milk.requestExtraMilk'), icon: 'add-outline', handler: () => void this.openExtraEditor() },
+        { text: this.translate.instant('milk.changeQuantity'), icon: 'create-outline', handler: () => void this.openQuantityChangeEditor() },
         {
-          text: this.isSelfCollected() ? 'Pause Pickup' : 'Pause Delivery',
+          text: this.translate.instant(this.isSelfCollected() ? 'milk.pausePickup' : 'milk.pauseDelivery'),
           icon: 'pause-outline',
           handler: () => void this.router.navigateByUrl('/milk-pause'),
         },
-        { text: 'cancel', role: 'cancel' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
       ],
     });
     await sheet.present();
@@ -776,7 +841,7 @@ export class MilkPage implements ViewWillEnter {
         await this.loadMonth();
       }
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('milk.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }
@@ -784,11 +849,11 @@ export class MilkPage implements ViewWillEnter {
 
   private async confirmDelete(message: string): Promise<boolean> {
     const alert = await this.alerts.create({
-      header: 'Delete?',
+      header: this.translate.instant('milk.deleteConfirmTitle'),
       message,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Delete', role: 'destructive' },
+        { text: this.translate.instant('milk.cancelBtn'), role: 'cancel' },
+        { text: this.translate.instant('milk.deleteBtn'), role: 'destructive' },
       ],
     });
     await alert.present();

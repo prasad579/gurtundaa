@@ -37,6 +37,23 @@
       font-size: 11px;
       color: var(--ion-color-medium);
     }
+
+    .brand-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 3px;
+      padding: 1px 0;
+      background: none;
+      border: none;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--ion-color-primary, #7c3aed);
+
+      ion-icon {
+        font-size: 12px;
+      }
+    }
   }
 }
 

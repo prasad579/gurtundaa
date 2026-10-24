@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Milk — Tap-a-stat-card Popup — Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0f0a1a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  h1 { color: #e9e4f5; font-size: 20px; width: 100%; margin: 0 0 4px; }
+  .sub { color: #a89dc4; font-size: 13px; width: 100%; margin: 0 0 20px; max-width: 760px; }
+  .label-title { color: #00c48c; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .label-sub { color: #a89dc4; font-size: 11.5px; margin: -6px 0 10px; max-width: 360px; }
+
+  .phone {
+    width: 360px;
+    background: #f7f5fb;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 6px solid #1a1428;
+    position: relative;
+  }
+  .statusbar { display: flex; justify-content: space-between; padding: 8px 16px 2px; font-size: 11px; font-weight: 600; color: #333; }
+  .topbar { display: flex; align-items: center; gap: 6px; padding: 6px 16px 10px; }
+  .topbar h2 { font-size: 17px; margin: 0; color: #1f1330; }
+  .scroll { padding: 0 14px 16px; height: 640px; overflow-y: hidden; position: relative; }
+
+  .card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #ece7f7; }
+  .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .month-nav .nav-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-size: 13px; background: #fff; }
+  .month-nav h3 { margin: 0; font-size: 14px; color: #1f1330; }
+  .hint { font-size: 10.5px; color: #8a7fa3; margin: 0 0 10px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: #8a7fa3; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.delivered { background: #2dd36f; }
+  .dot.planned { background: #7c3aed; }
+  .dot.missed { background: #eb445a; }
+  .dot.paused { background: #ffc409; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .stat-card { background: #f7f5fb; border-radius: 12px; padding: 10px 12px; cursor: pointer; border: 1.5px solid transparent; transition: border-color .15s; }
+  .stat-card:hover { border-color: #c9b8f5; }
+  .stat-lbl { font-size: 10.5px; color: #8a7fa3; display: flex; align-items: center; justify-content: space-between; }
+  .stat-lbl .tap-hint { font-size: 12px; color: #b9a8dc; }
+  .stat-val { font-size: 18px; font-weight: 800; color: #1f1330; margin-top: 2px; }
+  .stat-val.paused { color: #b36b00; }
+  .stat-val.missed { color: #c62828; }
+  .stat-val.delivered { color: #2e7d32; }
+
+  /* --- popup overlay shared --- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 14, 34, 0.45);
+    display: flex;
+    align-items: flex-end;
+    z-index: 5;
+  }
+  .sheet {
+    width: 100%;
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+    padding: 14px 16px 18px;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.2);
+  }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: #e0dcec; margin: 0 auto 12px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .sheet-title { font-size: 14px; font-weight: 800; color: #1f1330; display: flex; align-items: center; gap: 6px; }
+  .sheet-title .chip { background: #fff3d6; color: #b36b00; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+  .sheet-close { width: 26px; height: 26px; border-radius: 50%; background: #f1eef9; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+
+  .day-row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid #f1eef9; }
+  .day-row:last-child { border-bottom: none; }
+  .day-badge { width: 36px; height: 36px; border-radius: 10px; background: #fff8e1; color: #b36b00; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; flex-shrink: 0; line-height: 1.1; }
+  .day-badge .num { font-size: 13px; }
+  .day-info { flex: 1; min-width: 0; }
+  .day-date { font-size: 12.5px; font-weight: 700; color: #1f1330; }
+  .day-reason { font-size: 10.5px; color: #8a7fa3; margin-top: 1px; }
+  .chevron { color: #c9b8f5; font-size: 16px; flex-shrink: 0; }
+
+  .opt-note { background: #ede7fd; border: 1px dashed #c9b8f5; border-radius: 10px; padding: 8px 10px; font-size: 10px; color: #5a4e75; margin-top: 10px; }
+
+  /* Option B: day detail sheet after tapping a row */
+  .detail-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 12px; color: #1f1330; border-bottom: 1px solid #f6f3fb; }
+  .detail-row span:first-child { color: #8a7fa3; }
+  .back-link { font-size: 11px; color: #7c3aed; font-weight: 700; margin-bottom: 8px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<h1>Milk — tap a stat card to see which days — Prototype</h1>
+<p class="sub">Right now "Paused 3 / Delivered 1 / Missed 0" are just counts — finding which days requires scrolling the whole month strip. Both options below trigger from tapping the <b>"Paused 3"</b> stat card. Pick A or B (or tweak either).</p>
+
+<!-- OPTION A -->
+<div>
+  <div class="label-title">Option A — simple list, just shows the dates</div>
+  <div class="label-sub">Bottom sheet lists the matching days and (if set) the pause reason. Nothing else happens on tap — closes via the ✕ or swiping down. Fastest to build.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="month-nav">
+          <div class="nav-btn">‹</div>
+          <h3>October 2026</h3>
+          <div class="nav-btn">›</div>
+        </div>
+        <div class="hint">Tap a day to see quantity &amp; extras</div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot delivered"></i>delivered</span>
+          <span class="legend-item"><i class="dot planned"></i>planned</span>
+          <span class="legend-item"><i class="dot missed"></i>missed</span>
+          <span class="legend-item"><i class="dot paused"></i>paused</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-lbl">Planned</div><div class="stat-val">13</div></div>
+          <div class="stat-card"><div class="stat-lbl">Delivered</div><div class="stat-val delivered">1</div></div>
+          <div class="stat-card" style="border-color:#7c3aed;"><div class="stat-lbl">Paused <span class="tap-hint">↑ tapped</span></div><div class="stat-val paused">3</div></div>
+          <div class="stat-card"><div class="stat-lbl">Missed</div><div class="stat-val missed">0</div></div>
+        </div>
+      </div>
+
+      <div class="overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <div class="sheet-title">⏸️ Paused Days <span class="chip">3</span></div>
+            <div class="sheet-close">✕</div>
+          </div>
+
+          <div class="day-row">
+            <div class="day-badge"><span class="num">20</span>Tue</div>
+            <div class="day-info"><div class="day-date">Tue, Oct 20</div><div class="day-reason">Out of Station</div></div>
+          </div>
+          <div class="day-row">
+            <div class="day-badge"><span class="num">21</span>Wed</div>
+            <div class="day-info"><div class="day-date">Wed, Oct 21</div><div class="day-reason">Out of Station</div></div>
+          </div>
+          <div class="day-row">
+            <div class="day-badge"><span class="num">22</span>Thu</div>
+            <div class="day-info"><div class="day-date">Thu, Oct 22</div><div class="day-reason">Out of Station</div></div>
+          </div>
+
+          <div class="opt-note">Read-only list. To act on a day (edit pause, mark delivered, etc.) you'd still go back to the calendar strip.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION B -->
+<div>
+  <div class="label-title">Option B — tappable list, jumps to day detail</div>
+  <div class="label-sub">Same list, but each row has a chevron — tapping one closes this sheet and opens that day's existing "quantity &amp; extras" detail sheet (same one you get by tapping a day on the calendar strip directly). Slightly more work, more useful.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="month-nav">
+          <div class="nav-btn">‹</div>
+          <h3>October 2026</h3>
+          <div class="nav-btn">›</div>
+        </div>
+        <div class="hint">Tap a day to see quantity &amp; extras</div>
+        <div class="legend">
+          <span class="legend-item"><i class="dot delivered"></i>delivered</span>
+          <span class="legend-item"><i class="dot planned"></i>planned</span>
+          <span class="legend-item"><i class="dot missed"></i>missed</span>
+          <span class="legend-item"><i class="dot paused"></i>paused</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-lbl">Planned</div><div class="stat-val">13</div></div>
+          <div class="stat-card"><div class="stat-lbl">Delivered</div><div class="stat-val delivered">1</div></div>
+          <div class="stat-card" style="border-color:#7c3aed;"><div class="stat-lbl">Paused <span class="tap-hint">↑ tapped</span></div><div class="stat-val paused">3</div></div>
+          <div class="stat-card"><div class="stat-lbl">Missed</div><div class="stat-val missed">0</div></div>
+        </div>
+      </div>
+
+      <div class="overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <div class="sheet-title">⏸️ Paused Days <span class="chip">3</span></div>
+            <div class="sheet-close">✕</div>
+          </div>
+
+          <div class="day-row">
+            <div class="day-badge"><span class="num">20</span>Tue</div>
+            <div class="day-info"><div class="day-date">Tue, Oct 20</div><div class="day-reason">Out of Station</div></div>
+            <div class="chevron">›</div>
+          </div>
+          <div class="day-row" style="background:#f7f5fb; border-radius: 10px; margin: 0 -8px; padding: 10px 8px;">
+            <div class="day-badge" style="background:#ede7fd; color:#7c3aed;"><span class="num">21</span>Wed</div>
+            <div class="day-info"><div class="day-date">Wed, Oct 21</div><div class="day-reason">Out of Station</div></div>
+            <div class="chevron" style="color:#7c3aed;">›</div>
+          </div>
+          <div class="day-row">
+            <div class="day-badge"><span class="num">22</span>Thu</div>
+            <div class="day-info"><div class="day-date">Thu, Oct 22</div><div class="day-reason">Out of Station</div></div>
+            <div class="chevron">›</div>
+          </div>
+
+          <div class="opt-note">↳ tapping "Wed, Oct 21" (highlighted) below closes this list and opens the day-detail sheet for that date — shown on the right ▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION B: day detail result -->
+<div>
+  <div class="label-title">↳ after tapping "Wed, Oct 21" in Option B</div>
+  <div class="label-sub">The existing per-day detail sheet (already in the app today when you tap a calendar day) opens directly — no extra screen built, just triggered from a different place.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="month-nav">
+          <div class="nav-btn">‹</div>
+          <h3>October 2026</h3>
+          <div class="nav-btn">›</div>
+        </div>
+        <div class="hint">Tap a day to see quantity &amp; extras</div>
+      </div>
+
+      <div class="overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <a class="back-link">‹ back to paused days</a>
+          <div class="sheet-head">
+            <div class="sheet-title">Wed, Oct 21</div>
+            <div class="sheet-close">✕</div>
+          </div>
+          <div class="detail-row"><span>Status</span><span style="color:#b36b00; font-weight:700;">Paused</span></div>
+          <div class="detail-row"><span>Reason</span><span>Out of Station</span></div>
+          <div class="detail-row"><span>Morning Qty</span><span>2.0 Ltr (skipped)</span></div>
+          <div class="detail-row"><span>Evening Qty</span><span>Off</span></div>
+          <div class="opt-note">Same detail sheet used elsewhere — this prototype just shows how Option B would feed into it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { OnboardingState } from '../../../services/onboarding-state';
 import { OnboardingShell } from '../onboarding-shell';
 
 @Component({
   selector: 'app-onboarding-location',
-  imports: [OnboardingShell],
+  imports: [OnboardingShell, TranslatePipe],
   templateUrl: './location.page.html',
   styleUrl: './location.page.scss',
 })

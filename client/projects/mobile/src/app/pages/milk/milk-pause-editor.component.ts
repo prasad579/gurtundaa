@@ -17,6 +17,7 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-milk-pause-editor',
@@ -35,14 +36,15 @@ import {
     IonModal,
     IonDatetime,
     IonTextarea,
+    TranslatePipe,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>{{ pause ? 'edit pause' : 'pause delivery 🧳' }}</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ (pause ? 'milkPauseEditor.editTitle' : 'milkPauseEditor.newTitle') | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -50,7 +52,7 @@ import {
       <form [formGroup]="form">
         <ion-list lines="none">
           <ion-item>
-            <ion-label>from</ion-label>
+            <ion-label>{{ 'milkPauseEditor.from' | translate }}</ion-label>
             <ion-datetime-button datetime="pause-start" />
           </ion-item>
           <ion-modal #startModal [keepContentsMounted]="true">
@@ -66,7 +68,7 @@ import {
           </ion-modal>
 
           <ion-item>
-            <ion-label>to</ion-label>
+            <ion-label>{{ 'milkPauseEditor.to' | translate }}</ion-label>
             <ion-datetime-button datetime="pause-end" />
           </ion-item>
           <ion-modal #endModal [keepContentsMounted]="true">
@@ -84,9 +86,9 @@ import {
           <ion-item>
             <ion-textarea
               formControlName="reason"
-              label="reason (optional)"
+              [label]="'milkPauseEditor.reasonLabel' | translate"
               labelPlacement="stacked"
-              placeholder="out of station, visiting family…"
+              [placeholder]="'milkPauseEditor.reasonPlaceholder' | translate"
               [autoGrow]="true"
               [maxlength]="200"
             />

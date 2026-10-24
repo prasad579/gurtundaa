@@ -5,8 +5,8 @@ import {
   Bill,
   BillsApi,
   SaveBillRequest,
-  billDueLabel,
   billUrgency,
+  parseDateOnly,
   rupeeLabel,
 } from '@gurtundaa/shared';
 import {
@@ -26,6 +26,7 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add, checkmarkDoneOutline, chevronForward, createOutline, trash } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { BillNotifications } from '../../services/bill-notifications';
 import { BillEditorComponent } from './bill-editor.component';
@@ -34,7 +35,7 @@ const VISIBLE_PER_SECTION = 2;
 
 @Component({
   selector: 'app-bills',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonRefresher, IonRefresherContent, IonButton, IonIcon, IonSkeletonText],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonRefresher, IonRefresherContent, IonButton, IonIcon, IonSkeletonText, TranslatePipe],
   templateUrl: './bills.page.html',
   styleUrl: './bills.page.scss',
 })
@@ -45,11 +46,33 @@ export class BillsPage implements ViewWillEnter {
   private readonly alerts = inject(AlertController);
   private readonly notifications = inject(BillNotifications);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly categoryLabels = BILL_CATEGORY_LABELS;
   protected readonly rupeeLabel = rupeeLabel;
-  protected readonly billDueLabel = billDueLabel;
   protected readonly visiblePerSection = VISIBLE_PER_SECTION;
+
+  // Mirrors the shared billDueLabel() shape but routed through TranslateService so the phrase
+  // itself (not just surrounding UI) switches language.
+  protected billDueLabel(bill: Pick<Bill, 'dueDate' | 'recurrence'>): string {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = parseDateOnly(bill.dueDate);
+    const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+    const isRenew = bill.recurrence !== 'OneTime' && bill.recurrence !== 'Monthly';
+
+    if (days < 0) {
+      const n = Math.abs(days);
+      return this.translate.instant(n === 1 ? 'bills.overdueByOne' : 'bills.overdueByMany', { days: n });
+    }
+    if (days === 0) {
+      return this.translate.instant(isRenew ? 'bills.renewsToday' : 'bills.dueToday');
+    }
+    return this.translate.instant(
+      isRenew ? (days === 1 ? 'bills.renewsInOne' : 'bills.renewsInMany') : days === 1 ? 'bills.dueInOne' : 'bills.dueInMany',
+      { days },
+    );
+  }
 
   protected readonly loading = signal(true);
   protected readonly bills = signal<Bill[]>([]);
@@ -89,21 +112,21 @@ export class BillsPage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(bill ? this.billsApi.update(bill.id, data) : this.billsApi.create(data));
-    await this.toast(bill ? 'bill updated' : 'bill added 🧾');
+    await this.toast(this.translate.instant(bill ? 'bills.billUpdated' : 'bills.billAdded'));
     await this.load();
   }
 
   protected async markPaid(bill: Bill): Promise<void> {
-    if (!(await this.confirm('Mark as paid?', `${bill.name} — ${rupeeLabel(bill.amount)}`))) return;
+    if (!(await this.confirm(this.translate.instant('bills.markAsPaidConfirm'), `${bill.name} — ${rupeeLabel(bill.amount)}`))) return;
     await firstValueFrom(this.billsApi.setPaid(bill.id, { isPaid: true }));
-    await this.toast('marked as paid ✅');
+    await this.toast(this.translate.instant('bills.markedAsPaid'));
     await this.load();
   }
 
   protected async remove(bill: Bill): Promise<void> {
-    if (!(await this.confirm('Delete this bill?', bill.name))) return;
+    if (!(await this.confirm(this.translate.instant('bills.deleteConfirm'), bill.name))) return;
     await firstValueFrom(this.billsApi.delete(bill.id));
-    await this.toast('bill removed');
+    await this.toast(this.translate.instant('bills.billRemoved'));
     await this.load();
   }
 
@@ -112,8 +135,8 @@ export class BillsPage implements ViewWillEnter {
       header,
       message,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Confirm', role: 'confirm' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('bills.confirmBtn'), role: 'confirm' },
       ],
     });
     await alert.present();
@@ -137,7 +160,7 @@ export class BillsPage implements ViewWillEnter {
       this.bills.set(bills);
       void this.notifications.sync(bills);
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('bills.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }

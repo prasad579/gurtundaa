@@ -2,6 +2,7 @@ import { Component, Input, OnInit, computed, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   BillData,
+  GURTUNDAA_API_URL,
   LAUNDRY_SERVICE_TYPE_LABELS,
   LaundryBatch,
   LaundryItemLine,
@@ -21,13 +22,12 @@ import {
   IonDatetime,
   IonDatetimeButton,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonTextarea,
@@ -35,7 +35,15 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { camera } from 'ionicons/icons';
+import { TranslatePipe } from '@ngx-translate/core';
 import { LAUNDRY_ITEM_TYPES } from './laundry-item-constants';
+
+export interface LaundryEntryEditorResult {
+  request: SaveLaundryBatchRequest;
+  photoFile: File | null;
+}
 
 @Component({
   selector: 'app-laundry-entry-editor',
@@ -53,19 +61,24 @@ import { LAUNDRY_ITEM_TYPES } from './laundry-item-constants';
     IonInput,
     IonSelect,
     IonSelectOption,
-    IonSegment,
-    IonSegmentButton,
     IonCheckbox,
     IonDatetimeButton,
     IonModal,
     IonDatetime,
     IonTextarea,
+    IonIcon,
+    TranslatePipe,
   ],
   templateUrl: './laundry-entry-editor.component.html',
   styleUrl: './laundry-entry-editor.component.scss',
 })
 export class LaundryEntryEditorComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
+  private readonly apiOrigin = inject(GURTUNDAA_API_URL).replace(/\/api\/?$/, '');
+
+  constructor() {
+    addIcons({ camera });
+  }
 
   @Input() batch?: LaundryBatch;
   @Input() contacts: ServiceContact[] = [];
@@ -77,6 +90,8 @@ export class LaundryEntryEditorComponent implements OnInit {
   protected readonly neededByDates = signal<Record<string, string>>({});
   protected readonly neededByOpen = signal<Record<string, boolean>>({});
   protected readonly serviceType = signal<LaundryServiceType>('WashAndIron');
+  protected readonly photoFile = signal<File | null>(null);
+  protected readonly photoPreviewUrl = signal<string | null>(null);
 
   protected readonly form = new FormGroup({
     contactId: new FormControl<string | null>(null, { nonNullable: true }),
@@ -203,6 +218,17 @@ export class LaundryEntryEditorComponent implements OnInit {
     return hasPredefined || hasOther;
   }
 
+  protected existingPhotoUrl(url: string): string {
+    return `${this.apiOrigin}${url}`;
+  }
+
+  protected onPhotoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.photoFile.set(file);
+    this.photoPreviewUrl.set(URL.createObjectURL(file));
+  }
+
   protected dismiss(): Promise<boolean> {
     return this.modalCtrl.dismiss(null, 'cancel');
   }
@@ -239,7 +265,8 @@ export class LaundryEntryEditorComponent implements OnInit {
       if (contact) this.notifyDhobiOfItems(contact, items);
     }
 
-    return this.modalCtrl.dismiss(request, 'save');
+    const result: LaundryEntryEditorResult = { request, photoFile: this.photoFile() };
+    return this.modalCtrl.dismiss(result, 'save');
   }
 
   private notifyDhobiOfItems(contact: ServiceContact, items: LaundryItemLine[]): void {

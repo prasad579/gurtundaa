@@ -1,8 +1,8 @@
 <app-onboarding-shell
   [step]="5"
-  title="you're all set! 🎉"
-  subtitle="here's a quick summary of your setup"
-  continueLabel="start using gurtundaa"
+  title="onboarding.summary.title"
+  subtitle="onboarding.summary.subtitle"
+  continueLabel="onboarding.summary.continueLabel"
   [continueDisabled]="busy()"
   (back)="back()"
   (continueClick)="finish()"
@@ -10,30 +10,30 @@
 >
   <div class="summary">
     <div class="row">
-      <span>account type</span>
-      <strong>{{ accountTypeLabel() }}</strong>
+      <span>{{ 'onboarding.summary.accountType' | translate }}</span>
+      <strong>{{ accountTypeLabel() | translate }}</strong>
     </div>
     <div class="row">
-      <span>adults</span>
+      <span>{{ 'onboarding.household.adults' | translate }}</span>
       <strong>{{ state.adults() }}</strong>
     </div>
     <div class="row">
-      <span>children</span>
+      <span>{{ 'onboarding.household.children' | translate }}</span>
       <strong>{{ state.children() }}</strong>
     </div>
     <div class="row">
-      <span>location</span>
-      <strong>{{ state.city() || 'not set' }}</strong>
+      <span>{{ 'onboarding.summary.location' | translate }}</span>
+      <strong>{{ state.city() || ('onboarding.summary.notSet' | translate) }}</strong>
     </div>
     <div class="row">
-      <span>enabled features</span>
-      <strong>{{ featureCount() }} features</strong>
+      <span>{{ 'onboarding.summary.enabledFeatures' | translate }}</span>
+      <strong>{{ 'onboarding.summary.featureCount' | translate: { count: featureCount() } }}</strong>
     </div>
   </div>
 
   <p class="note">
     <span aria-hidden="true">🛡️</span>
-    don't worry, you can update all of these anytime in settings.
+    {{ 'onboarding.summary.note' | translate }}
   </p>
 
   @if (error(); as message) {

@@ -40,6 +40,12 @@ export class LaundryApi {
     return this.http.patch<LaundryBatch>(`${this.url}/${id}/items/${itemIndex}/paid`, request);
   }
 
+  uploadPhoto(id: string, file: File): Observable<LaundryBatch> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<LaundryBatch>(`${this.url}/${id}/photo`, formData);
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }

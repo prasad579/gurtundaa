@@ -21,14 +21,13 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonTitle,
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 type SlotControl = 'morningQty' | 'afternoonQty' | 'eveningQty' | 'nightQty';
 
@@ -48,11 +47,10 @@ type SlotControl = 'morningQty' | 'afternoonQty' | 'eveningQty' | 'nightQty';
     IonInput,
     IonSelect,
     IonSelectOption,
-    IonSegment,
-    IonSegmentButton,
     IonDatetimeButton,
     IonModal,
     IonDatetime,
+    TranslatePipe,
   ],
   templateUrl: './medicine-editor.component.html',
   styleUrl: './medicine-editor.component.scss',
@@ -69,6 +67,7 @@ export class MedicineEditorComponent implements OnInit {
   protected readonly form = new FormGroup({
     memberId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
+    purpose: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(100)] }),
     mode: new FormControl<MedicineMode>('Daily', { nonNullable: true }),
     courseDays: new FormControl(10, { nonNullable: true }),
     morningQty: new FormControl(1, { nonNullable: true }),
@@ -78,6 +77,7 @@ export class MedicineEditorComponent implements OnInit {
     foodTiming: new FormControl<FoodTiming>('AnyTime', { nonNullable: true }),
     stockCount: new FormControl(30, { nonNullable: true }),
     startDate: new FormControl(this.today, { nonNullable: true, validators: [Validators.required] }),
+    nextVisitDate: new FormControl<string | null>(null),
   });
 
   ngOnInit(): void {
@@ -86,6 +86,7 @@ export class MedicineEditorComponent implements OnInit {
       this.form.setValue({
         memberId: m.memberId,
         name: m.name,
+        purpose: m.purpose ?? '',
         mode: m.mode,
         courseDays: m.courseDays ?? 10,
         morningQty: m.morningQty,
@@ -95,6 +96,7 @@ export class MedicineEditorComponent implements OnInit {
         foodTiming: m.foodTiming,
         stockCount: m.stockCount,
         startDate: m.startDate,
+        nextVisitDate: m.nextVisitDate,
       });
     } else if (this.initialMemberId) {
       this.form.controls.memberId.setValue(this.initialMemberId);
@@ -148,6 +150,7 @@ export class MedicineEditorComponent implements OnInit {
     const request: SaveMedicineRequest = {
       memberId: v.memberId,
       name: v.name.trim(),
+      purpose: v.purpose.trim() || null,
       mode: v.mode,
       courseDays: v.mode === 'Course' ? v.courseDays : null,
       morningQty: v.morningQty,
@@ -157,6 +160,7 @@ export class MedicineEditorComponent implements OnInit {
       foodTiming: v.foodTiming,
       stockCount: v.stockCount,
       startDate: v.startDate,
+      nextVisitDate: v.nextVisitDate,
     };
     return this.modalCtrl.dismiss(request, 'save');
   }

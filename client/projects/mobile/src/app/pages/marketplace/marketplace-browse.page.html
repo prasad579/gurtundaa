@@ -24,7 +24,7 @@
           @for (item of c.items; track item.key) {
             <div class="item-card">
               <div class="item-thumb" [style.background]="c.bg"><img [src]="item.image" [alt]="item.name" loading="lazy" /></div>
-              <div class="name">{{ item.name }}</div>
+              <div class="name">{{ item.name }} <span class="te-name">{{ item.teluguName }}</span></div>
 
               @if (item.packOptions.length > 1) {
                 <app-pack-size-picker [itemKey]="item.key" />

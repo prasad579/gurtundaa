@@ -16,6 +16,7 @@ public sealed record MedicineDto(
     string MemberName,
     string MemberAvatarEmoji,
     string Name,
+    string? Purpose,
     MedicineMode Mode,
     int? CourseDays,
     int MorningQty,
@@ -25,6 +26,7 @@ public sealed record MedicineDto(
     FoodTiming FoodTiming,
     int StockCount,
     DateOnly StartDate,
+    DateOnly? NextVisitDate,
     bool IsActive,
     int PerDayQty,
     int DaysRemaining,
@@ -43,7 +45,10 @@ public sealed record SaveMedicineRequest(
     [Range(0, 4)] int NightQty,
     FoodTiming FoodTiming,
     [Range(0, 2000)] int StockCount,
-    DateOnly StartDate);
+    DateOnly StartDate,
+    // Optional memory aid for what this medicine is for (e.g. "sugar control", "BP").
+    [MaxLength(100)] string? Purpose = null,
+    DateOnly? NextVisitDate = null);
 
 public sealed record DoseEntryDto(
     Guid MedicineId,

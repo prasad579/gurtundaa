@@ -38,6 +38,9 @@
             @if (r.lowestQuoteAmount !== null) {
               <span class="lowest">from {{ rupeeLabel(r.lowestQuoteAmount) }}</span>
             }
+            <button class="reorder-btn" (click)="reorder(r); $event.stopPropagation()">
+              <ion-icon name="refresh-outline" /> Reorder
+            </button>
           </div>
         </div>
       }

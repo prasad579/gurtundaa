@@ -4,6 +4,30 @@
   font-weight: 800;
 }
 
+.toggle-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  flex: 1;
+  min-width: 70px;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 12px;
+  background: var(--ion-color-step-50, #f3f0fa);
+  color: var(--ion-color-medium, #8a7fa3);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.toggle-btn.sel {
+  background: var(--ion-color-primary, #7c3aed);
+  color: #fff;
+}
+
 .item-grid {
   display: flex;
   flex-direction: column;
@@ -166,4 +190,42 @@ ion-label p { font-size: 10.5px; color: var(--ion-color-medium); white-space: no
   font-weight: 700;
 
   .total-val { font-size: 16px; color: var(--ion-color-primary); }
+}
+
+.photo-upload {
+  display: block;
+  width: 100%;
+  height: 120px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: var(--ion-color-step-50, #f7f8fb);
+  border: 1.5px dashed var(--ion-color-step-150, #ddd);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 26px;
+  }
+
+  span {
+    font-size: 11px;
+    font-weight: 600;
+  }
 }

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/milk" />
     </ion-buttons>
-    <ion-title>Pause / Resume Delivery</ion-title>
+    <ion-title>{{ 'milkPause.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -13,38 +13,38 @@
   } @else {
     <section class="card">
       <div class="sec-head">
-        <h3>Current Status</h3>
+        <h3>{{ 'milkPause.currentStatus' | translate }}</h3>
         @if (activePause()) {
-          <span class="pill active"><ion-icon name="pause-outline" />Paused</span>
+          <span class="pill active"><ion-icon name="pause-outline" />{{ 'milk.paused' | translate }}</span>
         } @else {
-          <span class="pill ok"><ion-icon name="play-outline" />Active</span>
+          <span class="pill ok"><ion-icon name="play-outline" />{{ 'milkPause.activeStatus' | translate }}</span>
         }
       </div>
 
       @if (activePause(); as p) {
         <div class="pause-active">
-          <div class="pa-range">Paused: {{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
+          <div class="pa-range">{{ 'milkPause.pausedLabel' | translate: { range: pauseRangeLabel(p.startDate, p.endDate) } }}</div>
           @if (p.reason) {
-            <div class="pa-detail">Reason: {{ p.reason }}</div>
+            <div class="pa-detail">{{ 'milkPause.reasonLabel' | translate: { reason: p.reason } }}</div>
           }
-          <div class="pa-resume"><ion-icon name="refresh-outline" /> Resumes {{ resumeDateLabel(p) }}</div>
+          <div class="pa-resume"><ion-icon name="refresh-outline" /> {{ 'milk.resumes' | translate: { date: resumeDateLabel(p) } }}</div>
           <div class="pa-btns">
-            <button class="b-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
-            <button class="b-edit" (click)="editPause(p)"><ion-icon name="create-outline" />Edit</button>
-            <button class="b-cancel" (click)="cancelPause(p)"><ion-icon name="trash" />Cancel</button>
+            <button class="b-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
+            <button class="b-edit" (click)="editPause(p)"><ion-icon name="create-outline" />{{ 'milk.edit' | translate }}</button>
+            <button class="b-cancel" (click)="cancelPause(p)"><ion-icon name="trash" />{{ 'milkPause.cancelBtn' | translate }}</button>
           </div>
         </div>
       } @else {
-        <p class="muted">Delivery is running as normal — no active pause.</p>
+        <p class="muted">{{ 'milkPause.runningNormally' | translate }}</p>
       }
     </section>
 
     <section class="card">
-      <h3>New Pause Request</h3>
-      <p class="label">Reason</p>
+      <h3>{{ 'milkPause.newRequest' | translate }}</h3>
+      <p class="label">{{ 'milkPause.reason' | translate }}</p>
       <div class="reason-chips">
         @for (r of reasons; track r) {
-          <button class="rchip" [class.sel]="selectedReason() === r" (click)="selectReason(r)">{{ r }}</button>
+          <button class="rchip" [class.sel]="selectedReason() === r" (click)="selectReason(r)">{{ reasonLabel(r) }}</button>
         }
       </div>
       @if (selectedReason() === 'Other') {
@@ -52,18 +52,18 @@
           class="other-input"
           [value]="customReason()"
           (ionInput)="customReason.set($any($event.detail.value))"
-          placeholder="describe the reason…"
+          [placeholder]="'milkPause.describeReason' | translate"
           [maxlength]="200"
         />
       }
 
       <div class="date-row">
         <div class="date-field">
-          <div class="df-lbl">Pause From</div>
+          <div class="df-lbl">{{ 'milkPause.pauseFrom' | translate }}</div>
           <ion-datetime-button datetime="pause-from" />
         </div>
         <div class="date-field">
-          <div class="df-lbl">Pause Till</div>
+          <div class="df-lbl">{{ 'milkPause.pauseTill' | translate }}</div>
           <ion-datetime-button datetime="pause-till" />
         </div>
       </div>
@@ -91,24 +91,24 @@
       </ion-modal>
 
       <div class="dur-row">
-        <span>Duration</span>
-        <span>{{ duration() }} Day{{ duration() === 1 ? '' : 's' }}</span>
+        <span>{{ 'milkPause.duration' | translate }}</span>
+        <span>{{ (duration() === 1 ? 'milkPause.dayOne' : 'milkPause.dayMany') | translate: { count: duration() } }}</span>
       </div>
 
       <div class="notify-row">
         <ion-checkbox [checked]="notifyOnSave()" (ionChange)="notifyOnSave.set($any($event.detail.checked))" />
-        <span>Notify milkman via WhatsApp</span>
+        <span>{{ 'milkPause.notifyViaWhatsapp' | translate }}</span>
       </div>
 
       <ion-button expand="block" class="full-btn" [disabled]="saving()" (click)="submitNewPause()">
-        <ion-icon slot="start" name="pause-outline" />{{ saving() ? 'pausing…' : 'Pause Delivery' }}
+        <ion-icon slot="start" name="pause-outline" />{{ (saving() ? 'milkPause.pausing' : 'milkPause.pauseDeliveryBtn') | translate }}
       </ion-button>
     </section>
 
     <section class="card">
-      <h3>Pause History</h3>
+      <h3>{{ 'milkPause.history' | translate }}</h3>
       @if (history().length === 0) {
-        <p class="muted">No pauses yet.</p>
+        <p class="muted">{{ 'milkPause.noPausesYet' | translate }}</p>
       } @else {
         <div class="hist-list">
           @for (p of history(); track p.id) {
@@ -116,10 +116,10 @@
               <div class="h-dot" [class]="statusOf(p)"></div>
               <div class="h-txt">
                 <div class="ht">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
-                <div class="hs">{{ durationOf(p) }} Day{{ durationOf(p) === 1 ? '' : 's' }}{{ p.reason ? ' · ' + p.reason : '' }}</div>
+                <div class="hs">{{ (durationOf(p) === 1 ? 'milkPause.dayOne' : 'milkPause.dayMany') | translate: { count: durationOf(p) } }}{{ p.reason ? ' · ' + p.reason : '' }}</div>
               </div>
               <span class="pill sm" [class]="statusOf(p)">
-                {{ statusOf(p) === 'active' ? 'Active' : statusOf(p) === 'scheduled' ? 'Scheduled' : 'Ended' }}
+                {{ (statusOf(p) === 'active' ? 'milkPause.activeStatus' : statusOf(p) === 'scheduled' ? 'milkPause.scheduledStatus' : 'milkPause.endedStatus') | translate }}
               </span>
             </div>
           }

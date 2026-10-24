@@ -328,6 +328,6 @@ public class ProviderDashboardService(AppDbContext db, ICurrentUser currentUser,
         return new LaundryBatchDto(
             batch.Id, batch.ContactId, batch.Contact?.Name, batch.Contact?.Phone,
             batch.ServiceType, batch.GivenOn, batch.ExpectedReturn, batch.Status, batch.PickedUpOn,
-            batch.Amount, batch.IsPaid, batch.PaidAt, items, batch.Notes, batch.CreatedAt);
+            batch.Amount, batch.IsPaid, batch.PaidAt, items, batch.Notes, batch.PhotoUrl, batch.CreatedAt);
     }
 }

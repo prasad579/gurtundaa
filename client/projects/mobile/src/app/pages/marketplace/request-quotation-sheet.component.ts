@@ -1,13 +1,17 @@
 import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
+  GURTUNDAA_API_URL,
   MARKETPLACE_CATALOG,
   MarketplaceApi,
   QuotationItemLine,
   ServiceContact,
   ServiceContactsApi,
   ShopSummary,
+  distanceLabel,
+  haversineKm,
 } from '@gurtundaa/shared';
+import { AppGeolocation, Coordinates } from '../../services/geolocation';
 import {
   IonButton,
   IonButtons,
@@ -18,6 +22,7 @@ import {
   IonLabel,
   IonList,
   IonTextarea,
+  IonThumbnail,
   IonTitle,
   IonToolbar,
   ModalController,
@@ -59,6 +64,7 @@ const CATEGORY_META = new Map(MARKETPLACE_CATALOG.map((c) => [c.key, { label: c.
     IonLabel,
     IonCheckbox,
     IonTextarea,
+    IonThumbnail,
   ],
   template: `
     <ion-header>
@@ -93,19 +99,34 @@ const CATEGORY_META = new Map(MARKETPLACE_CATALOG.map((c) => [c.key, { label: c.
       }
 
       @if (shops().length > 0) {
-        <h3 class="section-title">Shops on gurtundaa</h3>
+        <div class="section-title-row">
+          <h3 class="section-title">Shops on gurtundaa</h3>
+          <button type="button" class="win-chip" [class.sel]="myLocation() !== null" (click)="useMyLocation()">
+            📍 {{ myLocation() ? 'Near me' : 'Sort by near me' }}
+          </button>
+        </div>
         <ion-list lines="full">
-          @for (shop of shops(); track shop.userId) {
+          @for (shop of sortedShops(); track shop.userId) {
             <ion-item>
               <ion-checkbox
                 slot="start"
                 [checked]="selectedShopIds().has(shop.userId)"
                 (ionChange)="toggleShop(shop.userId)"
               />
+              @if (shopImageUrl(shop); as img) {
+                <ion-thumbnail slot="start">
+                  <img [src]="img" [alt]="shop.shopName" loading="lazy" />
+                </ion-thumbnail>
+              }
               <ion-label>
                 <h2>{{ shop.shopName }}</h2>
-                @if (shop.city) {
-                  <p>{{ shop.city }}</p>
+                @if (shop.city || shop.distanceKm !== null) {
+                  <p>
+                    {{ shop.city }}
+                    @if (shop.distanceKm !== null) {
+                      <span class="shop-distance">{{ shop.city ? ' · ' : '' }}{{ distanceLabel(shop.distanceKm) }} away</span>
+                    }
+                  </p>
                 }
               </ion-label>
             </ion-item>
@@ -166,6 +187,18 @@ const CATEGORY_META = new Map(MARKETPLACE_CATALOG.map((c) => [c.key, { label: c.
       margin: 12px 4px 4px;
       font-size: 13px;
       font-weight: 800;
+    }
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 12px 4px 4px;
+
+      .section-title { margin: 0; }
+    }
+    .shop-distance {
+      color: var(--ion-color-medium);
     }
     .empty {
       font-size: 13px;
@@ -236,6 +269,8 @@ export class RequestQuotationSheetComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
   private readonly marketplace = inject(MarketplaceApi);
   private readonly contactsApi = inject(ServiceContactsApi);
+  private readonly geo = inject(AppGeolocation);
+  private readonly apiOrigin = inject(GURTUNDAA_API_URL).replace(/\/api\/?$/, '');
 
   @Input() items: QuotationItemLine[] = [];
 
@@ -246,8 +281,25 @@ export class RequestQuotationSheetComponent implements OnInit {
   protected readonly notes = new FormControl('', { nonNullable: true });
   protected readonly closeWindowPresets = CLOSE_WINDOW_PRESETS;
   protected readonly closeWindowMinutes = signal<number | null>(30);
+  protected readonly myLocation = signal<Coordinates | null>(null);
+  protected readonly distanceLabel = distanceLabel;
 
   protected readonly selectedCount = signal(0);
+
+  protected readonly sortedShops = computed<(ShopSummary & { distanceKm: number | null })[]>(() => {
+    const me = this.myLocation();
+    const withDistance = this.shops().map((shop) => ({
+      ...shop,
+      distanceKm:
+        me && shop.latitude !== null && shop.longitude !== null
+          ? haversineKm(me.latitude, me.longitude, shop.latitude, shop.longitude)
+          : null,
+    }));
+    if (!me) {
+      return withDistance;
+    }
+    return [...withDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+  });
 
   protected readonly categoryGroups = computed<CategoryGroup[]>(() => {
     const byCategory = new Map<string, QuotationItemLine[]>();
@@ -282,7 +334,15 @@ export class RequestQuotationSheetComponent implements OnInit {
   }
 
   protected itemsLabel(group: CategoryGroup): string {
-    return group.items.map((i) => `${i.name} (${i.qty > 1 ? i.qty + ' × ' : ''}${i.pack})`).join(' · ');
+    return group.items.map((i) => `${i.name}${i.brand ? ' [' + i.brand + ']' : ''} (${i.qty > 1 ? i.qty + ' × ' : ''}${i.pack})`).join(' · ');
+  }
+
+  protected shopImageUrl(shop: ShopSummary): string | null {
+    return shop.imageUrl ? `${this.apiOrigin}${shop.imageUrl}` : null;
+  }
+
+  protected async useMyLocation(): Promise<void> {
+    this.myLocation.set(await this.geo.getCurrentPosition());
   }
 
   protected toggleShop(id: string): void {

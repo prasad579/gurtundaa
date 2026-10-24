@@ -152,6 +152,9 @@ export function litresLabel(quantity: number): string {
   return `${quantity.toFixed(1)} Ltr`;
 }
 
+/** Milk is only ever packeted/delivered in half-litre units — odd decimals like 2.1 or 2.37 aren't real quantities. */
+export const MILK_QUANTITY_STEP_LTR = 0.5;
+
 /** Parses a `DateOnly` string (`yyyy-MM-dd`) as a local calendar date, avoiding UTC off-by-one. */
 export function parseDateOnly(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);

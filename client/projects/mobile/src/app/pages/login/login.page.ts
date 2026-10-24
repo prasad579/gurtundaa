@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, BRAND } from '@gurtundaa/shared';
 import { IonButton, IonContent, IonInput, IonItem, IonList, IonText } from '@ionic/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^\+?[0-9\s-]{7,15}$/;
@@ -11,13 +12,14 @@ type IdentifierKind = 'email' | 'phone' | 'unknown';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, IonContent, IonList, IonItem, IonInput, IonButton, IonText],
+  imports: [ReactiveFormsModule, RouterLink, IonContent, IonList, IonItem, IonInput, IonButton, IonText, TranslatePipe],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly brand = BRAND;
   protected readonly busy = signal(false);
@@ -48,11 +50,11 @@ export class LoginPage {
     const password = this.form.controls.password.value;
 
     if (kind === 'unknown') {
-      this.error.set('enter a valid email or mobile number');
+      this.error.set(this.translate.instant('login.errorInvalidIdentifier'));
       return;
     }
     if (kind === 'email' && password.length < 8) {
-      this.error.set('enter your password (8+ chars)');
+      this.error.set(this.translate.instant('login.errorShortPassword'));
       return;
     }
 

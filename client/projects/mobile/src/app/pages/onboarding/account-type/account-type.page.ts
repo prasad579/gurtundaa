@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ACCOUNT_TYPES, AccountType, OnboardingState } from '../../../services/onboarding-state';
 import { OnboardingShell } from '../onboarding-shell';
 
 @Component({
   selector: 'app-onboarding-account-type',
-  imports: [OnboardingShell],
+  imports: [OnboardingShell, TranslatePipe],
   templateUrl: './account-type.page.html',
   styleUrl: './account-type.page.scss',
 })

@@ -21,13 +21,12 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonTextarea,
   IonTitle,
   IonToolbar,
   ModalController,
 } from '@ionic/angular';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-bill-editor',
@@ -43,31 +42,30 @@ import {
     IonItem,
     IonLabel,
     IonInput,
-    IonSegment,
-    IonSegmentButton,
     IonDatetimeButton,
     IonModal,
     IonDatetime,
     IonTextarea,
+    TranslatePipe,
   ],
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-        <ion-title>{{ bill ? 'edit bill' : 'new bill 🧾' }}</ion-title>
+        <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+        <ion-title>{{ (bill ? 'billEditor.editTitle' : 'billEditor.newTitle') | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">save</ion-button>
+          <ion-button strong="true" [disabled]="form.invalid" (click)="save()">{{ 'common.save' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <form [formGroup]="form">
-        <h3 class="section-title">Category</h3>
+        <h3 class="section-title">{{ 'billEditor.category' | translate }}</h3>
         <div class="cat-grid">
           @for (cat of categories; track cat.key) {
             <div class="cat-chip" [class.sel]="category() === cat.key" (click)="category.set(cat.key)">
               <span class="ic">{{ cat.icon }}</span>
-              {{ cat.label }}
+              {{ 'bills.category.' + cat.key | translate }}
             </div>
           }
         </div>
@@ -76,9 +74,9 @@ import {
           <ion-item>
             <ion-input
               formControlName="name"
-              label="name / provider"
+              [label]="'billEditor.nameLabel' | translate"
               labelPlacement="stacked"
-              placeholder="e.g. TSSPDCL, Netflix…"
+              [placeholder]="'billEditor.namePlaceholder' | translate"
               [maxlength]="100"
             />
           </ion-item>
@@ -87,13 +85,13 @@ import {
               formControlName="amount"
               type="number"
               inputmode="decimal"
-              label="amount (₹)"
+              [label]="'billEditor.amountLabel' | translate"
               labelPlacement="stacked"
               placeholder="0"
             />
           </ion-item>
           <ion-item>
-            <ion-label>due date</ion-label>
+            <ion-label>{{ 'billEditor.dueDate' | translate }}</ion-label>
             <ion-datetime-button datetime="due-date" />
           </ion-item>
           <ion-modal [keepContentsMounted]="true">
@@ -103,13 +101,13 @@ import {
           </ion-modal>
         </ion-list>
 
-        <h3 class="section-title">Repeats</h3>
-        <ion-segment [value]="form.controls.recurrence.value" (ionChange)="form.controls.recurrence.setValue($any($event.detail.value))">
-          <ion-segment-button value="OneTime">One-time</ion-segment-button>
-          <ion-segment-button value="Monthly">Monthly</ion-segment-button>
-          <ion-segment-button value="Quarterly">Quarterly</ion-segment-button>
-          <ion-segment-button value="Yearly">Yearly</ion-segment-button>
-        </ion-segment>
+        <h3 class="section-title">{{ 'billEditor.repeats' | translate }}</h3>
+        <div class="toggle-row">
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.recurrence.value === 'OneTime'" (click)="form.controls.recurrence.setValue('OneTime')">{{ 'bills.recurrence.OneTime' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.recurrence.value === 'Monthly'" (click)="form.controls.recurrence.setValue('Monthly')">{{ 'bills.recurrence.Monthly' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.recurrence.value === 'Quarterly'" (click)="form.controls.recurrence.setValue('Quarterly')">{{ 'bills.recurrence.Quarterly' | translate }}</button>
+          <button type="button" class="toggle-btn" [class.sel]="form.controls.recurrence.value === 'Yearly'" (click)="form.controls.recurrence.setValue('Yearly')">{{ 'bills.recurrence.Yearly' | translate }}</button>
+        </div>
 
         <ion-list lines="none">
           <ion-item>
@@ -117,7 +115,7 @@ import {
               formControlName="reminderLeadDays"
               type="number"
               inputmode="numeric"
-              label="remind me (days before due date)"
+              [label]="'billEditor.reminderLabel' | translate"
               labelPlacement="stacked"
               placeholder="3"
             />
@@ -125,9 +123,9 @@ import {
           <ion-item>
             <ion-textarea
               formControlName="notes"
-              label="notes (optional)"
+              [label]="'billEditor.notesLabel' | translate"
               labelPlacement="stacked"
-              placeholder="account number, policy number…"
+              [placeholder]="'billEditor.notesPlaceholder' | translate"
               [autoGrow]="true"
               [maxlength]="200"
             />
@@ -135,10 +133,7 @@ import {
         </ion-list>
 
         @if (form.controls.recurrence.value !== 'OneTime') {
-          <p class="hint">
-            Once you mark this paid, it'll roll forward to the next due date on its own — no need to re-enter it
-            every cycle unless the amount changes.
-          </p>
+          <p class="hint">{{ 'billEditor.recurrenceHint' | translate }}</p>
         }
       </form>
     </ion-content>
@@ -163,6 +158,20 @@ import {
       &.sel { border-color: var(--ion-color-primary, #7c3aed); background: rgb(124 58 237 / 0.12); color: var(--ion-color-primary, #7c3aed); }
       .ic { font-size: 18px; }
     }
+    .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggle-btn {
+      flex: 1;
+      min-width: 70px;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: var(--ion-color-step-50, #f3f0fa);
+      color: var(--ion-color-medium, #8a7fa3);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .toggle-btn.sel { background: var(--ion-color-primary, #7c3aed); color: #fff; }
     .hint { font-size: 11px; color: var(--ion-color-medium); margin: 10px 4px 0; }
   `,
 })

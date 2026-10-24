@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Health & Medicines 💊</ion-title>
+    <ion-title>{{ 'health.title' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="goToNewPrescription()">
         <ion-icon slot="icon-only" name="document-text" />
@@ -23,24 +23,24 @@
       <div class="alert-banner">
         <span class="al-ic">⚠️</span>
         <div class="al-txt">
-          <div class="t">{{ m.name }} — only {{ m.daysRemaining }} day{{ m.daysRemaining === 1 ? '' : 's' }} left</div>
-          <div class="s">{{ m.memberAvatarEmoji }} {{ m.memberName }} · {{ m.stockCount }} tablets in hand</div>
+          <div class="t">{{ lowStockLine(m) }}</div>
+          <div class="s">{{ m.memberAvatarEmoji }} {{ 'health.lowStockSub' | translate: { name: m.memberName, count: m.stockCount } }}</div>
         </div>
-        <ion-button size="small" fill="outline" (click)="openMedicineEditor(m)">Refill</ion-button>
+        <ion-button size="small" fill="outline" (click)="openMedicineEditor(m)">{{ 'health.refillBtn' | translate }}</ion-button>
       </div>
     }
 
     <section class="card">
-      <h3>Today's Medicines</h3>
+      <h3>{{ 'health.todayMeds' | translate }}</h3>
       @if (doses().length === 0) {
-        <p class="muted">No medicines due today. Add one below.</p>
+        <p class="muted">{{ 'health.noDosesToday' | translate }}</p>
       }
       @for (slot of slotOrder; track slot) {
         @if (dosesBySlot()[slot].length > 0) {
           <div class="slot-group">
             <div class="slot-hd">
               <span class="ic">{{ slotMeta[slot].icon }}</span>
-              <span class="sh">{{ slotMeta[slot].label }}</span>
+              <span class="sh">{{ slotMeta[slot].labelKey | translate }}</span>
               <span class="count">{{ slotDoneCount(slot).done }}/{{ slotDoneCount(slot).total }}</span>
               <span class="time">{{ slotMeta[slot].time }}</span>
             </div>
@@ -53,11 +53,11 @@
                 </div>
                 <div class="d-txt">
                   <div class="dn">{{ d.medicineName }} <span class="who">{{ d.memberAvatarEmoji }} {{ d.memberName }}</span></div>
-                  <div class="ds">{{ d.qty }} tab{{ d.qty === 1 ? '' : 's' }}</div>
+                  <div class="ds">{{ tabsLabel(d.qty) }}</div>
                 </div>
                 <div class="d-r">
-                  <div class="left" [class.low]="d.daysRemaining <= 2">{{ d.stockLeft }} left</div>
-                  <div class="lsub">{{ d.daysRemaining }} days</div>
+                  <div class="left" [class.low]="d.daysRemaining <= 2">{{ 'health.leftSuffix' | translate: { count: d.stockLeft } }}</div>
+                  <div class="lsub">{{ 'health.daysSuffix' | translate: { days: d.daysRemaining } }}</div>
                 </div>
               </div>
             }
@@ -68,32 +68,32 @@
 
     <section class="card">
       <div class="section-head">
-        <h3><ion-icon name="people" />Family Members</h3>
+        <h3><ion-icon name="people" />{{ 'health.familyMembers' | translate }}</h3>
       </div>
       <div class="ct-scroll">
         @for (m of members(); track m.id) {
           <div class="ct-item" (click)="openMemberEditor(m)">
             <div class="ct-av">{{ m.avatarEmoji }}</div>
             <div class="ct-nm">{{ m.name }}</div>
-            <div class="ct-rel">{{ m.relation }}</div>
+            <div class="ct-rel">{{ 'memberEditor.relations.' + m.relation | translate }}</div>
           </div>
         }
         <div class="add-tile" (click)="openMemberEditor()">
           <ion-icon name="add" />
-          <span>Add Member</span>
+          <span>{{ 'health.addMember' | translate }}</span>
         </div>
       </div>
     </section>
 
     @if (prescriptions().length > 0) {
       <section class="card">
-        <h3>Prescriptions</h3>
+        <h3>{{ 'health.prescriptions' | translate }}</h3>
         @for (p of prescriptions(); track p.id) {
           <div class="rx-row">
             <div class="rx-ic">📋</div>
             <div class="rx-txt">
               <div class="rn">{{ p.doctorName }}<span class="who">{{ p.memberAvatarEmoji }} {{ p.memberName }}</span></div>
-              <div class="rs">{{ p.visitDate }} · {{ p.medicines.length }} medicine{{ p.medicines.length === 1 ? '' : 's' }}{{ p.revisitDate ? ' · revisit ' + p.revisitDate : '' }}</div>
+              <div class="rs">{{ prescriptionSummary(p) }}</div>
             </div>
             <button class="del-btn" (click)="removePrescription(p)"><ion-icon name="trash" /></button>
           </div>
@@ -103,17 +103,25 @@
 
     @if (medicines().length > 0) {
       <section class="card">
-        <h3>Stock Left</h3>
+        <h3>{{ 'health.stockLeftTitle' | translate }}</h3>
         @for (m of medicines(); track m.id) {
           <div class="stk" (click)="openMedicineEditor(m)">
             <div class="stk-info">
-              <div class="sn">{{ m.name }}</div>
-              <div class="ss">{{ m.memberAvatarEmoji }} {{ m.memberName }} · {{ m.perDayQty }} / day</div>
+              <div class="sn">
+                {{ m.name }}
+                @if (m.purpose) {
+                  <span class="purpose">— {{ m.purpose }}</span>
+                }
+              </div>
+              <div class="ss">{{ m.memberAvatarEmoji }} {{ m.memberName }} · {{ 'health.perDay' | translate: { qty: m.perDayQty } }}</div>
+              @if (m.nextVisitDate) {
+                <div class="next-visit">🗓️ {{ 'health.nextVisitOn' | translate }} {{ m.nextVisitDate }}</div>
+              }
               <div class="bar"><div [style.width.%]="m.daysRemaining > 30 ? 100 : (m.daysRemaining / 30) * 100" [class.low]="m.daysRemaining <= 2"></div></div>
             </div>
             <div class="stk-r">
-              <b [class.low]="m.daysRemaining <= 2">{{ m.stockCount }} tabs</b>
-              <span>{{ m.daysRemaining <= 2 ? 'Refill now' : (m.refillReminderDate ? 'Refill on ' + m.refillReminderDate : '') }}</span>
+              <b [class.low]="m.daysRemaining <= 2">{{ 'health.tabsCount' | translate: { count: m.stockCount } }}</b>
+              <span>{{ refillLabel(m) }}</span>
             </div>
             <button class="del-btn" (click)="removeMedicine(m); $event.stopPropagation()"><ion-icon name="trash" /></button>
           </div>

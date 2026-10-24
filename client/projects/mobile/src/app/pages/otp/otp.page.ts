@@ -3,12 +3,13 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, BRAND } from '@gurtundaa/shared';
 import { IonButton, IonContent, IonText } from '@ionic/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
 @Component({
   selector: 'app-otp',
-  imports: [ReactiveFormsModule, IonContent, IonButton, IonText],
+  imports: [ReactiveFormsModule, IonContent, IonButton, IonText, TranslatePipe],
   templateUrl: './otp.page.html',
   styleUrl: './otp.page.scss',
 })
@@ -16,6 +17,7 @@ export class OtpPage implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
   private cooldownHandle?: ReturnType<typeof setInterval>;
 
   @ViewChildren('digitInput') private digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
@@ -78,7 +80,7 @@ export class OtpPage implements OnDestroy {
   protected async verify(): Promise<void> {
     const code = this.form.controls.code.value;
     if (code.length < 4) {
-      this.error.set('enter the code we sent you');
+      this.error.set(this.translate.instant('otp.errorShortCode'));
       return;
     }
 

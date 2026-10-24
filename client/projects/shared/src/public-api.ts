@@ -33,3 +33,4 @@ export * from './lib/auth/auth.guards';
 export * from './lib/util/vibes';
 export * from './lib/util/billing';
 export * from './lib/util/bill-message-parser';
+export * from './lib/util/geo';

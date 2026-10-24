@@ -1,7 +1,7 @@
 <app-onboarding-shell
   [step]="3"
-  title="which features do you want to use?"
-  subtitle="you can enable or disable features anytime"
+  title="onboarding.features.title"
+  subtitle="onboarding.features.subtitle"
   (back)="back()"
   (continueClick)="continue()"
   (skip)="skip()"
@@ -20,8 +20,8 @@
             @if (state.enabledFeatures().has(option.key)) { ✓ }
           </span>
         </span>
-        <strong>{{ option.label }}</strong>
-        <span class="hint">{{ option.hint }}</span>
+        <strong>{{ 'onboarding.featureOptions.' + option.key + '.label' | translate }}</strong>
+        <span class="hint">{{ 'onboarding.featureOptions.' + option.key + '.hint' | translate }}</span>
       </button>
     }
   </div>

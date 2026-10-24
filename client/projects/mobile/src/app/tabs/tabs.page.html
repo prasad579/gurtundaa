@@ -3,7 +3,7 @@
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="home">
       <ion-icon name="home-outline" />
-      <ion-label>Home</ion-label>
+      <ion-label>{{ 'tabs.home' | translate }}</ion-label>
     </ion-tab-button>
 
     @if (enabledFeatures().has('milk')) {
@@ -12,77 +12,77 @@
         @if (unseenMilkActivity() > 0) {
           <ion-badge color="danger">{{ unseenMilkActivity() }}</ion-badge>
         }
-        <ion-label>Milk</ion-label>
+        <ion-label>{{ 'tabs.milk' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (enabledFeatures().has('laundry')) {
       <ion-tab-button tab="laundry">
         <ion-icon name="shirt-outline" />
-        <ion-label>Laundry</ion-label>
+        <ion-label>{{ 'tabs.laundry' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (enabledFeatures().has('bills')) {
       <ion-tab-button tab="bills">
         <ion-icon name="receipt-outline" />
-        <ion-label>Bills</ion-label>
+        <ion-label>{{ 'tabs.bills' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (enabledFeatures().has('medicines')) {
       <ion-tab-button tab="health">
         <ion-icon name="medkit-outline" />
-        <ion-label>Health</ion-label>
+        <ion-label>{{ 'tabs.health' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (enabledFeatures().has('marketplace')) {
       <ion-tab-button tab="marketplace">
         <ion-icon name="cart-outline" />
-        <ion-label>Marketplace</ion-label>
+        <ion-label>{{ 'tabs.marketplace' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (isShop()) {
       <ion-tab-button tab="shop/incoming-requests">
         <ion-icon name="download-outline" />
-        <ion-label>Requests</ion-label>
+        <ion-label>{{ 'tabs.requests' | translate }}</ion-label>
       </ion-tab-button>
 
       <ion-tab-button tab="shop/orders">
         <ion-icon name="cube-outline" />
-        <ion-label>Orders</ion-label>
+        <ion-label>{{ 'tabs.orders' | translate }}</ion-label>
       </ion-tab-button>
 
       <ion-tab-button tab="shop/price-list">
         <ion-icon name="pricetag-outline" />
-        <ion-label>Prices</ion-label>
+        <ion-label>{{ 'tabs.prices' | translate }}</ion-label>
       </ion-tab-button>
 
       <ion-tab-button tab="shop/profile">
         <ion-icon name="storefront-outline" />
-        <ion-label>Shop</ion-label>
+        <ion-label>{{ 'tabs.shop' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (isMilkProvider()) {
       <ion-tab-button tab="provider/milk">
         <ion-icon name="people-outline" />
-        <ion-label>My Round</ion-label>
+        <ion-label>{{ 'tabs.myRound' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     @if (isLaundryProvider()) {
       <ion-tab-button tab="provider/laundry">
         <ion-icon name="people-outline" />
-        <ion-label>My Customers</ion-label>
+        <ion-label>{{ 'tabs.myCustomers' | translate }}</ion-label>
       </ion-tab-button>
     }
 
     <ion-tab-button tab="more">
       <ion-icon name="ellipsis-horizontal-outline" />
-      <ion-label>More</ion-label>
+      <ion-label>{{ 'tabs.more' | translate }}</ion-label>
     </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>

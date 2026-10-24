@@ -1,15 +1,15 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-button (click)="dismiss()">cancel</ion-button></ion-buttons>
-    <ion-title>mark picked up ✅</ion-title>
+    <ion-buttons slot="start"><ion-button (click)="dismiss()">{{ 'common.cancel' | translate }}</ion-button></ion-buttons>
+    <ion-title>{{ 'laundryPickup.title' | translate }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button strong="true" (click)="save()">save</ion-button>
+      <ion-button strong="true" (click)="save()">{{ 'common.save' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <p class="hint">Set a price per item to auto-calculate the total — leave it at 0 for items you aren't charging for.</p>
+  <p class="hint">{{ 'laundryPickup.hint' | translate }}</p>
 
   <div class="price-rows">
     @for (row of rows(); track row.itemType; let i = $index) {
@@ -28,7 +28,7 @@
   </div>
 
   <div class="total-row">
-    <span>Total Amount</span>
+    <span>{{ 'laundryPickup.totalAmount' | translate }}</span>
     <span class="total-val">{{ rupeeLabel(total()) }}</span>
   </div>
 </ion-content>

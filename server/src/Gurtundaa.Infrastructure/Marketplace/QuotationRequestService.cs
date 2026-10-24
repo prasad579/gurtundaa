@@ -135,8 +135,8 @@ public class QuotationRequestService(AppDbContext db, ICurrentUser currentUser, 
 
         return shopUserIds
             .Select(u => profiles.TryGetValue(u.Id, out var profile)
-                ? new ShopSummaryDto(u.Id, profile.ShopName, profile.City, MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ServedCategoryKeysJson))
-                : new ShopSummaryDto(u.Id, u.DisplayName, null, []))
+                ? new ShopSummaryDto(u.Id, profile.ShopName, profile.City, MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ServedCategoryKeysJson), profile.Latitude, profile.Longitude, profile.ImageUrl)
+                : new ShopSummaryDto(u.Id, u.DisplayName, null, [], null, null, null))
             .ToList();
     }
 

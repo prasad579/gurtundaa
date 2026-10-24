@@ -200,7 +200,9 @@
   min-width: 0;
 
   .sn { font-size: 12px; font-weight: 700; }
+  .sn .purpose { font-size: 11px; font-weight: 400; color: var(--ion-color-medium); }
   .ss { font-size: 10px; color: var(--ion-color-medium); margin: 1px 0 4px; }
+  .next-visit { font-size: 10px; color: #e65100; font-weight: 600; margin-bottom: 4px; }
 }
 
 .bar {

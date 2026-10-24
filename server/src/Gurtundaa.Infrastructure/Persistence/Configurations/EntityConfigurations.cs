@@ -233,6 +233,7 @@ public class LaundryBatchConfiguration : IEntityTypeConfiguration<LaundryBatch>
         builder.Property(b => b.Amount).HasColumnType("decimal(8,2)");
         builder.Property(b => b.ItemsJson).HasMaxLength(2000).IsRequired();
         builder.Property(b => b.Notes).HasMaxLength(200);
+        builder.Property(b => b.PhotoUrl).HasMaxLength(300);
 
         builder.HasOne(b => b.User)
             .WithMany()
@@ -334,6 +335,7 @@ public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
         builder.Property(m => m.Mode).HasConversion<byte>();
         builder.Property(m => m.FoodTiming).HasConversion<byte>();
         builder.Property(m => m.Name).HasMaxLength(100).IsRequired();
+        builder.Property(m => m.Purpose).HasMaxLength(100);
 
         builder.HasOne(m => m.User)
             .WithMany()

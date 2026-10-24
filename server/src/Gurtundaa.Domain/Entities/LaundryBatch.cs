@@ -33,6 +33,8 @@ public class LaundryBatch
 
     public string? Notes { get; set; }
 
+    public string? PhotoUrl { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

@@ -1,27 +1,28 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HouseholdApi } from '@gurtundaa/shared';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
-import { ACCOUNT_TYPES, OnboardingState } from '../../../services/onboarding-state';
+import { OnboardingState } from '../../../services/onboarding-state';
 import { OnboardingShell } from '../onboarding-shell';
 
 @Component({
   selector: 'app-onboarding-summary',
-  imports: [OnboardingShell],
+  imports: [OnboardingShell, TranslatePipe],
   templateUrl: './summary.page.html',
   styleUrl: './summary.page.scss',
 })
 export class SummaryPage {
   private readonly router = inject(Router);
   private readonly household = inject(HouseholdApi);
+  private readonly translate = inject(TranslateService);
   protected readonly state = inject(OnboardingState);
 
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly accountTypeLabel = computed(
-    () => ACCOUNT_TYPES.find((o) => o.value === this.state.accountType())?.label ?? this.state.accountType(),
-  );
+  // A translation key, not display text — the template pipes it through `| translate`.
+  protected readonly accountTypeLabel = computed(() => `onboarding.accountTypes.${this.state.accountType()}.label`);
   protected readonly featureCount = computed(() => this.state.enabledFeatures().size);
 
   protected back(): void {
@@ -43,7 +44,7 @@ export class SummaryPage {
       );
       await this.router.navigateByUrl('/', { replaceUrl: true });
     } catch {
-      this.error.set("couldn't save your setup, but you can still continue and edit it later");
+      this.error.set(this.translate.instant('onboarding.summary.saveError'));
     } finally {
       this.busy.set(false);
     }

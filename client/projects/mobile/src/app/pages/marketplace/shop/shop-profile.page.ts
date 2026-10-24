@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DayOfWeekName, GURTUNDAA_API_URL, MARKETPLACE_CATALOG, ShopProfileApi } from '@gurtundaa/shared';
+import { AppGeolocation } from '../../../services/geolocation';
 import {
   IonButton,
   IonContent,
@@ -53,6 +54,7 @@ const DAY_OPTIONS: { value: DayOfWeekName; label: string }[] = [
 })
 export class ShopProfilePage implements ViewWillEnter {
   private readonly shopProfile = inject(ShopProfileApi);
+  private readonly geo = inject(AppGeolocation);
   private readonly toasts = inject(ToastController);
   private readonly apiOrigin = inject(GURTUNDAA_API_URL).replace(/\/api\/?$/, '');
 
@@ -160,24 +162,16 @@ export class ShopProfilePage implements ViewWillEnter {
   }
 
   protected async useMyLocation(): Promise<void> {
-    if (!navigator.geolocation) {
-      await this.toast('location is not available on this device', 'danger');
+    this.locatingMe.set(true);
+    const position = await this.geo.getCurrentPosition();
+    this.locatingMe.set(false);
+
+    if (!position) {
+      await this.toast("couldn't get your location — check location permission", 'danger');
       return;
     }
-
-    this.locatingMe.set(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.latitude.set(position.coords.latitude);
-        this.longitude.set(position.coords.longitude);
-        this.locatingMe.set(false);
-      },
-      async () => {
-        this.locatingMe.set(false);
-        await this.toast("couldn't get your location — check location permission", 'danger');
-      },
-      { enableHighAccuracy: true, timeout: 10_000 },
-    );
+    this.latitude.set(position.latitude);
+    this.longitude.set(position.longitude);
   }
 
   protected async save(): Promise<void> {
@@ -209,7 +203,11 @@ export class ShopProfilePage implements ViewWillEnter {
     const profile = await firstValueFrom(this.shopProfile.get());
     if (profile) {
       this.form.setValue({ shopName: profile.shopName, city: profile.city ?? '', address: profile.address ?? '' });
-      this.selectedCategoryKeys.set(new Set(profile.servedCategoryKeys));
+      // Drop category keys that no longer exist in the catalog (e.g. left over from an older catalog
+      // version) — they can never be unchecked in the UI since it only renders current categories, so
+      // without this they'd round-trip on every save and silently keep blocking real categories from matching.
+      const validKeys = new Set(this.categories.map((c) => c.key));
+      this.selectedCategoryKeys.set(new Set(profile.servedCategoryKeys.filter((key) => validKeys.has(key))));
       this.imageUrl.set(profile.imageUrl);
       this.contactPhones.set(profile.contactPhones);
       this.opensAt.set(profile.opensAt);

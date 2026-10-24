@@ -30,27 +30,40 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { add, checkmark, create, documentText, people, trash } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { MedicineEditorComponent } from './medicine-editor.component';
 import { MemberEditorComponent } from './member-editor.component';
 
 interface SlotMeta {
   icon: string;
-  label: string;
+  labelKey: string;
   time: string;
 }
 
 const SLOT_ORDER: DoseSlot[] = ['Morning', 'Afternoon', 'Evening', 'Night'];
 const SLOT_META: Record<DoseSlot, SlotMeta> = {
-  Morning: { icon: '🌅', label: 'Morning', time: '8:00 AM' },
-  Afternoon: { icon: '☀️', label: 'Afternoon', time: '1:30 PM' },
-  Evening: { icon: '🌇', label: 'Evening', time: '6:00 PM' },
-  Night: { icon: '🌙', label: 'Night', time: '9:00 PM' },
+  Morning: { icon: '🌅', labelKey: 'medicineEditor.morning', time: '8:00 AM' },
+  Afternoon: { icon: '☀️', labelKey: 'medicineEditor.afternoon', time: '1:30 PM' },
+  Evening: { icon: '🌇', labelKey: 'medicineEditor.evening', time: '6:00 PM' },
+  Night: { icon: '🌙', labelKey: 'medicineEditor.night', time: '9:00 PM' },
 };
 
 @Component({
   selector: 'app-health-home',
-  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonContent, IonRefresher, IonRefresherContent, IonButton, IonIcon, IonSkeletonText],
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonContent,
+    IonRefresher,
+    IonRefresherContent,
+    IonButton,
+    IonIcon,
+    IonSkeletonText,
+    TranslatePipe,
+  ],
   templateUrl: './health-home.page.html',
   styleUrl: './health-home.page.scss',
 })
@@ -63,6 +76,7 @@ export class HealthHomePage implements ViewWillEnter {
   private readonly toasts = inject(ToastController);
   private readonly alerts = inject(AlertController);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   protected readonly slotOrder = SLOT_ORDER;
   protected readonly slotMeta = SLOT_META;
@@ -97,10 +111,35 @@ export class HealthHomePage implements ViewWillEnter {
     void this.router.navigateByUrl('/new-prescription');
   }
 
+  protected lowStockLine(m: Medicine): string {
+    return this.translate.instant(m.daysRemaining === 1 ? 'health.lowStockOne' : 'health.lowStockMany', {
+      name: m.name,
+      days: m.daysRemaining,
+    });
+  }
+
+  protected tabsLabel(qty: number): string {
+    return this.translate.instant(qty === 1 ? 'health.tabOne' : 'health.tabMany', { qty });
+  }
+
+  protected prescriptionSummary(p: PrescriptionDto): string {
+    const base = this.translate.instant(p.medicines.length === 1 ? 'health.medicineOne' : 'health.medicineMany', {
+      count: p.medicines.length,
+    });
+    const revisit = p.revisitDate ? this.translate.instant('health.revisitSuffix', { date: p.revisitDate }) : '';
+    return `${p.visitDate} · ${base}${revisit}`;
+  }
+
+  protected refillLabel(m: Medicine): string {
+    if (m.daysRemaining <= 2) return this.translate.instant('health.refillNow');
+    return m.refillReminderDate ? this.translate.instant('health.refillOn', { date: m.refillReminderDate }) : '';
+  }
+
   protected async removePrescription(prescription: PrescriptionDto): Promise<void> {
-    if (!(await this.confirmDelete(`Remove this prescription from ${prescription.doctorName}? Its medicines stay, just unlinked.`))) return;
+    if (!(await this.confirmDelete(this.translate.instant('health.removePrescriptionConfirm', { doctor: prescription.doctorName }))))
+      return;
     await firstValueFrom(this.prescriptionsApi.delete(prescription.id));
-    await this.toast('prescription removed');
+    await this.toast(this.translate.instant('health.toastPrescriptionRemoved'));
     await this.load();
   }
 
@@ -129,20 +168,20 @@ export class HealthHomePage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(member ? this.membersApi.update(member.id, data) : this.membersApi.create(data));
-    await this.toast(member ? 'member updated ✍️' : 'family member added 🧑');
+    await this.toast(this.translate.instant(member ? 'health.toastMemberUpdated' : 'health.toastMemberAdded'));
     await this.load();
   }
 
   protected async removeMember(member: HouseholdMember): Promise<void> {
-    if (!(await this.confirmDelete(`Remove ${member.name} and all their medicines?`))) return;
+    if (!(await this.confirmDelete(this.translate.instant('health.removeMemberConfirm', { name: member.name })))) return;
     await firstValueFrom(this.membersApi.delete(member.id));
-    await this.toast('member removed');
+    await this.toast(this.translate.instant('health.toastMemberRemoved'));
     await this.load();
   }
 
   protected async openMedicineEditor(medicine?: Medicine): Promise<void> {
     if (this.members().length === 0) {
-      await this.toast('add a family member first', 'danger');
+      await this.toast(this.translate.instant('health.toastAddMemberFirst'), 'danger');
       return;
     }
 
@@ -158,14 +197,14 @@ export class HealthHomePage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(medicine ? this.medicinesApi.update(medicine.id, data) : this.medicinesApi.create(data));
-    await this.toast(medicine ? 'medicine updated ✍️' : 'medicine added 💊');
+    await this.toast(this.translate.instant(medicine ? 'health.toastMedicineUpdated' : 'health.toastMedicineAdded'));
     await this.load();
   }
 
   protected async removeMedicine(medicine: Medicine): Promise<void> {
-    if (!(await this.confirmDelete(`Stop tracking ${medicine.name}?`))) return;
+    if (!(await this.confirmDelete(this.translate.instant('health.removeMedicineConfirm', { name: medicine.name })))) return;
     await firstValueFrom(this.medicinesApi.delete(medicine.id));
-    await this.toast('medicine removed');
+    await this.toast(this.translate.instant('health.toastMedicineRemoved'));
     await this.load();
   }
 
@@ -188,7 +227,7 @@ export class HealthHomePage implements ViewWillEnter {
       this.doses.set(doses);
       this.prescriptions.set(prescriptions);
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('health.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }
@@ -196,11 +235,11 @@ export class HealthHomePage implements ViewWillEnter {
 
   private async confirmDelete(message: string): Promise<boolean> {
     const alert = await this.alerts.create({
-      header: 'Delete?',
+      header: this.translate.instant('health.deleteConfirmTitle'),
       message,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Delete', role: 'destructive' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('health.deleteBtn'), role: 'destructive' },
       ],
     });
     await alert.present();

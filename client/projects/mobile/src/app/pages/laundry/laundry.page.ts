@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import {
   BillData,
   BillLineItem,
+  GURTUNDAA_API_URL,
   LAUNDRY_SERVICE_TYPE_LABELS,
   LaundryApi,
   LaundryBatch,
@@ -61,11 +62,12 @@ import {
   timeOutline,
   trash,
 } from 'ionicons/icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { LaundryNotifications } from '../../services/laundry-notifications';
 import { shareText } from '../../services/share';
 import { ContactEditorComponent } from '../contacts/contact-editor.component';
-import { LaundryEntryEditorComponent } from './laundry-entry-editor.component';
+import { LaundryEntryEditorComponent, LaundryEntryEditorResult } from './laundry-entry-editor.component';
 import { LaundryPickupComponent } from './laundry-pickup.component';
 
 @Component({
@@ -88,6 +90,7 @@ import { LaundryPickupComponent } from './laundry-pickup.component';
     IonLabel,
     IonNote,
     IonSkeletonText,
+    TranslatePipe,
   ],
   templateUrl: './laundry.page.html',
   styleUrl: './laundry.page.scss',
@@ -97,10 +100,12 @@ export class LaundryPage implements ViewWillEnter {
   private readonly contactsApi = inject(ServiceContactsApi);
   private readonly pickupRequestsApi = inject(LaundryPickupRequestsApi);
   private readonly modals = inject(ModalController);
+  private readonly apiOrigin = inject(GURTUNDAA_API_URL).replace(/\/api\/?$/, '');
   private readonly toasts = inject(ToastController);
   private readonly alerts = inject(AlertController);
   private readonly actionSheets = inject(ActionSheetController);
   private readonly notifications = inject(LaundryNotifications);
+  private readonly translate = inject(TranslateService);
 
   protected readonly rupeeLabel = rupeeLabel;
   protected readonly shortDateLabel = shortDateLabel;
@@ -237,6 +242,10 @@ export class LaundryPage implements ViewWillEnter {
     return estimated > 0 ? estimated : null;
   }
 
+  protected photoThumbUrl(batch: LaundryBatch): string | null {
+    return batch.photoUrl ? `${this.apiOrigin}${batch.photoUrl}` : null;
+  }
+
   protected async addDhobiContact(): Promise<void> {
     const modal = await this.modals.create({
       component: ContactEditorComponent,
@@ -250,7 +259,7 @@ export class LaundryPage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(this.contactsApi.create(data));
-    await this.toast('contact added');
+    await this.toast(this.translate.instant('laundry.contactAdded'));
     await this.load();
   }
 
@@ -264,11 +273,16 @@ export class LaundryPage implements ViewWillEnter {
     });
     await modal.present();
 
-    const { data, role } = await modal.onWillDismiss();
+    const { data, role } = await modal.onWillDismiss<LaundryEntryEditorResult>();
     if (role !== 'save' || !data) return;
 
-    await firstValueFrom(batch ? this.laundry.update(batch.id, data) : this.laundry.create(data));
-    await this.toast(batch ? 'entry updated' : 'laundry entry saved 🧺');
+    const saved = await firstValueFrom(
+      batch ? this.laundry.update(batch.id, data.request) : this.laundry.create(data.request),
+    );
+    if (data.photoFile) {
+      await firstValueFrom(this.laundry.uploadPhoto(saved.id, data.photoFile));
+    }
+    await this.toast(this.translate.instant(batch ? 'laundry.entryUpdated' : 'laundry.entrySaved'));
     await this.load();
   }
 
@@ -286,21 +300,21 @@ export class LaundryPage implements ViewWillEnter {
     if (role !== 'save' || !data) return;
 
     await firstValueFrom(this.laundry.markPickedUp(batch.id, data));
-    await this.toast('marked as picked up ✅');
+    await this.toast(this.translate.instant('laundry.markedPickedUp'));
     await this.load();
   }
 
   protected async setPaid(batch: LaundryBatch, isPaid: boolean, sliding?: IonItemSliding): Promise<void> {
     await sliding?.close();
     await firstValueFrom(this.laundry.setPaid(batch.id, { isPaid }));
-    await this.toast(isPaid ? 'marked as paid ✅' : 'marked as pending');
+    await this.toast(this.translate.instant(isPaid ? 'laundry.markedPaid' : 'laundry.markedPending'));
     await this.load();
   }
 
   protected async toggleItemPaid(batch: LaundryBatch, itemIndex: number): Promise<void> {
     const isPaid = !batch.items[itemIndex].isPaid;
     await firstValueFrom(this.laundry.setItemPaid(batch.id, itemIndex, { isPaid }));
-    await this.toast(isPaid ? 'item marked as paid ✅' : 'item marked as pending');
+    await this.toast(this.translate.instant(isPaid ? 'laundry.itemMarkedPaid' : 'laundry.itemMarkedPending'));
     await this.load();
   }
 
@@ -308,7 +322,7 @@ export class LaundryPage implements ViewWillEnter {
     const pending = this.batchesInMonth().filter((b) => !b.isPaid && this.batchAmount(b));
     if (pending.length === 0) return;
     await Promise.all(pending.map((b) => firstValueFrom(this.laundry.setPaid(b.id, { isPaid: true }))));
-    await this.toast('marked as paid ✅');
+    await this.toast(this.translate.instant('laundry.markedPaid'));
     await this.load();
   }
 
@@ -322,24 +336,24 @@ export class LaundryPage implements ViewWillEnter {
 
   protected daysUntilLabel(dateOnly: string): string {
     const days = this.daysUntil(dateOnly);
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Tomorrow';
-    if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue`;
-    return `In ${days} days`;
+    if (days === 0) return this.translate.instant('laundry.todayLabel');
+    if (days === 1) return this.translate.instant('laundry.tomorrowLabel');
+    if (days < 0) return this.translate.instant(Math.abs(days) === 1 ? 'laundry.dayOverdueOne' : 'laundry.dayOverdueMany', { count: Math.abs(days) });
+    return this.translate.instant('laundry.inDaysLabel', { count: days });
   }
 
   protected async requestPickup(serviceContactId: string): Promise<void> {
     const alert = await this.alerts.create({
-      header: 'Request Pickup',
-      message: "Asks your linked dhobi to come collect laundry — they'll see this on their dashboard.",
+      header: this.translate.instant('laundry.requestPickupTitle'),
+      message: this.translate.instant('laundry.requestPickupMessage'),
       inputs: [
-        { name: 'when', type: 'radio', label: 'Today', value: toDateOnlyString(new Date()), checked: true },
-        { name: 'when', type: 'radio', label: 'Tomorrow', value: toDateOnlyString(new Date(Date.now() + 86_400_000)) },
-        { name: 'note', type: 'text', placeholder: 'note (optional, e.g. about 10 shirts)' },
+        { name: 'when', type: 'radio', label: this.translate.instant('laundry.todayLabel'), value: toDateOnlyString(new Date()), checked: true },
+        { name: 'when', type: 'radio', label: this.translate.instant('laundry.tomorrowLabel'), value: toDateOnlyString(new Date(Date.now() + 86_400_000)) },
+        { name: 'note', type: 'text', placeholder: this.translate.instant('laundry.notePlaceholder') },
       ],
       buttons: [
-        { text: 'cancel', role: 'cancel' },
-        { text: 'send', role: 'confirm' },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+        { text: this.translate.instant('laundry.send'), role: 'confirm' },
       ],
     });
     await alert.present();
@@ -350,9 +364,9 @@ export class LaundryPage implements ViewWillEnter {
       await firstValueFrom(
         this.pickupRequestsApi.create({ serviceContactId, requestedDate: data.values.when, note: data.values.note || null }),
       );
-      await this.toast('pickup requested 📬');
+      await this.toast(this.translate.instant('laundry.pickupRequested'));
     } catch (e) {
-      await this.toast((e as { error?: { title?: string } })?.error?.title ?? "couldn't send that request", 'danger');
+      await this.toast((e as { error?: { title?: string } })?.error?.title ?? this.translate.instant('laundry.couldntSendRequest'), 'danger');
     }
   }
 
@@ -372,13 +386,13 @@ export class LaundryPage implements ViewWillEnter {
 
   protected async openShareSheet(batch: LaundryBatch): Promise<void> {
     const sheet = await this.actionSheets.create({
-      header: 'Share bill',
+      header: this.translate.instant('laundry.shareBillTitle'),
       buttons: [
         ...(batch.contactPhone
-          ? [{ text: 'Share via WhatsApp', icon: 'logo-whatsapp', handler: () => this.shareBill(batch) }]
+          ? [{ text: this.translate.instant('laundry.shareViaWhatsapp'), icon: 'logo-whatsapp', handler: () => this.shareBill(batch) }]
           : []),
-        { text: 'Share with others', icon: 'share-social-outline', handler: () => void this.shareBillWithOthers(batch) },
-        { text: 'cancel', role: 'cancel' },
+        { text: this.translate.instant('laundry.shareWithOthers'), icon: 'share-social-outline', handler: () => void this.shareBillWithOthers(batch) },
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
       ],
     });
     await sheet.present();
@@ -413,9 +427,9 @@ export class LaundryPage implements ViewWillEnter {
 
   protected async remove(batch: LaundryBatch, sliding?: IonItemSliding): Promise<void> {
     await sliding?.close();
-    if (!(await this.confirmDelete('Delete this laundry entry?'))) return;
+    if (!(await this.confirmDelete(this.translate.instant('laundry.deleteConfirm')))) return;
     await firstValueFrom(this.laundry.delete(batch.id));
-    await this.toast('entry removed');
+    await this.toast(this.translate.instant('laundry.entryRemoved'));
     await this.load();
   }
 
@@ -437,7 +451,7 @@ export class LaundryPage implements ViewWillEnter {
       this.history.set(history);
       void this.notifications.sync(active);
     } catch {
-      await this.toast("can't reach the server rn 😵‍💫", 'danger');
+      await this.toast(this.translate.instant('laundry.toastServerError'), 'danger');
     } finally {
       this.loading.set(false);
     }
@@ -445,11 +459,11 @@ export class LaundryPage implements ViewWillEnter {
 
   private async confirmDelete(message: string): Promise<boolean> {
     const alert = await this.alerts.create({
-      header: 'Delete?',
+      header: this.translate.instant('laundry.deleteTitle'),
       message,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Delete', role: 'destructive' },
+        { text: this.translate.instant('laundry.cancelBtn'), role: 'cancel' },
+        { text: this.translate.instant('laundry.deleteBtn'), role: 'destructive' },
       ],
     });
     await alert.present();

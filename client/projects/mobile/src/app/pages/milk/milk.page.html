@@ -16,8 +16,8 @@
   } @else if (!subscription()) {
     <div class="empty ion-padding">
       <span aria-hidden="true">🥛</span>
-      <p>No milk subscription set up yet.</p>
-      <ion-button (click)="openSubscriptionEditor()">Set up milk tracking</ion-button>
+      <p>{{ 'milk.emptyText' | translate }}</p>
+      <ion-button (click)="openSubscriptionEditor()">{{ 'milk.setupButton' | translate }}</ion-button>
     </div>
   } @else {
     <section class="card contact-card">
@@ -25,7 +25,7 @@
         <div class="avatar">{{ subscription()?.isSelfCollected ? '🛒' : '🧑‍🍼' }}</div>
         <div class="mk-info">
           <div class="nm">
-            {{ contact()?.name ?? (subscription()?.isSelfCollected ? 'Self-collected' : 'No milkman set') }}
+            {{ contact()?.name ?? (subscription()?.isSelfCollected ? ('milk.selfCollected' | translate) : ('milk.noMilkmanSet' | translate)) }}
             @if (subscription(); as s) {
               <span class="badge-blue">{{ s.settlementCycle }}</span>
             }
@@ -51,10 +51,10 @@
 
       @if (subscription(); as s) {
         <div class="stats4">
-          <div class="s4i"><div class="lbl">🌅 Morning Qty</div><div class="val">{{ s.morningEnabled ? litresLabel(s.morningQuantityLtr) : 'Off' }}</div></div>
-          <div class="s4i"><div class="lbl">🌙 Evening Qty</div><div class="val">{{ s.eveningEnabled ? litresLabel(s.eveningQuantityLtr) : 'Off' }}</div></div>
-          <div class="s4i"><div class="lbl">Rate / Ltr</div><div class="val">{{ rupeeLabel(s.ratePerLtr) }}</div></div>
-          <div class="s4i"><div class="lbl">Settlement</div><div class="val small">{{ s.settlementCycle }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'milk.morningQty' | translate }}</div><div class="val">{{ s.morningEnabled ? litresLabel(s.morningQuantityLtr) : ('milk.off' | translate) }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'milk.eveningQty' | translate }}</div><div class="val">{{ s.eveningEnabled ? litresLabel(s.eveningQuantityLtr) : ('milk.off' | translate) }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'milk.ratePerLtr' | translate }}</div><div class="val">{{ rupeeLabel(s.ratePerLtr) }}</div></div>
+          <div class="s4i"><div class="lbl">{{ 'milk.settlement' | translate }}</div><div class="val small">{{ s.settlementCycle }}</div></div>
         </div>
       }
     </section>
@@ -64,7 +64,7 @@
         @if (t.morning.enabled) {
           <section class="card today-card">
             <div class="today-head">
-              <h3>🌅 {{ isSelfCollected() ? 'Morning Pickup' : 'Morning Delivery' }}</h3>
+              <h3>🌅 {{ (isSelfCollected() ? 'milk.morningPickup' : 'milk.morningDelivery') | translate }}</h3>
             </div>
             @if (t.morning.status !== 'Paused') {
               <div class="del-inner">
@@ -72,31 +72,31 @@
                   <ion-icon [name]="t.morning.status === 'Delivered' ? 'checkmark' : 'close'" />
                 </div>
                 <div class="dt">
-                  <div class="dtt">{{ statusLabelFor(t.morning.status) }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtt">{{ statusLabelFor(t.morning.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }}</div>
                   <div class="dtq">{{ litresLabel(t.morning.quantityLtr) }}</div>
-                  <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.morning)) }}</div>
+                  <div class="dta">{{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.morning)) } }}</div>
                 </div>
               </div>
               <div class="today-actions">
                 @if (t.morning.status === 'Delivered') {
                   <button class="mbtn" (click)="markNotDelivered('Morning')">
-                    <ion-icon name="close" />{{ isSelfCollected() ? 'Not Picked Up' : 'Not Delivered' }}
+                    <ion-icon name="close" />{{ (isSelfCollected() ? 'milk.notPickedUp' : 'milk.notDelivered') | translate }}
                   </button>
                 } @else {
                   <button class="mbtn" (click)="markDelivered('Morning')">
-                    <ion-icon name="checkmark" />{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}
+                    <ion-icon name="checkmark" />{{ (isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') | translate }}
                   </button>
                 }
-                <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />Edit Qty</button>
+                <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />{{ 'milk.editQty' | translate }}</button>
                 @if (t.morning.status === 'Missed' && contact()) {
-                  <button class="mbtn wa" (click)="notifyMissed('Morning')"><ion-icon name="logo-whatsapp" />Notify</button>
+                  <button class="mbtn wa" (click)="notifyMissed('Morning')"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
                 }
               </div>
               @if (slotHint(t.morning); as hint) {
                 <div class="ontrack">{{ hint }}</div>
               }
             } @else {
-              <p class="muted">{{ isSelfCollected() ? 'Pickup' : 'Delivery' }} is paused today — see the Paused card.</p>
+              <p class="muted">{{ (isSelfCollected() ? 'milk.pickupPausedToday' : 'milk.deliveryPausedToday') | translate }}</p>
             }
           </section>
         }
@@ -104,7 +104,7 @@
         @if (t.evening.enabled) {
           <section class="card today-card">
             <div class="today-head">
-              <h3>🌙 {{ isSelfCollected() ? 'Evening Pickup' : 'Evening Delivery' }}</h3>
+              <h3>🌙 {{ (isSelfCollected() ? 'milk.eveningPickup' : 'milk.eveningDelivery') | translate }}</h3>
             </div>
             @if (t.evening.status !== 'Paused') {
               <div class="del-inner">
@@ -112,31 +112,31 @@
                   <ion-icon [name]="t.evening.status === 'Delivered' ? 'checkmark' : 'close'" />
                 </div>
                 <div class="dt">
-                  <div class="dtt">{{ statusLabelFor(t.evening.status) }}{{ t.isAuto ? ' (Auto)' : '' }}</div>
+                  <div class="dtt">{{ statusLabelFor(t.evening.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }}</div>
                   <div class="dtq">{{ litresLabel(t.evening.quantityLtr) }}</div>
-                  <div class="dta">Amount: {{ rupeeLabel(todaySlotAmount(t.evening)) }}</div>
+                  <div class="dta">{{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.evening)) } }}</div>
                 </div>
               </div>
               <div class="today-actions">
                 @if (t.evening.status === 'Delivered') {
                   <button class="mbtn" (click)="markNotDelivered('Evening')">
-                    <ion-icon name="close" />{{ isSelfCollected() ? 'Not Picked Up' : 'Not Delivered' }}
+                    <ion-icon name="close" />{{ (isSelfCollected() ? 'milk.notPickedUp' : 'milk.notDelivered') | translate }}
                   </button>
                 } @else {
                   <button class="mbtn" (click)="markDelivered('Evening')">
-                    <ion-icon name="checkmark" />{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}
+                    <ion-icon name="checkmark" />{{ (isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') | translate }}
                   </button>
                 }
-                <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />Edit Qty</button>
+                <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />{{ 'milk.editQty' | translate }}</button>
                 @if (t.evening.status === 'Missed' && contact()) {
-                  <button class="mbtn wa" (click)="notifyMissed('Evening')"><ion-icon name="logo-whatsapp" />Notify</button>
+                  <button class="mbtn wa" (click)="notifyMissed('Evening')"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
                 }
               </div>
               @if (slotHint(t.evening); as hint) {
                 <div class="ontrack">{{ hint }}</div>
               }
             } @else {
-              <p class="muted">{{ isSelfCollected() ? 'Pickup' : 'Delivery' }} is paused today — see the Paused card.</p>
+              <p class="muted">{{ (isSelfCollected() ? 'milk.pickupPausedToday' : 'milk.deliveryPausedToday') | translate }}</p>
             }
           </section>
         }
@@ -145,20 +145,20 @@
       @if (activePause(); as p) {
         <section class="card pause-card">
           <div class="sec-head">
-            <h3><ion-icon name="pause-outline" /> {{ isSelfCollected() ? 'Pickup Paused' : 'Delivery Paused' }}</h3>
-            <a routerLink="/milk-pause" class="manage-link">Manage</a>
+            <h3><ion-icon name="pause-outline" /> {{ (isSelfCollected() ? 'milk.pickupPaused' : 'milk.deliveryPaused') | translate }}</h3>
+            <a routerLink="/milk-pause" class="manage-link">{{ 'milk.manage' | translate }}</a>
           </div>
           <div class="pause-box">
             <div class="pb-range">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
             @if (p.reason) {
               <div class="pb-reason">{{ p.reason }}</div>
             }
-            <div class="pb-resume">Resumes {{ resumeDateLabel(p) }}</div>
+            <div class="pb-resume">{{ 'milk.resumes' | translate: { date: resumeDateLabel(p) } }}</div>
             <div class="pb-btns">
               @if (contact()) {
-                <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />Notify</button>
+                <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
               }
-              <button class="btn-edit" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />Edit</button>
+              <button class="btn-edit" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />{{ 'milk.edit' | translate }}</button>
             </div>
           </div>
         </section>
@@ -171,7 +171,7 @@
         <h3>{{ monthLabel() }}</h3>
         <button class="icon-btn" (click)="changeMonth(1)"><ion-icon name="chevron-forward" /></button>
       </div>
-      <p class="muted calendar-hint">Tap a day to see quantity &amp; extras</p>
+      <p class="muted calendar-hint">{{ 'milk.tapDayHint' | translate }}</p>
 
       @if (month(); as m) {
         <app-milk-calendar
@@ -181,46 +181,46 @@
           (daySelected)="showDayDetail($event)"
         />
         <div class="summary">
-          <div class="sg-item"><div class="sgl">Planned</div><div class="sgv">{{ m.summary.planned }}</div></div>
-          <div class="sg-item"><div class="sgl">{{ isSelfCollected() ? 'Picked Up' : 'Delivered' }}</div><div class="sgv g">{{ m.summary.delivered }}</div></div>
-          <div class="sg-item"><div class="sgl">Paused</div><div class="sgv o">{{ m.summary.paused }}</div></div>
-          <div class="sg-item"><div class="sgl">Missed</div><div class="sgv r">{{ m.summary.missed }}</div></div>
+          <button type="button" class="sg-item" (click)="showDaysForStatus('planned')"><div class="sgl">{{ 'milk.planned' | translate }}</div><div class="sgv">{{ m.summary.planned }}</div></button>
+          <button type="button" class="sg-item" (click)="showDaysForStatus('delivered')"><div class="sgl">{{ (isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') | translate }}</div><div class="sgv g">{{ m.summary.delivered }}</div></button>
+          <button type="button" class="sg-item" (click)="showDaysForStatus('paused')"><div class="sgl">{{ 'milk.paused' | translate }}</div><div class="sgv o">{{ m.summary.paused }}</div></button>
+          <button type="button" class="sg-item" (click)="showDaysForStatus('missed')"><div class="sgl">{{ 'milk.missed' | translate }}</div><div class="sgv r">{{ m.summary.missed }}</div></button>
         </div>
 
         <div class="amt-rows">
           <div class="amt-row">
-            <div class="ar-lbl">Regular ({{ m.summary.delivered }} days {{ isSelfCollected() ? 'picked up' : 'delivered' }}, {{ litresLabel(m.summary.regularLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+            <div class="ar-lbl">{{ 'milk.regularSummary' | translate: { count: m.summary.delivered, verb: (isSelfCollected() ? 'milk.pickedUpVerb' : 'milk.deliveredVerb') | translate, qty: litresLabel(m.summary.regularLitres), rate: rupeeLabel(m.summary.ratePerLtr) } }}</div>
             <div class="ar-val">{{ rupeeLabel(m.summary.regularAmount) }}</div>
           </div>
           @if (m.summary.extraLitres > 0) {
             <div class="amt-row">
-              <div class="ar-lbl">Extra ({{ litresLabel(m.summary.extraLitres) }} × {{ rupeeLabel(m.summary.ratePerLtr) }})</div>
+              <div class="ar-lbl">{{ 'milk.extraSummary' | translate: { qty: litresLabel(m.summary.extraLitres), rate: rupeeLabel(m.summary.ratePerLtr) } }}</div>
               <div class="ar-val">{{ rupeeLabel(m.summary.extraAmount) }}</div>
             </div>
           }
-          <div class="amt-row total"><div class="ar-lbl">Total Amount</div><div class="ar-val">{{ rupeeLabel(m.summary.totalAmount) }}</div></div>
+          <div class="amt-row total"><div class="ar-lbl">{{ 'milk.totalAmount' | translate }}</div><div class="ar-val">{{ rupeeLabel(m.summary.totalAmount) }}</div></div>
         </div>
 
         <div class="pay-status">
           <div class="ps-left">
-            <div class="psl">Payment Status</div>
-            <div class="pss" [class.paid]="m.summary.isPaid">{{ m.summary.isPaid ? 'PAID' : 'PENDING' }}</div>
+            <div class="psl">{{ 'milk.paymentStatus' | translate }}</div>
+            <div class="pss" [class.paid]="m.summary.isPaid">{{ (m.summary.isPaid ? 'milk.paidChip' : 'milk.pendingChip') | translate }}</div>
           </div>
           <button class="mpaid-btn" [class.pending]="m.summary.isPaid" (click)="toggleSettlementPaid()">
-            {{ m.summary.isPaid ? 'Mark as Pending' : 'Mark as Paid' }}
+            {{ (m.summary.isPaid ? 'milk.markPending' : 'milk.markPaid') | translate }}
           </button>
         </div>
 
         <div class="payments-box">
           <div class="pb-row">
-            <div><div class="psl">Paid So Far</div><div class="pss good">{{ rupeeLabel(m.summary.paidSoFar) }}</div></div>
-            <div><div class="psl">Balance Due</div><div class="pss">{{ rupeeLabel(balanceDue()) }}</div></div>
+            <div><div class="psl">{{ 'milk.paidSoFar' | translate }}</div><div class="pss good">{{ rupeeLabel(m.summary.paidSoFar) }}</div></div>
+            <div><div class="psl">{{ 'milk.balanceDue' | translate }}</div><div class="pss">{{ rupeeLabel(balanceDue()) }}</div></div>
           </div>
           <div class="pb-btns">
             @if (providerPaymentInfo()?.upiId && balanceDue() > 0) {
-              <ion-button size="small" (click)="payViaUpi()">💳 Pay via UPI</ion-button>
+              <button class="btn-upi" (click)="payViaUpi()">{{ 'milk.payViaUpiBtn' | translate }}</button>
             }
-            <ion-button size="small" fill="outline" (click)="recordPayment()">+ Record Payment</ion-button>
+            <button class="btn-record" (click)="recordPayment()">{{ 'milk.recordPaymentBtn' | translate }}</button>
           </div>
           @if (payments().length > 0) {
             <div class="pb-list">
@@ -231,9 +231,9 @@
                     <span class="pb-date">
                       {{ shortDateLabel(p.date) }}{{ p.note ? ' · ' + p.note : '' }}
                       @if (p.status === 'AwaitingConfirmation') {
-                        <span class="pb-status pending">⏳ awaiting confirmation</span>
+                        <span class="pb-status pending">{{ 'milk.awaitingConfirmation' | translate }}</span>
                       } @else if (p.status === 'Rejected') {
-                        <span class="pb-status rejected">❌ rejected — not received</span>
+                        <span class="pb-status rejected">{{ 'milk.rejected' | translate }}</span>
                       }
                     </span>
                   </div>
@@ -245,22 +245,22 @@
         </div>
         <div class="share-row">
           @if (contact()) {
-            <button class="share-wa-btn" (click)="shareSettlement()"><ion-icon name="logo-whatsapp" />Share</button>
+            <button class="share-wa-btn" (click)="shareSettlement()"><ion-icon name="logo-whatsapp" />{{ 'milk.share' | translate }}</button>
           }
           <button class="share-other-btn" (click)="shareSettlementWithOthers()">
-            <ion-icon name="share-social-outline" />Share
+            <ion-icon name="share-social-outline" />{{ 'milk.share' | translate }}
           </button>
         </div>
       }
     </section>
 
     <section class="card">
-      <h3>Upcoming Schedule</h3>
+      <h3>{{ 'milk.upcomingSchedule' | translate }}</h3>
       <div class="uc-scroll">
         @for (card of upcomingCards(); track card.kind + card.data.id) {
           @if (card.kind === 'extra') {
             <div class="uc-item ex">
-              <div class="uc-tp ex"><ion-icon name="add" />Extra Milk ({{ slotLabels[card.data.slot] }})</div>
+              <div class="uc-tp ex"><ion-icon name="add" />{{ 'milk.extraMilkLabel' | translate: { slot: slotLabels[card.data.slot] } }}</div>
               <div class="uc-dt">{{ shortDateLabel(card.data.date) }}</div>
               <div class="uc-qty">+{{ litresLabel(card.data.quantityLtr) }}</div>
               @if (card.data.reason) {
@@ -271,16 +271,17 @@
             </div>
           } @else if (card.kind === 'pause') {
             <div class="uc-item ps" (click)="openPauseEditor(card.data)">
-              <div class="uc-tp ps"><ion-icon name="pause-outline" />Pause</div>
+              <div class="uc-tp ps"><ion-icon name="pause-outline" />{{ 'milk.pauseLabel' | translate }}</div>
               <div class="uc-dt">{{ pauseRangeLabel(card.data.startDate, card.data.endDate) }}</div>
               @if (card.data.reason) {
                 <div class="uc-rsn">{{ card.data.reason }}</div>
               }
+              <button class="uc-del" (click)="notifyMilkman(card.data); $event.stopPropagation()"><ion-icon name="logo-whatsapp" /></button>
               <button class="uc-del" (click)="cancelPause(card.data); $event.stopPropagation()"><ion-icon name="trash" /></button>
             </div>
           } @else {
             <div class="uc-item qc" (click)="openQuantityChangeEditor(card.data)">
-              <div class="uc-tp qc"><ion-icon name="create-outline" />Quantity Change</div>
+              <div class="uc-tp qc"><ion-icon name="create-outline" />{{ 'milk.quantityChangeLabel' | translate }}</div>
               <div class="uc-dt">{{ pauseRangeLabel(card.data.startDate, card.data.endDate) }}</div>
               <div class="uc-qty">🌅 {{ litresLabel(card.data.morningQuantityLtr) }} · 🌙 {{ litresLabel(card.data.eveningQuantityLtr) }}</div>
               @if (card.data.reason) {
@@ -293,15 +294,15 @@
         }
         <div class="add-uc" (click)="openAddSheet()">
           <ion-icon name="add" />
-          <span>Add New<br />Extra / Pause</span>
+          <span>{{ 'milk.addNew' | translate }}<br />{{ 'milk.extraPause' | translate }}</span>
         </div>
       </div>
     </section>
 
     <section class="card">
-      <h3>Recent Activity</h3>
+      <h3>{{ 'milk.recentActivity' | translate }}</h3>
       @if (activity().length === 0) {
-        <p class="muted">No activity yet.</p>
+        <p class="muted">{{ 'milk.noActivity' | translate }}</p>
       } @else {
         <div class="act-list">
           @for (a of activity(); track a.occurredAt) {
@@ -311,7 +312,7 @@
                 <div class="att">
                   {{ a.description }}
                   @if (a.addedByProviderName) {
-                    <span class="by-provider">· added by {{ a.addedByProviderName }}</span>
+                    <span class="by-provider">{{ 'milk.addedByProvider' | translate: { name: a.addedByProviderName } }}</span>
                   }
                 </div>
                 <div class="ats">{{ shortDateLabel(a.date) }}, {{ timeOfDayLabel(a.occurredAt) }}</div>

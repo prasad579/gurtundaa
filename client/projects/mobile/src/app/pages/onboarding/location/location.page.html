@@ -1,27 +1,27 @@
 <app-onboarding-shell
   [step]="4"
-  title="where do you live?"
-  subtitle="we use this for local weather alerts, holidays and better reminders"
+  title="onboarding.location.title"
+  subtitle="onboarding.location.subtitle"
   (back)="back()"
   (continueClick)="continue()"
   (skip)="skip()"
 >
   <label class="city-field">
-    <span>city</span>
+    <span>{{ 'onboarding.location.city' | translate }}</span>
     <input
       type="text"
       [value]="state.city()"
-      placeholder="e.g. chennai, tamil nadu"
+      [placeholder]="'onboarding.location.cityPlaceholder' | translate"
       (input)="onCityInput($any($event.target).value)"
     />
   </label>
 
   <div class="why">
-    <strong>why we need your location?</strong>
+    <strong>{{ 'onboarding.location.whyTitle' | translate }}</strong>
     <ul>
-      <li>accurate weather alerts & smart reminders</li>
-      <li>local holidays & important updates</li>
-      <li>relevant suggestions for your area</li>
+      <li>{{ 'onboarding.location.why1' | translate }}</li>
+      <li>{{ 'onboarding.location.why2' | translate }}</li>
+      <li>{{ 'onboarding.location.why3' | translate }}</li>
     </ul>
   </div>
 </app-onboarding-shell>
