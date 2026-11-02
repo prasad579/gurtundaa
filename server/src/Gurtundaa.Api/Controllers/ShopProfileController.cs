@@ -37,4 +37,23 @@ public class ShopProfileController(IShopProfileService shopProfile) : Controller
         await using var stream = file.OpenReadStream();
         return Ok(await shopProfile.UploadImageAsync(stream, extension, ct));
     }
+
+    [HttpPost("owner-photo")]
+    [RequestSizeLimit(5_000_000)] // 5 MB
+    public async Task<ActionResult<UploadShopOwnerPhotoResponse>> UploadOwnerPhoto(IFormFile file, CancellationToken ct)
+    {
+        if (file.Length == 0)
+        {
+            return BadRequest("No file uploaded.");
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            return BadRequest("Only .jpg, .jpeg, .png, or .webp images are allowed.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        return Ok(await shopProfile.UploadOwnerPhotoAsync(stream, extension, ct));
+    }
 }

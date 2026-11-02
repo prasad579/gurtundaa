@@ -47,6 +47,13 @@
     .t { font-size: 12px; font-weight: 700; color: #c62828; }
     .s { font-size: 10.5px; color: var(--ion-color-medium); margin-top: 1px; }
   }
+
+  &.visit {
+    background: rgb(230 81 0 / 0.08);
+    border-color: rgb(230 81 0 / 0.3);
+
+    .t { color: #e65100; }
+  }
 }
 
 // ---------- Today's Medicines ----------
@@ -148,11 +155,29 @@
   min-width: 90px;
   flex-shrink: 0;
   background: var(--ion-color-step-50, #f7f8fb);
-  border: 1px solid var(--ion-color-step-100, #e8eaee);
+  border: 1.5px solid var(--ion-color-step-100, #e8eaee);
   border-radius: 12px;
   padding: 10px;
   text-align: center;
   cursor: pointer;
+  position: relative;
+
+  &.selected {
+    border-color: var(--ion-color-primary, #7c3aed);
+    background: rgb(124 58 237 / 0.08);
+  }
+}
+
+.ct-edit {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  padding: 2px;
+  color: var(--ion-color-medium);
+  font-size: 12px;
+  line-height: 0;
 }
 
 .ct-av {
@@ -193,6 +218,8 @@
   cursor: pointer;
 
   &:last-of-type { border-bottom: none; }
+
+  &.stopped { opacity: 0.55; }
 }
 
 .stk-info {
@@ -201,6 +228,16 @@
 
   .sn { font-size: 12px; font-weight: 700; }
   .sn .purpose { font-size: 11px; font-weight: 400; color: var(--ion-color-medium); }
+  .sn .stopped-badge {
+    margin-left: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ion-color-medium);
+    background: var(--ion-color-step-100, #efeaf9);
+    border-radius: 6px;
+    padding: 2px 6px;
+  }
   .ss { font-size: 10px; color: var(--ion-color-medium); margin: 1px 0 4px; }
   .next-visit { font-size: 10px; color: #e65100; font-weight: 600; margin-bottom: 4px; }
 }
@@ -248,6 +285,24 @@
   border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
 
   &:last-of-type { border-bottom: none; }
+}
+
+// ---------- Pharmacy orders ----------
+
+.ph-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+  cursor: pointer;
+
+  &:last-of-type { border-bottom: none; }
+
+  .ph-ic { font-size: 18px; flex-shrink: 0; }
+  .ph-txt { flex: 1; min-width: 0; }
+  .pn { font-size: 12px; font-weight: 700; }
+  .ps { font-size: 10px; color: var(--ion-color-medium); margin-top: 1px; text-transform: capitalize; }
 }
 
 .rx-ic { font-size: 18px; flex-shrink: 0; }

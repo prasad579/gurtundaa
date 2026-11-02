@@ -18,7 +18,6 @@ import {
   rupeesInWords,
   shareOnWhatsApp,
   shortDateLabel,
-  toDateOnlyString,
   waLink,
 } from '@gurtundaa/shared';
 import {
@@ -69,6 +68,7 @@ import { shareText } from '../../services/share';
 import { ContactEditorComponent } from '../contacts/contact-editor.component';
 import { LaundryEntryEditorComponent, LaundryEntryEditorResult } from './laundry-entry-editor.component';
 import { LaundryPickupComponent } from './laundry-pickup.component';
+import { LaundryPickupRequestSheetComponent, LaundryPickupRequestResult } from './laundry-pickup-request-sheet.component';
 
 @Component({
   selector: 'app-laundry',
@@ -246,10 +246,10 @@ export class LaundryPage implements ViewWillEnter {
     return batch.photoUrl ? `${this.apiOrigin}${batch.photoUrl}` : null;
   }
 
-  protected async addDhobiContact(): Promise<void> {
+  protected async addDhobiContact(contact?: ServiceContact): Promise<void> {
     const modal = await this.modals.create({
       component: ContactEditorComponent,
-      componentProps: { defaultCategory: 'Laundry' },
+      componentProps: { contact, defaultCategory: 'Laundry' },
       breakpoints: [0, 0.9, 1],
       initialBreakpoint: 0.9,
     });
@@ -258,8 +258,8 @@ export class LaundryPage implements ViewWillEnter {
     const { data, role } = await modal.onWillDismiss();
     if (role !== 'save' || !data) return;
 
-    await firstValueFrom(this.contactsApi.create(data));
-    await this.toast(this.translate.instant('laundry.contactAdded'));
+    await firstValueFrom(contact ? this.contactsApi.update(contact.id, data) : this.contactsApi.create(data));
+    await this.toast(this.translate.instant(contact ? 'laundry.contactUpdated' : 'laundry.contactAdded'));
     await this.load();
   }
 
@@ -343,27 +343,18 @@ export class LaundryPage implements ViewWillEnter {
   }
 
   protected async requestPickup(serviceContactId: string): Promise<void> {
-    const alert = await this.alerts.create({
-      header: this.translate.instant('laundry.requestPickupTitle'),
-      message: this.translate.instant('laundry.requestPickupMessage'),
-      inputs: [
-        { name: 'when', type: 'radio', label: this.translate.instant('laundry.todayLabel'), value: toDateOnlyString(new Date()), checked: true },
-        { name: 'when', type: 'radio', label: this.translate.instant('laundry.tomorrowLabel'), value: toDateOnlyString(new Date(Date.now() + 86_400_000)) },
-        { name: 'note', type: 'text', placeholder: this.translate.instant('laundry.notePlaceholder') },
-      ],
-      buttons: [
-        { text: this.translate.instant('common.cancel'), role: 'cancel' },
-        { text: this.translate.instant('laundry.send'), role: 'confirm' },
-      ],
+    const modal = await this.modals.create({
+      component: LaundryPickupRequestSheetComponent,
+      breakpoints: [0, 0.5, 0.8],
+      initialBreakpoint: 0.5,
     });
-    await alert.present();
-    const { role, data } = await alert.onWillDismiss();
-    if (role !== 'confirm') return;
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss<LaundryPickupRequestResult>();
+    if (role !== 'send' || !data) return;
 
     try {
-      await firstValueFrom(
-        this.pickupRequestsApi.create({ serviceContactId, requestedDate: data.values.when, note: data.values.note || null }),
-      );
+      await firstValueFrom(this.pickupRequestsApi.create({ serviceContactId, requestedDate: data.when, note: data.note }));
       await this.toast(this.translate.instant('laundry.pickupRequested'));
     } catch (e) {
       await this.toast((e as { error?: { title?: string } })?.error?.title ?? this.translate.instant('laundry.couldntSendRequest'), 'danger');

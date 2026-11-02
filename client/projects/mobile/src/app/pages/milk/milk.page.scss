@@ -122,28 +122,41 @@
   .val.small { font-size: 10px; }
 }
 
-// ---------- Today's Delivery + Paused ----------
+// ---------- Today hero (merged morning/evening + paused banner) ----------
 
-.row2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 0 16px 12px;
-
-  .card { margin: 0; }
-
-  &.full { grid-template-columns: 1fr; }
+.hero {
+  padding: 0;
+  overflow: hidden;
 }
 
-.del-inner {
+.hero-head {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 55%, #f97316 100%);
+  padding: 12px 16px;
+  color: #fff;
+
+  &.paused { background: linear-gradient(135deg, #8a6200, #ffc409); }
+
+  .ht-lbl { font-size: 10px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ht-main { font-size: 15px; font-weight: 800; margin-top: 2px; }
+}
+
+.hero-body {
+  padding: 10px 14px 14px;
+}
+
+.slot-row {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ion-color-step-100, #efeaf9);
+
+  &:last-of-type { border-bottom: none; }
 }
 
-.del-badge {
-  width: 32px;
-  height: 32px;
+.slot-circle {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -151,102 +164,105 @@
   flex-shrink: 0;
   font-size: 15px;
   color: #fff;
+  border: none;
+  padding: 0;
+  background: var(--ion-color-medium, #92949c);
 
   &.delivered { background: #2dd36f; }
   &.missed { background: #eb445a; }
 }
 
-.dt {
-  .dtt { font-size: 10.5px; font-weight: 700; color: var(--ion-color-medium); }
-  .dtq { font-size: 17px; font-weight: 800; line-height: 1.2; }
-  .dta { font-size: 10px; color: var(--ion-color-medium); }
+.slot-info {
+  flex: 1;
+  min-width: 0;
+
+  .slot-nm { font-size: 12.5px; font-weight: 700; }
+  .slot-qty { font-size: 10.5px; color: var(--ion-color-medium); margin-top: 1px; }
 }
 
-.today-actions {
+.slot-more {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ion-color-step-50, #f7f5fb);
+  border: none;
+  color: var(--ion-color-medium);
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
 }
 
-.mbtn {
-  background: #fff;
-  border: 1px solid var(--ion-color-step-150, #ddd);
-  border-radius: 7px;
-  padding: 5px 8px;
+.tap-hint {
   font-size: 9.5px;
-  color: var(--ion-color-primary);
-  font-weight: 600;
+  color: var(--ion-color-medium);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.pause-banner {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 10px;
+
+  .pic {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgb(255 196 9 / 0.18);
+    color: #b36b00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .pt { flex: 1; min-width: 0; }
+  .pt1 { font-size: 12.5px; font-weight: 800; }
+  .pt2 { font-size: 10.5px; color: var(--ion-color-medium); margin-top: 1px; }
+}
+
+.btn-resume {
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  flex-shrink: 0;
   white-space: nowrap;
-
-  ion-icon { font-size: 11px; }
-
-  &.wa { background: #25d366; color: #fff; border-color: #25d366; }
 }
 
-.ontrack {
-  background: rgb(45 211 111 / 0.12);
-  border-radius: 7px;
-  padding: 6px 9px;
-  margin-top: 8px;
-  font-size: 10px;
-  color: #2e7d32;
-  font-weight: 600;
+.pause-sub-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  padding-left: 48px;
 }
 
-.sec-head {
+.link-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-
-  h3 { margin: 0; }
-}
-
-.manage-link {
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--ion-color-primary);
+  background: none;
+  border: none;
+  padding: 0;
   text-decoration: none;
-}
 
-.pause-card .pause-box {
-  background: rgb(255 196 9 / 0.14);
-  border: 1px solid rgb(255 196 9 / 0.4);
-  border-radius: 10px;
-  padding: 10px;
+  ion-icon { font-size: 13px; }
 }
-
-.pb-range { font-size: 11.5px; font-weight: 700; color: #e65100; }
-.pb-reason { font-size: 10.5px; color: #795548; margin-top: 2px; }
-.pb-resume { font-size: 10.5px; color: #388e3c; font-weight: 700; margin-top: 6px; }
 
 .pb-btns {
   display: flex;
   gap: 6px;
   margin-top: 8px;
 }
-
-.btn-wa, .btn-edit {
-  flex: 1;
-  border-radius: 7px;
-  padding: 6px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border: none;
-
-  ion-icon { font-size: 12px; }
-}
-
-.btn-wa { background: #25d366; color: #fff; }
-.btn-edit { background: #fff; color: #e65100; border: 1px solid #ffb74d; }
 
 // ---------- Calendar card ----------
 

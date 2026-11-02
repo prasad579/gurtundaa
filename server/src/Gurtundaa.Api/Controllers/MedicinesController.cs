@@ -23,6 +23,10 @@ public class MedicinesController(IMedicineService medicines) : ControllerBase
     public async Task<ActionResult<MedicineDto>> Update(Guid id, SaveMedicineRequest request, CancellationToken ct) =>
         await medicines.UpdateAsync(id, request, ct) is { } medicine ? Ok(medicine) : NotFound();
 
+    [HttpPut("{id:guid}/active")]
+    public async Task<ActionResult<MedicineDto>> SetActive(Guid id, SetMedicineActiveRequest request, CancellationToken ct) =>
+        await medicines.SetActiveAsync(id, request.IsActive, ct) is { } medicine ? Ok(medicine) : NotFound();
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
         await medicines.DeleteAsync(id, ct) ? NoContent() : NotFound();

@@ -1269,6 +1269,9 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.Property<TimeOnly?>("OpensAt")
                         .HasColumnType("time");
 
+                    b.Property<string>("OwnerPhotoUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PriceListJson")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

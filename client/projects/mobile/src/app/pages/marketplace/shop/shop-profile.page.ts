@@ -62,9 +62,11 @@ export class ShopProfilePage implements ViewWillEnter {
   protected readonly dayOptions = DAY_OPTIONS;
   protected readonly busy = signal(false);
   protected readonly uploadingImage = signal(false);
+  protected readonly uploadingOwnerPhoto = signal(false);
   protected readonly selectedCategoryKeys = signal<ReadonlySet<string>>(new Set());
 
   protected readonly imageUrl = signal<string | null>(null);
+  protected readonly ownerPhotoUrl = signal<string | null>(null);
   protected readonly contactPhones = signal<string[]>([]);
   protected readonly newPhone = new FormControl('', { nonNullable: true });
   protected readonly opensAt = signal<string | null>(null);
@@ -88,6 +90,11 @@ export class ShopProfilePage implements ViewWillEnter {
 
   protected readonly fullImageUrl = computed(() => {
     const url = this.imageUrl();
+    return url ? `${this.apiOrigin}${url}` : null;
+  });
+
+  protected readonly fullOwnerPhotoUrl = computed(() => {
+    const url = this.ownerPhotoUrl();
     return url ? `${this.apiOrigin}${url}` : null;
   });
 
@@ -161,6 +168,23 @@ export class ShopProfilePage implements ViewWillEnter {
     }
   }
 
+  protected async onOwnerPhotoSelected(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.uploadingOwnerPhoto.set(true);
+    try {
+      const result = await firstValueFrom(this.shopProfile.uploadOwnerPhoto(file));
+      this.ownerPhotoUrl.set(result.ownerPhotoUrl);
+      await this.toast('owner photo updated ✅');
+    } catch {
+      await this.toast("couldn't upload photo, try again", 'danger');
+    } finally {
+      this.uploadingOwnerPhoto.set(false);
+      (event.target as HTMLInputElement).value = '';
+    }
+  }
+
   protected async useMyLocation(): Promise<void> {
     this.locatingMe.set(true);
     const position = await this.geo.getCurrentPosition();
@@ -185,6 +209,7 @@ export class ShopProfilePage implements ViewWillEnter {
           address: address.trim() || null,
           servedCategoryKeys: [...this.selectedCategoryKeys()],
           imageUrl: this.imageUrl(),
+          ownerPhotoUrl: this.ownerPhotoUrl(),
           contactPhones: this.contactPhones(),
           opensAt: this.opensAt(),
           closesAt: this.closesAt(),
@@ -209,6 +234,7 @@ export class ShopProfilePage implements ViewWillEnter {
       const validKeys = new Set(this.categories.map((c) => c.key));
       this.selectedCategoryKeys.set(new Set(profile.servedCategoryKeys.filter((key) => validKeys.has(key))));
       this.imageUrl.set(profile.imageUrl);
+      this.ownerPhotoUrl.set(profile.ownerPhotoUrl);
       this.contactPhones.set(profile.contactPhones);
       this.opensAt.set(profile.opensAt);
       this.closesAt.set(profile.closesAt);

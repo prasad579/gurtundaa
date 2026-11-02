@@ -17,6 +17,8 @@ import {
   MilkToday,
   BillsApi,
   PRIORITY_LABELS,
+  PrescriptionDto,
+  PrescriptionsApi,
   Reminder,
   ReminderFilter,
   ReminderStats,
@@ -27,6 +29,7 @@ import {
   emptyStateLine,
   greeting,
   isOverdue,
+  nextVisitAlerts,
   randomCheer,
   rupeeLabel,
   shortDateLabel,
@@ -105,6 +108,7 @@ export class RemindersPage implements ViewWillEnter {
   private readonly billsApi = inject(BillsApi);
   private readonly medicinesApi = inject(MedicinesApi);
   private readonly doseLogApi = inject(DoseLogApi);
+  private readonly prescriptionsApi = inject(PrescriptionsApi);
   private readonly translate = inject(TranslateService);
 
   protected readonly brand = BRAND;
@@ -134,6 +138,7 @@ export class RemindersPage implements ViewWillEnter {
   protected readonly bills = signal<Bill[]>([]);
   protected readonly healthDoses = signal<DoseEntry[]>([]);
   protected readonly healthMedicines = signal<Medicine[]>([]);
+  protected readonly healthPrescriptions = signal<PrescriptionDto[]>([]);
 
   protected readonly milkMissedSlots = computed(() => {
     const t = this.milkToday();
@@ -161,6 +166,7 @@ export class RemindersPage implements ViewWillEnter {
   protected readonly healthLowStock = computed(() =>
     this.healthMedicines().filter((m) => m.isActive && m.perDayQty > 0 && m.daysRemaining <= 2),
   );
+  protected readonly healthUpcomingVisits = computed(() => nextVisitAlerts(this.healthMedicines(), this.healthPrescriptions()));
 
   constructor() {
     addIcons({ add, pencil, trash });
@@ -271,6 +277,9 @@ export class RemindersPage implements ViewWillEnter {
         .catch(() => undefined);
       firstValueFrom(this.doseLogApi.getToday())
         .then((d) => this.healthDoses.set(d))
+        .catch(() => undefined);
+      firstValueFrom(this.prescriptionsApi.list())
+        .then((p) => this.healthPrescriptions.set(p))
         .catch(() => undefined);
     }
   }

@@ -59,111 +59,88 @@
       }
     </section>
 
-    <div class="row2" [class.full]="todayRowCardCount() === 1">
-      @if (today(); as t) {
-        @if (t.morning.enabled) {
-          <section class="card today-card">
-            <div class="today-head">
-              <h3>🌅 {{ (isSelfCollected() ? 'milk.morningPickup' : 'milk.morningDelivery') | translate }}</h3>
-            </div>
-            @if (t.morning.status !== 'Paused') {
-              <div class="del-inner">
-                <div class="del-badge" [class]="t.morning.status.toLowerCase()">
-                  <ion-icon [name]="t.morning.status === 'Delivered' ? 'checkmark' : 'close'" />
-                </div>
-                <div class="dt">
-                  <div class="dtt">{{ statusLabelFor(t.morning.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }}</div>
-                  <div class="dtq">{{ litresLabel(t.morning.quantityLtr) }}</div>
-                  <div class="dta">{{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.morning)) } }}</div>
-                </div>
-              </div>
-              <div class="today-actions">
-                @if (t.morning.status === 'Delivered') {
-                  <button class="mbtn" (click)="markNotDelivered('Morning')">
-                    <ion-icon name="close" />{{ (isSelfCollected() ? 'milk.notPickedUp' : 'milk.notDelivered') | translate }}
-                  </button>
-                } @else {
-                  <button class="mbtn" (click)="markDelivered('Morning')">
-                    <ion-icon name="checkmark" />{{ (isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') | translate }}
-                  </button>
-                }
-                <button class="mbtn" (click)="editQuantity('Morning', t.morning)"><ion-icon name="create-outline" />{{ 'milk.editQty' | translate }}</button>
-                @if (t.morning.status === 'Missed' && contact()) {
-                  <button class="mbtn wa" (click)="notifyMissed('Morning')"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
-                }
-              </div>
-              @if (slotHint(t.morning); as hint) {
-                <div class="ontrack">{{ hint }}</div>
-              }
+    @if (today(); as t) {
+      <section class="card hero">
+        <div class="hero-head" [class.paused]="t.morning.status === 'Paused' || t.evening.status === 'Paused'">
+          <div class="ht-lbl">{{ 'milk.todayHeroLabel' | translate }} · {{ shortDateLabel(t.date) }}</div>
+          <div class="ht-main">
+            @if (t.morning.status === 'Paused' || t.evening.status === 'Paused') {
+              {{ (isSelfCollected() ? 'milk.pickupPaused' : 'milk.deliveryPaused') | translate }} ⏸️
             } @else {
-              <p class="muted">{{ (isSelfCollected() ? 'milk.pickupPausedToday' : 'milk.deliveryPausedToday') | translate }}</p>
+              {{ heroSummaryLabel(t) }}
             }
-          </section>
-        }
-
-        @if (t.evening.enabled) {
-          <section class="card today-card">
-            <div class="today-head">
-              <h3>🌙 {{ (isSelfCollected() ? 'milk.eveningPickup' : 'milk.eveningDelivery') | translate }}</h3>
-            </div>
-            @if (t.evening.status !== 'Paused') {
-              <div class="del-inner">
-                <div class="del-badge" [class]="t.evening.status.toLowerCase()">
-                  <ion-icon [name]="t.evening.status === 'Delivered' ? 'checkmark' : 'close'" />
-                </div>
-                <div class="dt">
-                  <div class="dtt">{{ statusLabelFor(t.evening.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }}</div>
-                  <div class="dtq">{{ litresLabel(t.evening.quantityLtr) }}</div>
-                  <div class="dta">{{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.evening)) } }}</div>
-                </div>
-              </div>
-              <div class="today-actions">
-                @if (t.evening.status === 'Delivered') {
-                  <button class="mbtn" (click)="markNotDelivered('Evening')">
-                    <ion-icon name="close" />{{ (isSelfCollected() ? 'milk.notPickedUp' : 'milk.notDelivered') | translate }}
-                  </button>
-                } @else {
-                  <button class="mbtn" (click)="markDelivered('Evening')">
-                    <ion-icon name="checkmark" />{{ (isSelfCollected() ? 'milk.pickedUp' : 'milk.delivered') | translate }}
-                  </button>
-                }
-                <button class="mbtn" (click)="editQuantity('Evening', t.evening)"><ion-icon name="create-outline" />{{ 'milk.editQty' | translate }}</button>
-                @if (t.evening.status === 'Missed' && contact()) {
-                  <button class="mbtn wa" (click)="notifyMissed('Evening')"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
-                }
-              </div>
-              @if (slotHint(t.evening); as hint) {
-                <div class="ontrack">{{ hint }}</div>
-              }
-            } @else {
-              <p class="muted">{{ (isSelfCollected() ? 'milk.pickupPausedToday' : 'milk.deliveryPausedToday') | translate }}</p>
-            }
-          </section>
-        }
-      }
-
-      @if (activePause(); as p) {
-        <section class="card pause-card">
-          <div class="sec-head">
-            <h3><ion-icon name="pause-outline" /> {{ (isSelfCollected() ? 'milk.pickupPaused' : 'milk.deliveryPaused') | translate }}</h3>
-            <a routerLink="/milk-pause" class="manage-link">{{ 'milk.manage' | translate }}</a>
           </div>
-          <div class="pause-box">
-            <div class="pb-range">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
-            @if (p.reason) {
-              <div class="pb-reason">{{ p.reason }}</div>
+        </div>
+        <div class="hero-body">
+          @if (t.morning.status === 'Paused' || t.evening.status === 'Paused') {
+            @if (activePause(); as p) {
+              <div class="pause-banner">
+                <div class="pic"><ion-icon name="pause-outline" /></div>
+                <div class="pt">
+                  <div class="pt1">{{ pauseRangeLabel(p.startDate, p.endDate) }}</div>
+                  @if (p.reason) {
+                    <div class="pt2">{{ p.reason }}</div>
+                  }
+                  <div class="pt2">{{ 'milk.resumes' | translate: { date: resumeDateLabel(p) } }}</div>
+                </div>
+                <button class="btn-resume" (click)="resumeNow(p)">{{ 'milk.resumeNow' | translate }}</button>
+              </div>
+              <div class="pause-sub-actions">
+                @if (contact()) {
+                  <button class="link-btn" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
+                }
+                <button class="link-btn" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />{{ 'milk.edit' | translate }}</button>
+                <a routerLink="/milk-pause" class="link-btn">{{ 'milk.manage' | translate }}</a>
+              </div>
             }
-            <div class="pb-resume">{{ 'milk.resumes' | translate: { date: resumeDateLabel(p) } }}</div>
-            <div class="pb-btns">
-              @if (contact()) {
-                <button class="btn-wa" (click)="notifyMilkman(p)"><ion-icon name="logo-whatsapp" />{{ 'milk.notify' | translate }}</button>
-              }
-              <button class="btn-edit" (click)="openPauseEditor(p)"><ion-icon name="create-outline" />{{ 'milk.edit' | translate }}</button>
-            </div>
-          </div>
-        </section>
-      }
-    </div>
+          } @else {
+            @if (t.morning.enabled) {
+              <div class="slot-row">
+                <button
+                  class="slot-circle"
+                  [class.delivered]="t.morning.status === 'Delivered'"
+                  [class.missed]="t.morning.status === 'Missed'"
+                  (click)="t.morning.status === 'Missed' ? markDelivered('Morning') : markNotDelivered('Morning')"
+                >
+                  <ion-icon [name]="t.morning.status === 'Missed' ? 'close' : 'checkmark'" />
+                </button>
+                <div class="slot-info">
+                  <div class="slot-nm">🌅 {{ (isSelfCollected() ? 'milk.morningPickup' : 'milk.morningDelivery') | translate }}</div>
+                  <div class="slot-qty">
+                    {{ statusLabelFor(t.morning.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }} ·
+                    {{ litresLabel(t.morning.quantityLtr) }} ·
+                    {{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.morning)) } }}
+                  </div>
+                </div>
+                <button class="slot-more" (click)="openSlotMenu('Morning', t.morning)"><ion-icon name="ellipsis-horizontal" /></button>
+              </div>
+            }
+            @if (t.evening.enabled) {
+              <div class="slot-row">
+                <button
+                  class="slot-circle"
+                  [class.delivered]="t.evening.status === 'Delivered'"
+                  [class.missed]="t.evening.status === 'Missed'"
+                  (click)="t.evening.status === 'Missed' ? markDelivered('Evening') : markNotDelivered('Evening')"
+                >
+                  <ion-icon [name]="t.evening.status === 'Missed' ? 'close' : 'checkmark'" />
+                </button>
+                <div class="slot-info">
+                  <div class="slot-nm">🌙 {{ (isSelfCollected() ? 'milk.eveningPickup' : 'milk.eveningDelivery') | translate }}</div>
+                  <div class="slot-qty">
+                    {{ statusLabelFor(t.evening.status) }} {{ t.isAuto ? ('milk.auto' | translate) : '' }} ·
+                    {{ litresLabel(t.evening.quantityLtr) }} ·
+                    {{ 'milk.amountLabel' | translate: { amount: rupeeLabel(todaySlotAmount(t.evening)) } }}
+                  </div>
+                </div>
+                <button class="slot-more" (click)="openSlotMenu('Evening', t.evening)"><ion-icon name="ellipsis-horizontal" /></button>
+              </div>
+            }
+            <div class="tap-hint">{{ 'milk.heroTapHint' | translate }}</div>
+          }
+        </div>
+      </section>
+    }
 
     <section class="card">
       <div class="month-nav">

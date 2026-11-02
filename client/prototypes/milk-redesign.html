@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Milk — Simplified Redesign — Prototype</title>
+<style>
+  :root {
+    --grad: linear-gradient(135deg, #7c3aed 0%, #ec4899 55%, #f97316 100%);
+    --ink: #1f1330;
+    --muted: #8a7fa3;
+    --bg-soft: #f7f5fb;
+    --line: #ece7f7;
+    --green: #2dd36f;
+    --green-ink: #1f7a43;
+    --amber: #ffc409;
+    --amber-ink: #8a6200;
+    --red: #eb445a;
+    --red-ink: #b4203a;
+    --purple: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: #0f0a1a;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 28px;
+    margin: 0;
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  h1 { color: #e9e4f5; font-size: 20px; width: 100%; margin: 0 0 4px; }
+  .sub { color: #a89dc4; font-size: 13px; width: 100%; margin: 0 0 8px; max-width: 920px; line-height: 1.6; }
+  .sub b { color: #d8cdf0; }
+  .changelist { color: #a89dc4; font-size: 12.5px; width: 100%; max-width: 920px; margin: 0 0 24px; line-height: 1.9; }
+  .changelist li::marker { color: #00c48c; }
+  .label-title { color: #00c48c; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .label-sub { color: #a89dc4; font-size: 11.5px; margin: -6px 0 10px; max-width: 360px; line-height: 1.5; }
+
+  .phone {
+    width: 360px;
+    background: var(--bg-soft);
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border: 6px solid #1a1428;
+    position: relative;
+  }
+  .statusbar { display: flex; justify-content: space-between; padding: 8px 16px 2px; font-size: 11px; font-weight: 600; color: #333; background: #fff; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 14px; background: #fff;
+  }
+  .topbar h2 { font-size: 18px; margin: 0; color: var(--ink); }
+  .topbar .gavatar {
+    width: 30px; height: 30px; border-radius: 50%; background: var(--grad);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .scroll { height: 680px; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  .card { background: #fff; border-radius: 18px; padding: 14px; margin: 0 14px 12px; border: 1px solid var(--line); }
+  .card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .link { color: var(--purple); font-size: 11.5px; font-weight: 700; }
+
+  /* ---------- Milkman strip (slimmed) ---------- */
+  .mk-strip { display: flex; align-items: center; gap: 10px; padding: 2px 2px 12px; margin: 0 14px; }
+  .mk-strip .av { width: 36px; height: 36px; border-radius: 50%; background: rgb(45 211 111/.15); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .mk-strip .nm { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .mk-strip .cyc { font-size: 10px; color: var(--muted); }
+  .mk-strip .sp { flex: 1; }
+  .mk-strip .ic-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 13px; }
+  .mk-strip .ic-btn.wa { background: rgb(37 211 102/.15); color: #1fa855; }
+
+  /* ---------- Hero Today card ---------- */
+  .hero { padding: 0; overflow: hidden; }
+  .hero-head { background: var(--grad); padding: 14px 16px; color: #fff; }
+  .hero-head .ht-lbl { font-size: 10.5px; opacity: .85; text-transform: uppercase; letter-spacing: .05em; }
+  .hero-head .ht-main { font-size: 16px; font-weight: 800; margin-top: 2px; }
+  .hero-body { padding: 10px 14px 14px; }
+
+  .slot-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .slot-row:last-child { border-bottom: none; }
+  .slot-circle {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; border: none; cursor: pointer;
+  }
+  .slot-circle.delivered { background: rgb(45 211 111/.18); color: var(--green-ink); }
+  .slot-circle.missed { background: rgb(235 68 90/.15); color: var(--red-ink); }
+  .slot-info { flex: 1; min-width: 0; }
+  .slot-nm { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .slot-qty { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .slot-more { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-soft); color: var(--muted); display:flex; align-items:center; justify-content:center; font-size: 13px; flex-shrink:0; }
+  .tap-hint { font-size: 9.5px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  /* paused banner variant */
+  .pause-banner { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .pause-banner .pic { width: 40px; height: 40px; border-radius: 12px; background: rgb(255,196,9,.18); color: var(--amber-ink); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .pause-banner .pt { flex: 1; min-width: 0; }
+  .pause-banner .pt1 { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .pause-banner .pt2 { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .btn-resume { background: var(--grad); color: #fff; border: none; border-radius: 10px; padding: 8px 14px; font-size: 11.5px; font-weight: 700; flex-shrink: 0; }
+
+  /* ---------- Mini calendar ---------- */
+  .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .month-nav .nav-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--purple); font-size: 12px; background: #fff; }
+  .month-nav h3 { margin: 0; font-size: 13.5px; color: var(--ink); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-dow { font-size: 9px; color: var(--muted); text-align: center; padding-bottom: 3px; }
+  .cal-day { aspect-ratio: 1; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative; color: var(--ink); background: var(--bg-soft); }
+  .cal-day.blank { background: transparent; }
+  .cal-day.delivered { background: rgb(45 211 111/.16); }
+  .cal-day.missed { background: rgb(235 68 90/.16); }
+  .cal-day.paused { background: rgb(255,196,9,.2); }
+  .cal-day.today { outline: 2px solid var(--purple); outline-offset: -2px; font-weight: 800; }
+  .cal-legend { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .cal-legend span { font-size: 9px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
+  .cal-legend i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .cal-legend i.d { background: var(--green); } .cal-legend i.m { background: var(--red); } .cal-legend i.p { background: var(--amber); }
+
+  /* ---------- Bill summary (collapsed) ---------- */
+  .bill-hero { display: flex; align-items: flex-end; justify-content: space-between; margin: 12px 0 10px; }
+  .bill-amt-lbl { font-size: 11px; color: var(--muted); }
+  .bill-amt { font-size: 26px; font-weight: 800; color: var(--ink); margin-top: 1px; }
+  .bill-chip { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+  .bill-chip.due { background: rgb(255,196,9,.2); color: var(--amber-ink); }
+  .bill-chip.paid { background: rgb(45 211 111/.18); color: var(--green-ink); }
+  .bill-detail-link { font-size: 10.5px; color: var(--purple); font-weight: 700; margin-bottom: 10px; display: inline-block; }
+  .btn-pay { width: 100%; background: var(--grad); color: #fff; border: none; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 800; }
+
+  /* ---------- Quick actions ---------- */
+  .qa-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 0 14px 14px; }
+  .qa-btn { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px; text-align: center; }
+  .qa-ic { font-size: 18px; }
+  .qa-lbl { font-size: 10px; color: var(--ink); font-weight: 700; margin-top: 4px; }
+
+  /* ---------- collapsed links section ---------- */
+  .link-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+  .link-row:last-child { border-bottom: none; }
+  .link-row .ll { font-size: 12.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .link-row .lc { font-size: 10px; background: rgb(124,58,237,.12); color: var(--purple); font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .link-row .chev { color: var(--muted); }
+
+  /* ---------- Bottom sheet (day detail, redesigned) ---------- */
+  .overlay { position: absolute; inset: 0; background: rgba(20,14,34,0.45); display: flex; align-items: flex-end; z-index: 5; }
+  .sheet { width: 100%; background: #fff; border-radius: 20px 20px 0 0; padding: 14px 16px 20px; box-shadow: 0 -8px 24px rgba(0,0,0,0.2); }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: #e0dcec; margin: 0 auto 12px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .sheet-title { font-size: 15px; font-weight: 800; color: var(--ink); }
+  .sheet-sub { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .sheet-close { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-soft); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+
+  .sheet-slot { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-soft); border-radius: 12px; margin-bottom: 8px; }
+  .sheet-slot .ic { font-size: 16px; }
+  .sheet-slot .sn { font-size: 12px; font-weight: 700; color: var(--ink); flex: 1; }
+  .sheet-slot .sv { font-size: 11px; color: var(--muted); }
+
+  .act-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+  .act-pill { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; font-size: 11.5px; font-weight: 700; color: var(--ink); }
+  .act-pill .pic { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .act-pill.wide { grid-column: span 2; background: var(--bg-soft); border-color: transparent; color: var(--muted); font-weight: 600; justify-content: center; }
+</style>
+</head>
+<body>
+
+<h1>Milk 🥛 — Simplified Redesign — Prototype</h1>
+<p class="sub">
+  The current screen works but front-loads <b>everything at once</b>: a contact card with a 4-stat grid, two separate
+  "today" cards, a separate pause card, a calendar + 4 clickable stat buttons + 3 rows of amounts + payment status +
+  payments list + 2 share buttons all in one card, a horizontal "upcoming schedule" scroller mixing 3 different item
+  types, and an always-expanded activity feed. Nothing is wrong individually — it's just a lot to scan before you can
+  answer "did milk come today, and do I owe anything?" This prototype keeps every feature (nothing removed) but
+  re-prioritizes by <b>how often you actually need it</b>.
+</p>
+<ul class="changelist">
+  <li><b>One hero card</b> for "today" (was 2 separate cards) — tap the ✅/❌ circle itself to toggle status; quantity and overflow (notify / edit) tucked behind a "⋯" instead of 3 buttons always visible.</li>
+  <li><b>Pause state replaces the today-cards entirely</b> with one clear banner + a single gradient "Resume" button — instead of muted placeholder text in each slot card plus a whole separate pause card below.</li>
+  <li><b>Bill is one big number</b> ("₹840 due") with a "see breakdown ›" link, not 3 always-open amount rows + a payments ledger always visible.</li>
+  <li><b>3 big quick-action tiles</b> (Extra / Pause / Change Qty) replace the "+" action-sheet — same 3 actions, zero taps to discover them.</li>
+  <li><b>"Upcoming changes" and "Recent activity" become single collapsed links with a count badge</b>, not always-rendered scrollers/lists — tap to expand only when you care.</li>
+  <li><b>Tapping a calendar day</b> opens a proper bottom sheet (not a native stacked-button alert) with the quantity/pause actions as a clean 2×2 pill grid.</li>
+  <li>Brand gradient (<code>#7c3aed → #ec4899 → #f97316</code>) now actually shows up — on the hero header and primary CTA — instead of flat purple everywhere.</li>
+</ul>
+
+<!-- PHONE A: Normal / on-track state -->
+<div>
+  <div class="label-title">A — Home, on-track day</div>
+  <div class="label-sub">Everything above the fold answers "did milk come, what do I owe." Everything else is one tap away, not pre-rendered.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2><div class="gavatar">🧑‍🍼</div></div>
+    <div class="scroll">
+      <div class="mk-strip">
+        <div class="av">🧑‍🍼</div>
+        <div><div class="nm">Ramesh</div><div class="cyc">Monthly settlement</div></div>
+        <div class="sp"></div>
+        <div class="ic-btn">📞</div>
+        <div class="ic-btn wa">💬</div>
+      </div>
+
+      <div class="card hero">
+        <div class="hero-head"><div class="ht-lbl">Today · Thu, Oct 30</div><div class="ht-main">Both slots on track ✅</div></div>
+        <div class="hero-body">
+          <div class="slot-row">
+            <button class="slot-circle delivered">✓</button>
+            <div class="slot-info"><div class="slot-nm">🌅 Morning</div><div class="slot-qty">Delivered · 2.0 Ltr</div></div>
+            <div class="slot-more">⋯</div>
+          </div>
+          <div class="slot-row">
+            <button class="slot-circle missed">✕</button>
+            <div class="slot-info"><div class="slot-nm">🌙 Evening — not yet</div><div class="slot-qty">Expected · 1.0 Ltr</div></div>
+            <div class="slot-more">⋯</div>
+          </div>
+          <div class="tap-hint">Tap the circle to mark delivered/missed · "⋯" for qty &amp; notify</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="month-nav">
+          <div class="nav-btn">‹</div><h3>October 2026</h3><div class="nav-btn">›</div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-dow">S</div><div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div>
+          <div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div>
+          <div class="cal-day delivered">1</div><div class="cal-day delivered">2</div><div class="cal-day delivered">3</div>
+          <div class="cal-day delivered">4</div><div class="cal-day delivered">5</div><div class="cal-day delivered">6</div><div class="cal-day delivered">7</div>
+          <div class="cal-day delivered">8</div><div class="cal-day delivered">9</div><div class="cal-day paused">10</div><div class="cal-day paused">11</div>
+          <div class="cal-day paused">12</div><div class="cal-day paused">13</div><div class="cal-day paused">14</div>
+          <div class="cal-day paused">15</div><div class="cal-day paused">16</div><div class="cal-day missed">17</div><div class="cal-day delivered">18</div>
+          <div class="cal-day delivered">19</div><div class="cal-day delivered">20</div><div class="cal-day delivered">21</div>
+          <div class="cal-day delivered">22</div><div class="cal-day delivered">23</div><div class="cal-day delivered">24</div><div class="cal-day delivered">25</div>
+          <div class="cal-day delivered">26</div><div class="cal-day delivered">27</div><div class="cal-day delivered">28</div>
+          <div class="cal-day delivered">29</div><div class="cal-day today">30</div><div class="cal-day">31</div>
+        </div>
+        <div class="cal-legend"><span><i class="d"></i>delivered</span><span><i class="m"></i>missed</span><span><i class="p"></i>paused</span></div>
+
+        <div class="bill-hero">
+          <div><div class="bill-amt-lbl">October total</div><div class="bill-amt">₹840</div></div>
+          <div class="bill-chip due">Due</div>
+        </div>
+        <a class="bill-detail-link">See breakdown (regular + extra) ›</a>
+        <button class="btn-pay">Pay ₹840 via UPI</button>
+      </div>
+
+      <div class="qa-row">
+        <div class="qa-btn"><div class="qa-ic">🥛</div><div class="qa-lbl">Extra Milk</div></div>
+        <div class="qa-btn"><div class="qa-ic">⏸️</div><div class="qa-lbl">Pause</div></div>
+        <div class="qa-btn"><div class="qa-ic">✏️</div><div class="qa-lbl">Change Qty</div></div>
+      </div>
+
+      <div class="card">
+        <div class="link-row">
+          <div class="ll">🗓️ Upcoming changes <span class="lc">2</span></div>
+          <div class="chev">›</div>
+        </div>
+        <div class="link-row">
+          <div class="ll">📜 Recent activity</div>
+          <div class="chev">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE B: Paused state -->
+<div>
+  <div class="label-title">B — Home, while paused</div>
+  <div class="label-sub">Today's two cards collapse into one clear banner. No muted placeholder text, no separate pause card competing for attention below the fold.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2><div class="gavatar">🧑‍🍼</div></div>
+    <div class="scroll">
+      <div class="mk-strip">
+        <div class="av">🧑‍🍼</div>
+        <div><div class="nm">Ramesh</div><div class="cyc">Monthly settlement</div></div>
+        <div class="sp"></div>
+        <div class="ic-btn">📞</div>
+        <div class="ic-btn wa">💬</div>
+      </div>
+
+      <div class="card hero">
+        <div class="hero-head" style="background:linear-gradient(135deg,#8a6200,#ffc409);"><div class="ht-lbl">Today · Thu, Oct 30</div><div class="ht-main">Delivery paused ⏸️</div></div>
+        <div class="hero-body">
+          <div class="pause-banner">
+            <div class="pic">⏸️</div>
+            <div class="pt">
+              <div class="pt1">Paused Oct 10 – Oct 26</div>
+              <div class="pt2">"Out of Station" · resumes automatically</div>
+            </div>
+            <button class="btn-resume">Resume Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="month-nav"><div class="nav-btn">‹</div><h3>October 2026</h3><div class="nav-btn">›</div></div>
+        <div class="cal-grid">
+          <div class="cal-dow">S</div><div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div>
+          <div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div>
+          <div class="cal-day delivered">1</div><div class="cal-day delivered">2</div><div class="cal-day delivered">3</div>
+          <div class="cal-day delivered">4</div><div class="cal-day delivered">5</div><div class="cal-day delivered">6</div><div class="cal-day delivered">7</div>
+          <div class="cal-day delivered">8</div><div class="cal-day delivered">9</div><div class="cal-day paused">10</div><div class="cal-day paused">11</div>
+          <div class="cal-day paused">12</div><div class="cal-day paused">13</div><div class="cal-day paused">14</div>
+          <div class="cal-day paused">15</div><div class="cal-day paused">16</div><div class="cal-day paused">17</div><div class="cal-day paused">18</div>
+          <div class="cal-day paused">19</div><div class="cal-day paused">20</div><div class="cal-day paused">21</div>
+          <div class="cal-day paused">22</div><div class="cal-day paused">23</div><div class="cal-day paused">24</div><div class="cal-day paused">25</div>
+          <div class="cal-day paused">26</div><div class="cal-day delivered">27</div><div class="cal-day delivered">28</div>
+          <div class="cal-day delivered">29</div><div class="cal-day today">30</div><div class="cal-day">31</div>
+        </div>
+        <div class="cal-legend"><span><i class="d"></i>delivered</span><span><i class="m"></i>missed</span><span><i class="p"></i>paused</span></div>
+
+        <div class="bill-hero">
+          <div><div class="bill-amt-lbl">October total (so far)</div><div class="bill-amt">₹460</div></div>
+          <div class="bill-chip due">Due</div>
+        </div>
+        <a class="bill-detail-link">See breakdown (regular + extra) ›</a>
+        <button class="btn-pay">Pay ₹460 via UPI</button>
+      </div>
+
+      <div class="qa-row">
+        <div class="qa-btn"><div class="qa-ic">🥛</div><div class="qa-lbl">Extra Milk</div></div>
+        <div class="qa-btn" style="border-color:#ffc409;"><div class="qa-ic">▶️</div><div class="qa-lbl">Resume</div></div>
+        <div class="qa-btn"><div class="qa-ic">✏️</div><div class="qa-lbl">Change Qty</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE C: Day-tap sheet, redesigned -->
+<div>
+  <div class="label-title">C — Tap any calendar day</div>
+  <div class="label-sub">Replaces today's native stacked-button alert (functional but plain) with a proper bottom sheet. Same actions we already wired up (Change Quantity, Pause/Edit Pause, Add Extra) — just laid out as a clean 2×2 grid instead of a vertical button stack.</div>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>🔋 100%</span></div>
+    <div class="topbar"><h2>Milk 🥛</h2><div class="gavatar">🧑‍🍼</div></div>
+    <div class="scroll" style="position: relative;">
+      <div class="card">
+        <div class="month-nav"><div class="nav-btn">‹</div><h3>October 2026</h3><div class="nav-btn">›</div></div>
+        <div class="cal-grid">
+          <div class="cal-dow">S</div><div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div>
+          <div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day blank"></div>
+          <div class="cal-day delivered">1</div><div class="cal-day delivered">2</div><div class="cal-day delivered">3</div>
+          <div class="cal-day delivered">4</div><div class="cal-day delivered">5</div><div class="cal-day delivered">6</div><div class="cal-day delivered">7</div>
+          <div class="cal-day delivered">8</div><div class="cal-day delivered">9</div>
+          <div class="cal-day paused" style="outline:2px solid var(--purple); outline-offset:-2px;">10</div>
+          <div class="cal-day paused">11</div><div class="cal-day paused">12</div><div class="cal-day paused">13</div><div class="cal-day paused">14</div>
+        </div>
+      </div>
+
+      <div class="overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <div class="sheet-title">Sat, Oct 10</div>
+            <div class="sheet-close">✕</div>
+          </div>
+          <div class="sheet-sub">⏸️ Paused · "Out of Station"</div>
+
+          <div class="sheet-slot"><span class="ic">🌅</span><span class="sn">Morning</span><span class="sv">Paused</span></div>
+          <div class="sheet-slot"><span class="ic">🌙</span><span class="sn">Evening</span><span class="sv">Paused</span></div>
+
+          <div class="act-grid">
+            <div class="act-pill"><div class="pic">✏️</div>Change Quantity</div>
+            <div class="act-pill"><div class="pic">⏸️</div>Edit Pause</div>
+            <div class="act-pill"><div class="pic">🥛</div>Add Extra</div>
+            <div class="act-pill"><div class="pic">💬</div>Notify Ramesh</div>
+            <div class="act-pill wide">Close</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

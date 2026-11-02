@@ -19,6 +19,20 @@
       <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onImageSelected($event)" />
     </label>
 
+    <h3 class="section-title">Owner Photo <span class="hint">(optional)</span></h3>
+    <p class="hint">Let customers put a face to the name — shown on your shop's detail page.</p>
+    <label class="photo-upload">
+      @if (fullOwnerPhotoUrl(); as url) {
+        <img [src]="url" alt="Owner photo" />
+      } @else {
+        <div class="photo-placeholder"><ion-icon name="camera" /><span>Add photo</span></div>
+      }
+      @if (uploadingOwnerPhoto()) {
+        <div class="photo-overlay">uploading…</div>
+      }
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onOwnerPhotoSelected($event)" />
+    </label>
+
     <ion-list lines="full">
       <ion-item>
         <ion-input label="shop name" labelPlacement="stacked" formControlName="shopName" />

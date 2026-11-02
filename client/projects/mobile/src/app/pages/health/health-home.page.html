@@ -26,13 +26,26 @@
           <div class="t">{{ lowStockLine(m) }}</div>
           <div class="s">{{ m.memberAvatarEmoji }} {{ 'health.lowStockSub' | translate: { name: m.memberName, count: m.stockCount } }}</div>
         </div>
-        <ion-button size="small" fill="outline" (click)="openMedicineEditor(m)">{{ 'health.refillBtn' | translate }}</ion-button>
+        <ion-button size="small" fill="outline" (click)="openRefillOptions(m)">{{ 'health.refillBtn' | translate }}</ion-button>
+      </div>
+    }
+
+    @for (v of upcomingVisits(); track v.key) {
+      <div class="alert-banner visit">
+        <span class="al-ic">🗓️</span>
+        <div class="al-txt">
+          <div class="t">{{ visitDueLabel(v.date) }} — {{ v.title }}</div>
+          <div class="s">{{ v.memberAvatarEmoji }} {{ v.memberName }}</div>
+        </div>
       </div>
     }
 
     <section class="card">
       <h3>{{ 'health.todayMeds' | translate }}</h3>
-      @if (doses().length === 0) {
+      @if (selectedMemberSummary(); as s) {
+        <p class="muted">{{ (s.medicineCount === 1 ? 'health.memberSummaryOne' : 'health.memberSummaryMany') | translate: { count: s.medicineCount, qty: s.totalPerDay } }}</p>
+      }
+      @if (filteredDoseCount() === 0) {
         <p class="muted">{{ 'health.noDosesToday' | translate }}</p>
       }
       @for (slot of slotOrder; track slot) {
@@ -71,8 +84,15 @@
         <h3><ion-icon name="people" />{{ 'health.familyMembers' | translate }}</h3>
       </div>
       <div class="ct-scroll">
+        <div class="ct-item" [class.selected]="selectedMemberId() === null" (click)="selectedMemberId.set(null)">
+          <div class="ct-av">👪</div>
+          <div class="ct-nm">{{ 'health.allMembers' | translate }}</div>
+        </div>
         @for (m of members(); track m.id) {
-          <div class="ct-item" (click)="openMemberEditor(m)">
+          <div class="ct-item" [class.selected]="selectedMemberId() === m.id" (click)="selectMember(m)">
+            <button class="ct-edit" (click)="openMemberEditor(m); $event.stopPropagation()">
+              <ion-icon name="create" />
+            </button>
             <div class="ct-av">{{ m.avatarEmoji }}</div>
             <div class="ct-nm">{{ m.name }}</div>
             <div class="ct-rel">{{ 'memberEditor.relations.' + m.relation | translate }}</div>
@@ -85,10 +105,25 @@
       </div>
     </section>
 
-    @if (prescriptions().length > 0) {
+    @if (pharmacyOrders().length > 0) {
+      <section class="card">
+        <h3>{{ 'health.pharmacyOrders' | translate }}</h3>
+        @for (r of pharmacyOrders(); track r.id) {
+          <div class="ph-row" (click)="openPharmacyOrder(r)">
+            <div class="ph-ic">💊</div>
+            <div class="ph-txt">
+              <div class="pn">{{ pharmacyOrderSummary(r) }}</div>
+              <div class="ps">{{ r.status }} · {{ r.quoteCount }} quote{{ r.quoteCount === 1 ? '' : 's' }}</div>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    @if (filteredPrescriptions().length > 0) {
       <section class="card">
         <h3>{{ 'health.prescriptions' | translate }}</h3>
-        @for (p of prescriptions(); track p.id) {
+        @for (p of filteredPrescriptions(); track p.id) {
           <div class="rx-row">
             <div class="rx-ic">📋</div>
             <div class="rx-txt">
@@ -101,16 +136,19 @@
       </section>
     }
 
-    @if (medicines().length > 0) {
+    @if (filteredMedicines().length > 0) {
       <section class="card">
         <h3>{{ 'health.stockLeftTitle' | translate }}</h3>
-        @for (m of medicines(); track m.id) {
-          <div class="stk" (click)="openMedicineEditor(m)">
+        @for (m of filteredMedicines(); track m.id) {
+          <div class="stk" [class.stopped]="!m.isActive" (click)="openMedicineEditor(m)">
             <div class="stk-info">
               <div class="sn">
                 {{ m.name }}
                 @if (m.purpose) {
                   <span class="purpose">— {{ m.purpose }}</span>
+                }
+                @if (!m.isActive) {
+                  <span class="stopped-badge">{{ 'health.stoppedBadge' | translate }}</span>
                 }
               </div>
               <div class="ss">{{ m.memberAvatarEmoji }} {{ m.memberName }} · {{ 'health.perDay' | translate: { qty: m.perDayQty } }}</div>
@@ -123,6 +161,9 @@
               <b [class.low]="m.daysRemaining <= 2">{{ 'health.tabsCount' | translate: { count: m.stockCount } }}</b>
               <span>{{ refillLabel(m) }}</span>
             </div>
+            <button class="del-btn" (click)="toggleActive(m); $event.stopPropagation()">
+              <ion-icon [name]="m.isActive ? 'pause-circle-outline' : 'play-circle-outline'" />
+            </button>
             <button class="del-btn" (click)="removeMedicine(m); $event.stopPropagation()"><ion-icon name="trash" /></button>
           </div>
         }

@@ -42,6 +42,7 @@ export class ShopOnboardingPage {
           address: address.trim() || null,
           servedCategoryKeys: [],
           imageUrl: null,
+          ownerPhotoUrl: null,
           contactPhones: [],
           opensAt: null,
           closesAt: null,

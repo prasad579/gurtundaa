@@ -41,7 +41,7 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
         var startDate = subscription?.StartDate ?? firstDay;
 
         var days = new List<MilkCalendarDayDto>(daysInMonth);
-        int delivered = 0, paused = 0, missed = 0;
+        int delivered = 0, paused = 0, missed = 0, planned = 0;
         decimal regularLitres = 0;
 
         for (var date = firstDay; date <= lastDay; date = date.AddDays(1))
@@ -55,11 +55,17 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
 
             days.Add(new MilkCalendarDayDto(date, dayStatus, morning, evening));
 
-            // Only count — and bill for — days that have actually happened: on/after the
-            // subscription's start date (nothing is "delivered" before tracking began) and
-            // on/before today (future days are still just a projection, not a fact yet).
-            if (date < startDate || date > today)
+            // Days before the subscription's start date aren't tracked at all — not delivered,
+            // not planned, nothing. Days after today haven't happened yet, so they're "planned"
+            // rather than counted as delivered/paused/missed (that would be presuming the future).
+            if (date < startDate)
             {
+                continue;
+            }
+
+            if (date > today)
+            {
+                planned++;
                 continue;
             }
 
@@ -74,9 +80,10 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             if (evening.Enabled && evening.Status == MilkCalendarStatus.Delivered) regularLitres += evening.QuantityLtr;
         }
 
-        var trackableFrom = startDate > firstDay ? startDate : firstDay;
-        var trackableDays = Math.Max(0, (lastDay.DayNumber - trackableFrom.DayNumber) + 1);
-        var extraLitres = extras.Where(e => e.Date >= startDate && e.Date <= today).Sum(e => e.QuantityLtr);
+        var extraLitres = extras
+            .Where(e => e.Date >= startDate && e.Date <= today)
+            .Where(e => !pauses.Any(p => p.StartDate <= e.Date && p.EndDate >= e.Date))
+            .Sum(e => e.QuantityLtr);
         var rate = subscription?.RatePerLtr ?? 0;
         var settlement = await db.MilkSettlements.AsNoTracking()
             .SingleOrDefaultAsync(s => s.UserId == userId && s.Year == year && s.Month == month, ct);
@@ -85,7 +92,7 @@ public class MilkDeliveryService(AppDbContext db, ICurrentUser currentUser, Time
             .SumAsync(p => p.Amount, ct);
 
         var summary = new MilkMonthSummaryDto(
-            trackableDays, delivered, paused, missed,
+            planned, delivered, paused, missed,
             regularLitres, extraLitres, rate,
             regularLitres * rate, extraLitres * rate, (regularLitres + extraLitres) * rate,
             settlement?.IsPaid ?? false, settlement?.PaidAt, paidSoFar);

@@ -44,6 +44,20 @@ public class MedicineService(AppDbContext db, ICurrentUser currentUser, TimeProv
         return await ToDtoWithMemberAsync(medicine, ct);
     }
 
+    public async Task<MedicineDto?> SetActiveAsync(Guid id, bool isActive, CancellationToken ct)
+    {
+        var medicine = await Mine.Include(m => m.Member).SingleOrDefaultAsync(m => m.Id == id, ct);
+        if (medicine is null)
+        {
+            return null;
+        }
+
+        medicine.IsActive = isActive;
+        medicine.UpdatedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+        return ToDto(medicine, Today());
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct) =>
         await Mine.Where(m => m.Id == id).ExecuteDeleteAsync(ct) > 0;
 

@@ -11,4 +11,6 @@ public interface IQuotationRequestService
     Task<QuotationRequestDetailDto?> AcceptAsync(Guid id, AcceptQuoteRequest request, CancellationToken ct);
 
     Task<IReadOnlyList<ShopSummaryDto>> ListShopsAsync(CancellationToken ct);
+
+    Task<ShopDetailDto?> GetShopAsync(Guid shopUserId, CancellationToken ct);
 }

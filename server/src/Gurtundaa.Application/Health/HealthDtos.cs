@@ -50,6 +50,8 @@ public sealed record SaveMedicineRequest(
     [MaxLength(100)] string? Purpose = null,
     DateOnly? NextVisitDate = null);
 
+public sealed record SetMedicineActiveRequest(bool IsActive);
+
 public sealed record DoseEntryDto(
     Guid MedicineId,
     string MedicineName,

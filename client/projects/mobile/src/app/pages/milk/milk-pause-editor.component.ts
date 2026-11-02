@@ -61,7 +61,6 @@ import { TranslatePipe } from '@ngx-translate/core';
                 id="pause-start"
                 formControlName="startDate"
                 presentation="date"
-                [min]="today"
                 (ionChange)="startModal.dismiss()"
               />
             </ng-template>
@@ -102,6 +101,7 @@ export class MilkPauseEditorComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
 
   @Input() pause?: MilkPause;
+  @Input() initialDate?: string;
 
   protected readonly today = toDateOnlyString(new Date());
 
@@ -118,6 +118,8 @@ export class MilkPauseEditorComponent implements OnInit {
         endDate: this.pause.endDate,
         reason: this.pause.reason ?? '',
       });
+    } else if (this.initialDate) {
+      this.form.patchValue({ startDate: this.initialDate, endDate: this.initialDate });
     }
   }
 

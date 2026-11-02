@@ -87,6 +87,9 @@ function category(
 }
 
 export const MARKETPLACE_CATALOG: MarketplaceCategory[] = [
+  // No seeded items — reached only via the Health module's "request from a pharmacy" shortcut,
+  // which adds an ad-hoc medicine line directly (see MarketplaceCart.addAdHocItem), not by browsing.
+  category('medical', 'Medical & Pharmacy', '💊', '#e6f0ff', []),
   category('vegetables', 'Vegetables', '🥦', '#e7f7ec', [
     ['vegetables:veg001', 'Tomato', 'టమాటా', '1 kg', '/marketplace/vegetables/VEG001_tomato.png'],
     ['vegetables:veg002', 'Onion', 'ఉల్లిపాయ', '1 kg', '/marketplace/vegetables/VEG002_onion.png'],

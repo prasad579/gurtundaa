@@ -16,7 +16,9 @@ export class MarketplaceHomePage {
   private readonly router = inject(Router);
   protected readonly cart = inject(MarketplaceCart);
 
-  protected readonly categories = MARKETPLACE_CATALOG;
+  // "medical" has no browsable items — it's reached only via the Health module's
+  // "request from a pharmacy" shortcut, so it's excluded from the general category grid.
+  protected readonly categories = MARKETPLACE_CATALOG.filter((c) => c.key !== 'medical');
 
   constructor() {
     addIcons({ cartOutline, listOutline });

@@ -93,6 +93,7 @@ export interface ShopProfile {
   address: string | null;
   servedCategoryKeys: string[];
   imageUrl: string | null;
+  ownerPhotoUrl: string | null;
   contactPhones: string[];
   /** "HH:mm:ss" (server TimeOnly serialized form), or null if not set. */
   opensAt: string | null;
@@ -106,6 +107,10 @@ export type SaveShopProfileRequest = ShopProfile;
 
 export interface UploadShopImageResponse {
   imageUrl: string;
+}
+
+export interface UploadShopOwnerPhotoResponse {
+  ownerPhotoUrl: string;
 }
 
 // ---------- Service contacts (general household directory) ----------
@@ -550,6 +555,22 @@ export interface ShopSummary {
   latitude: number | null;
   longitude: number | null;
   imageUrl: string | null;
+}
+
+export interface ShopDetail {
+  userId: string;
+  shopName: string;
+  city: string | null;
+  address: string | null;
+  servedCategoryKeys: string[];
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
+  ownerPhotoUrl: string | null;
+  contactPhones: string[];
+  opensAt: string | null;
+  closesAt: string | null;
+  openDays: DayOfWeekName[];
 }
 
 export interface SubmitQuoteItemLine {

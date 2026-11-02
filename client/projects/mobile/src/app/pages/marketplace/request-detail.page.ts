@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AuthService,
   MARKETPLACE_CATALOG,
@@ -62,6 +62,7 @@ const FULFILLMENT_STEPS: { value: string; label: string }[] = [
 export class RequestDetailPage implements ViewWillEnter {
   private readonly marketplace = inject(MarketplaceApi);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
   private readonly actionSheets = inject(ActionSheetController);
@@ -147,6 +148,10 @@ export class RequestDetailPage implements ViewWillEnter {
 
   protected stepIndex(status: Quote['fulfillmentStatus']): number {
     return status ? FULFILLMENT_STEPS.findIndex((s) => s.value === status) : -1;
+  }
+
+  protected openShop(shopUserId: string): void {
+    void this.router.navigateByUrl(`/marketplace/shop/${shopUserId}`);
   }
 
   protected callShop(quote: Quote): void {

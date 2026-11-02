@@ -6,13 +6,18 @@ import {
   DoseSlot,
   HouseholdMember,
   HouseholdMembersApi,
+  MarketplaceApi,
   Medicine,
   MedicinesApi,
   PrescriptionDto,
   PrescriptionsApi,
+  QuotationRequest,
+  nextVisitAlerts,
   toDateOnlyString,
+  visitDueLabel,
 } from '@gurtundaa/shared';
 import {
+  ActionSheetController,
   AlertController,
   IonButton,
   IonButtons,
@@ -29,9 +34,11 @@ import {
   ViewWillEnter,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { add, checkmark, create, documentText, people, trash } from 'ionicons/icons';
+import { add, checkmark, create, documentText, pauseCircleOutline, people, playCircleOutline, storefront, trash } from 'ionicons/icons';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
+import { HealthVisitNotifications } from '../../services/health-visit-notifications';
+import { MarketplaceCart } from '../../services/marketplace-cart';
 import { MedicineEditorComponent } from './medicine-editor.component';
 import { MemberEditorComponent } from './member-editor.component';
 
@@ -72,9 +79,13 @@ export class HealthHomePage implements ViewWillEnter {
   private readonly medicinesApi = inject(MedicinesApi);
   private readonly doseLogApi = inject(DoseLogApi);
   private readonly prescriptionsApi = inject(PrescriptionsApi);
+  private readonly notifications = inject(HealthVisitNotifications);
+  private readonly marketplace = inject(MarketplaceApi);
+  private readonly cart = inject(MarketplaceCart);
   private readonly modals = inject(ModalController);
   private readonly toasts = inject(ToastController);
   private readonly alerts = inject(AlertController);
+  private readonly actionSheets = inject(ActionSheetController);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
@@ -86,29 +97,86 @@ export class HealthHomePage implements ViewWillEnter {
   protected readonly medicines = signal<Medicine[]>([]);
   protected readonly doses = signal<DoseEntry[]>([]);
   protected readonly prescriptions = signal<PrescriptionDto[]>([]);
+  protected readonly selectedMemberId = signal<string | null>(null);
+  protected readonly pharmacyOrders = signal<QuotationRequest[]>([]);
 
   protected readonly lowStock = computed(() =>
     this.medicines().filter((m) => m.isActive && m.perDayQty > 0 && m.daysRemaining <= 2),
   );
 
+  protected readonly upcomingVisits = computed(() => nextVisitAlerts(this.medicines(), this.prescriptions()));
+  protected readonly visitDueLabel = visitDueLabel;
+
+  protected readonly filteredMedicines = computed(() => {
+    const id = this.selectedMemberId();
+    return id ? this.medicines().filter((m) => m.memberId === id) : this.medicines();
+  });
+
+  protected readonly filteredPrescriptions = computed(() => {
+    const id = this.selectedMemberId();
+    return id ? this.prescriptions().filter((p) => p.memberId === id) : this.prescriptions();
+  });
+
+  // Answers "how many tablets/day does this person take?" — only meaningful once a member is
+  // selected (for "All" it'd just be a mix of different people's doses, not a useful total).
+  protected readonly selectedMemberSummary = computed(() => {
+    const id = this.selectedMemberId();
+    if (!id) return null;
+    const active = this.medicines().filter((m) => m.memberId === id && m.isActive);
+    return { medicineCount: active.length, totalPerDay: active.reduce((sum, m) => sum + m.perDayQty, 0) };
+  });
+
   protected readonly dosesBySlot = computed(() => {
     const groups: Record<DoseSlot, DoseEntry[]> = { Morning: [], Afternoon: [], Evening: [], Night: [] };
+    const id = this.selectedMemberId();
     for (const d of this.doses()) {
+      if (id && d.memberId !== id) continue;
       groups[d.slot].push(d);
     }
     return groups;
   });
 
+  protected readonly filteredDoseCount = computed(() => Object.values(this.dosesBySlot()).reduce((sum, list) => sum + list.length, 0));
+
   constructor() {
-    addIcons({ add, checkmark, create, trash, people, documentText });
+    addIcons({ add, checkmark, create, trash, people, documentText, pauseCircleOutline, playCircleOutline, storefront });
   }
 
   ionViewWillEnter(): void {
     void this.load();
   }
 
+  protected selectMember(member: HouseholdMember): void {
+    this.selectedMemberId.update((id) => (id === member.id ? null : member.id));
+  }
+
   protected goToNewPrescription(): void {
     void this.router.navigateByUrl('/new-prescription');
+  }
+
+  protected async openRefillOptions(medicine: Medicine): Promise<void> {
+    const sheet = await this.actionSheets.create({
+      header: `Refill ${medicine.name}`,
+      buttons: [
+        { text: 'I refilled it myself', icon: 'create', handler: () => this.openMedicineEditor(medicine) },
+        { text: 'Request from a pharmacy', icon: 'storefront', handler: () => this.requestFromPharmacy(medicine) },
+        { text: 'Cancel', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  protected requestFromPharmacy(medicine: Medicine): void {
+    this.cart.addAdHocItem(`medical:${medicine.id}`, medicine.name, 1, 'as prescribed');
+    void this.router.navigateByUrl('/marketplace/cart');
+  }
+
+  protected pharmacyOrderSummary(request: QuotationRequest): string {
+    return request.items.map((i) => i.name).join(', ');
+  }
+
+  protected openPharmacyOrder(request: QuotationRequest): void {
+    void this.router.navigateByUrl(`/marketplace/requests/${request.id}`);
   }
 
   protected lowStockLine(m: Medicine): string {
@@ -201,6 +269,12 @@ export class HealthHomePage implements ViewWillEnter {
     await this.load();
   }
 
+  protected async toggleActive(medicine: Medicine): Promise<void> {
+    await firstValueFrom(this.medicinesApi.setActive(medicine.id, !medicine.isActive));
+    await this.toast(this.translate.instant(medicine.isActive ? 'health.toastMedicineStopped' : 'health.toastMedicineResumed'));
+    await this.load();
+  }
+
   protected async removeMedicine(medicine: Medicine): Promise<void> {
     if (!(await this.confirmDelete(this.translate.instant('health.removeMedicineConfirm', { name: medicine.name })))) return;
     await firstValueFrom(this.medicinesApi.delete(medicine.id));
@@ -226,6 +300,10 @@ export class HealthHomePage implements ViewWillEnter {
       this.medicines.set(medicines);
       this.doses.set(doses);
       this.prescriptions.set(prescriptions);
+      void this.notifications.sync(this.upcomingVisits());
+      firstValueFrom(this.marketplace.list())
+        .then((requests) => this.pharmacyOrders.set(requests.filter((r) => r.items.some((i) => i.itemKey.startsWith('medical:')))))
+        .catch(() => undefined);
     } catch {
       await this.toast(this.translate.instant('health.toastServerError'), 'danger');
     } finally {

@@ -21,6 +21,10 @@ export class MedicinesApi {
     return this.http.put<Medicine>(`${this.url}/${id}`, request);
   }
 
+  setActive(id: string, isActive: boolean): Observable<Medicine> {
+    return this.http.put<Medicine>(`${this.url}/${id}/active`, { isActive });
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }

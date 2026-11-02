@@ -6,6 +6,7 @@ import {
   AcceptQuoteRequest,
   QuotationRequest,
   QuotationRequestDetail,
+  ShopDetail,
   ShopSummary,
   SubmitQuotationRequest,
 } from './models';
@@ -33,5 +34,9 @@ export class MarketplaceApi {
 
   listShops(): Observable<ShopSummary[]> {
     return this.http.get<ShopSummary[]>(`${this.url}/shops`);
+  }
+
+  getShop(shopUserId: string): Observable<ShopDetail> {
+    return this.http.get<ShopDetail>(`${this.url}/shops/${shopUserId}`);
   }
 }

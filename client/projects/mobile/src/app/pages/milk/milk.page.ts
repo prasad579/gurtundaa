@@ -26,6 +26,7 @@ import {
   formatWhatsAppBill,
   isFutureDate,
   litresLabel,
+  parseDateOnly,
   pauseRangeLabel,
   payViaUpi,
   rupeeLabel,
@@ -63,6 +64,7 @@ import {
   chevronForward,
   close,
   createOutline,
+  ellipsisHorizontal,
   logoWhatsapp,
   pause,
   pauseOutline,
@@ -73,10 +75,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { shareText } from '../../services/share';
 import { MilkCalendarComponent } from './milk-calendar.component';
+import { MilkDayDetailAction, MilkDayDetailSheetComponent } from './milk-day-detail-sheet.component';
 import { MilkDayListSheetComponent } from './milk-day-list-sheet.component';
 import { MilkExtraEditorComponent } from './milk-extra-editor.component';
 import { MilkPauseEditorComponent } from './milk-pause-editor.component';
 import { MilkQuantityChangeEditorComponent } from './milk-quantity-change-editor.component';
+import { MilkRecordPaymentSheetComponent, RecordMilkPaymentResult } from './milk-record-payment-sheet.component';
 import { MilkSubscriptionEditorComponent, SaveMilkSubscriptionFormResult } from './milk-subscription-editor.component';
 
 type UpcomingCard =
@@ -178,15 +182,6 @@ export class MilkPage implements ViewWillEnter {
   // The soonest upcoming (or currently active) pause, shown side-by-side with Today's Delivery.
   protected readonly activePause = computed(() => this.pauses()[0] ?? null);
 
-  protected readonly todayRowCardCount = computed(() => {
-    const t = this.today();
-    let count = 0;
-    if (t?.morning.enabled) count++;
-    if (t?.evening.enabled) count++;
-    if (this.activePause()) count++;
-    return count;
-  });
-
   protected readonly upcomingCards = computed(() => {
     const cards: UpcomingCard[] = [
       ...this.extras().map((data): UpcomingCard => ({ kind: 'extra', data })),
@@ -213,6 +208,7 @@ export class MilkPage implements ViewWillEnter {
       pause,
       checkmarkDoneOutline,
       shareSocialOutline,
+      ellipsisHorizontal,
     });
   }
 
@@ -237,6 +233,14 @@ export class MilkPage implements ViewWillEnter {
 
   protected telLink(phone: string): string {
     return `tel:${phone.replace(/\s+/g, '')}`;
+  }
+
+  protected heroSummaryLabel(t: MilkToday): string {
+    const slots = [t.morning, t.evening].filter((s) => s.enabled);
+    if (slots.some((s) => s.status === 'Missed')) {
+      return this.translate.instant('milk.heroNeedsAttention');
+    }
+    return this.translate.instant(slots.length > 1 ? 'milk.heroOnTrack' : 'milk.heroOnTrackSingle');
   }
 
   protected statusLabelFor(status: MilkCalendarDay['status']): string {
@@ -303,98 +307,65 @@ export class MilkPage implements ViewWillEnter {
 
     const isPlanned = day.status === 'Delivered' && isFutureDate(day.date);
     const statusLabel = isPlanned ? this.translate.instant('milk.plannedChip') : this.statusLabelFor(day.status);
+    const dayExtras = this.allExtras().filter((e) => e.date === day.date);
 
-    const lines: string[] = [];
-    for (const [slotName, slot] of [
-      ['Morning', day.morning],
-      ['Evening', day.evening],
-    ] as const) {
-      if (!slot.enabled) continue;
-      const slotIsPlanned = slot.status === 'Delivered' && isFutureDate(day.date);
-      if (slot.status === 'Paused') {
-        lines.push(this.translate.instant('milk.slotPaused', { slot: this.slotLabels[slotName] }));
-      } else if (slot.status === 'Missed') {
-        lines.push(
-          this.translate.instant(this.isSelfCollected() ? 'milk.slotMissed' : 'milk.slotMissedDelivery', {
-            slot: this.slotLabels[slotName],
-          }),
-        );
-      } else {
-        const verb = this.translate.instant(
-          slotIsPlanned ? 'milk.expectedVerb' : this.isSelfCollected() ? 'milk.pickedUpLower' : 'milk.deliveredLower',
-        );
-        lines.push(
-          this.translate.instant('milk.slotStatusQty', { slot: this.slotLabels[slotName], verb, qty: litresLabel(slot.quantityLtr) }),
-        );
-      }
-    }
-    for (const extra of this.allExtras().filter((e) => e.date === day.date)) {
-      lines.push(
-        this.translate.instant('milk.extraMilkLabel', { slot: this.slotLabels[extra.slot] }) +
-          `: +${litresLabel(extra.quantityLtr)}${extra.reason ? ` (${extra.reason})` : ''}`,
-      );
-    }
-
-    // Past (and today's) days get quick toggle buttons per enabled, non-paused slot so you can
-    // correct the default "delivered" assumption — e.g. reconciling days before you started
-    // using the app for a milk delivery that was already ongoing. Future days stay read-only;
-    // nothing has happened on them yet.
-    const slotEntries = ([
-      ['Morning', day.morning],
-      ['Evening', day.evening],
-    ] as const).filter(([, slot]) => slot.enabled && slot.status !== 'Paused');
-
-    // Past (and today's) days get quick toggle buttons per enabled, non-paused slot so you can
-    // correct the default "delivered" assumption — e.g. reconciling days before you started
-    // using the app for a milk delivery that was already ongoing. Future days stay read-only;
-    // nothing has happened on them yet.
-    const toggleButtons = isFutureDate(day.date)
-      ? []
-      : slotEntries.map(([slotName, slot]) => {
-          const self = this.isSelfCollected();
-          const key =
-            slot.status === 'Missed'
-              ? self
-                ? 'milk.markSlotPickedUp'
-                : 'milk.markSlotDelivered'
-              : self
-                ? 'milk.markSlotNotPickedUp'
-                : 'milk.markSlotMissed';
-          const text = this.translate.instant(key, { slot: slotName });
-          return { text, handler: () => void this.toggleDaySlot(day.date, slotName, slot.status) };
-        });
-
-    // A persistent way to (re-)notify the milkman about a missed slot on this day, whenever —
-    // not just the moment it's first marked missed, since that toast disappears.
-    const notifyButtons = this.contact()
-      ? slotEntries
-          .filter(([, slot]) => slot.status === 'Missed')
-          .map(([slotName]) => ({
-            text: this.translate.instant('milk.notifySlot', { slot: slotName }),
-            icon: 'logo-whatsapp',
-            handler: () => this.notifyMissed(slotName, day.date),
-          }))
-      : [];
-
-    // Lets you log extra consumed on this exact day — past or future — without re-picking the
-    // date in a separate sheet.
-    const addExtraButton = {
-      text: this.translate.instant('milk.addExtra'),
-      icon: 'add',
-      handler: () => void this.openExtraEditor(day.date),
-    };
-
-    // Plain text, not HTML — Ionic's alert escapes the message by default, which is what we want
-    // since `reason` is free-text the user typed; `white-space: pre-line` (global styles) turns
-    // the \n's into real line breaks without needing any HTML at all.
-    const alert = await this.alerts.create({
-      header: shortDateLabel(day.date),
-      subHeader: statusLabel,
-      message: lines.join('\n'),
-      cssClass: 'day-detail-alert',
-      buttons: [...toggleButtons, addExtraButton, ...notifyButtons, this.translate.instant('milk.close')],
+    const modal = await this.modals.create({
+      component: MilkDayDetailSheetComponent,
+      componentProps: {
+        date: day.date,
+        statusLabel,
+        morning: day.morning,
+        evening: day.evening,
+        extras: dayExtras,
+        isSelfCollected: this.isSelfCollected(),
+        hasContact: !!this.contact(),
+        isPaused: day.status === 'Paused',
+      },
+      breakpoints: [0, 0.6, 0.95],
+      initialBreakpoint: 0.6,
     });
-    await alert.present();
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss<MilkDayDetailAction>();
+    if (role !== 'action' || !data) return;
+
+    switch (data.kind) {
+      case 'toggleSlot': {
+        const currentStatus = data.slot === 'Morning' ? day.morning.status : day.evening.status;
+        await this.toggleDaySlot(day.date, data.slot, currentStatus);
+        break;
+      }
+      case 'changeQuantity':
+        await this.openQuantityChangeEditor(undefined, day.date);
+        break;
+      case 'pauseFromHere':
+        await this.openPauseEditor(undefined, day.date);
+        break;
+      case 'editPause':
+        await this.editPauseForDate(day.date);
+        break;
+      case 'addExtra':
+        await this.openExtraEditor(day.date);
+        break;
+      case 'removeExtra': {
+        const extra = dayExtras.find((e) => e.id === data.extraId);
+        if (extra) await this.cancelExtra(extra);
+        break;
+      }
+      case 'notifySlot':
+        this.notifyMissed(data.slot, day.date);
+        break;
+    }
+  }
+
+  private async editPauseForDate(date: string): Promise<void> {
+    const pauses = await firstValueFrom(this.milk.listPauses(false));
+    const pause = pauses.find((p) => p.startDate <= date && p.endDate >= date);
+    if (!pause) {
+      await this.toast(this.translate.instant('milk.toastServerError'), 'danger');
+      return;
+    }
+    await this.openPauseEditor(pause);
   }
 
   private async toggleDaySlot(date: string, slot: MilkSlot, currentStatus: MilkSlotState['status']): Promise<void> {
@@ -465,33 +436,22 @@ export class MilkPage implements ViewWillEnter {
   }
 
   protected async recordPayment(): Promise<void> {
-    const todayAmt = this.todayAmount();
-    const weekAmt = this.thisWeekAmountSoFar();
-    const balance = this.balanceDue();
-
-    const alert = await this.alerts.create({
-      header: this.translate.instant('milk.recordPaymentTitle'),
-      message: this.translate.instant('milk.recordPaymentMessage'),
-      inputs: [
-        ...(todayAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.todayPreset', { amount: rupeeLabel(todayAmt) }), value: String(todayAmt) }] : []),
-        ...(weekAmt > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.weekPreset', { amount: rupeeLabel(weekAmt) }), value: String(weekAmt) }] : []),
-        ...(balance > 0 ? [{ name: 'preset', type: 'radio' as const, label: this.translate.instant('milk.fullBalancePreset', { amount: rupeeLabel(balance) }), value: String(balance) }] : []),
-        { name: 'amount', type: 'number', placeholder: this.translate.instant('milk.customAmountPlaceholder'), min: 0.01 },
-        { name: 'note', type: 'text', placeholder: this.translate.instant('milk.notePlaceholder') },
-      ],
-      buttons: [
-        { text: this.translate.instant('common.cancel'), role: 'cancel' },
-        { text: this.translate.instant('common.save'), role: 'confirm' },
-      ],
+    const modal = await this.modals.create({
+      component: MilkRecordPaymentSheetComponent,
+      componentProps: {
+        todayAmount: this.todayAmount(),
+        weekAmount: this.thisWeekAmountSoFar(),
+        balanceAmount: this.balanceDue(),
+      },
+      breakpoints: [0, 0.6, 0.9],
+      initialBreakpoint: 0.6,
     });
-    await alert.present();
-    const { role, data } = await alert.onWillDismiss();
-    if (role !== 'confirm') return;
+    await modal.present();
 
-    const amount = Number(data?.values?.amount) || Number(data?.values?.preset);
-    if (!amount || amount <= 0) return;
+    const { data, role } = await modal.onWillDismiss<RecordMilkPaymentResult>();
+    if (role !== 'save' || !data || data.amount <= 0) return;
 
-    await firstValueFrom(this.milk.createPayment({ date: toDateOnlyString(new Date()), amount, note: data.values.note || null }));
+    await firstValueFrom(this.milk.createPayment({ date: toDateOnlyString(new Date()), amount: data.amount, note: data.note }));
     await this.toast(this.translate.instant('milk.paymentRecorded'));
     await this.loadMonth();
   }
@@ -544,7 +504,9 @@ export class MilkPage implements ViewWillEnter {
     const m = this.month();
     if (!m) return null;
     const s = m.summary;
-    const totalDays = s.planned + s.delivered + s.paused + s.missed;
+    const monthDate = this.monthDate();
+    const monthName = monthDate.toLocaleDateString(undefined, { month: 'long' });
+    const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
 
     const items: BillLineItem[] = [
       { label: 'Regular', qty: litresLabel(s.regularLitres), rate: rupeeLabel(s.ratePerLtr), amount: rupeeLabel(s.regularAmount) },
@@ -558,10 +520,33 @@ export class MilkPage implements ViewWillEnter {
     if (s.paused > 0) dayParts.push(`${s.paused} paused`);
     if (s.planned > 0) dayParts.push(`${s.planned} upcoming`);
 
+    // Counts alone ("15 paused") don't say *which* days — spelling them out here is what actually
+    // lets the milkman (or the household) sanity-check the bill against what really happened.
+    const subtitleLines = [`📅 ${monthName} has ${daysInMonth} days — ${dayParts.join(' · ')}`];
+
+    const pausedDates = new Set(m.days.filter((d) => d.status === 'Paused').map((d) => d.date));
+    const pausedRanges = this.groupConsecutiveDates([...pausedDates]);
+    if (pausedRanges.length > 0) {
+      subtitleLines.push(`⏸️ Paused: ${pausedRanges.join(', ')}`);
+    }
+
+    const firstDate = m.days[0]?.date;
+    const lastDate = m.days[m.days.length - 1]?.date;
+    // Extras requested on a day that later got paused aren't billed (excluded from extraLitres
+    // above) — leaving them out here too, so the message never shows a day that isn't reflected
+    // in the total.
+    const monthExtras = this.allExtras().filter(
+      (e) => firstDate && lastDate && e.date >= firstDate && e.date <= lastDate && !pausedDates.has(e.date),
+    );
+    if (monthExtras.length > 0) {
+      const extraParts = monthExtras.map((e) => `${shortDateLabel(e.date)} +${litresLabel(e.quantityLtr)}`);
+      subtitleLines.push(`🥛 Extra: ${extraParts.join(', ')}`);
+    }
+
     return {
       icon: '🥛',
       title: `Milk Bill — ${this.monthLabel()}`,
-      subtitleLines: [`📅 ${dayParts.join(' · ')} (of ${totalDays} days)`],
+      subtitleLines,
       items,
       quantitySummary: { label: 'Total Liters', value: litresLabel(s.regularLitres + s.extraLitres) },
       total: {
@@ -572,6 +557,26 @@ export class MilkPage implements ViewWillEnter {
       },
       closingLine: 'Thank you! 🙏',
     };
+  }
+
+  /** Collapses sorted-or-not `DateOnly` strings into "11 Oct – 25 Oct (15 days)"-style ranges, splitting wherever there's a gap. */
+  private groupConsecutiveDates(dates: string[]): string[] {
+    const sorted = [...dates].sort();
+    const ranges: string[] = [];
+    let rangeStart = sorted[0];
+    let prev = sorted[0];
+
+    for (let i = 1; i <= sorted.length; i++) {
+      const current = sorted[i];
+      const isConsecutive = current !== undefined && parseDateOnly(current).getTime() - parseDateOnly(prev).getTime() === 86_400_000;
+      if (!isConsecutive) {
+        ranges.push(pauseRangeLabel(rangeStart, prev));
+        rangeStart = current;
+      }
+      prev = current;
+    }
+
+    return ranges;
   }
 
   protected async openSubscriptionEditor(): Promise<void> {
@@ -642,10 +647,42 @@ export class MilkPage implements ViewWillEnter {
     await this.load();
   }
 
-  protected async openPauseEditor(pause?: MilkPause): Promise<void> {
+  // The hero card's tap-circle handles the delivered/missed toggle directly; this "⋯" menu is for
+  // the less-frequent actions (precise quantity, re-notifying) so the circle stays a single tap.
+  protected async openSlotMenu(slot: MilkSlot, state: MilkSlotState): Promise<void> {
+    const sheet = await this.actionSheets.create({
+      buttons: [
+        { text: this.translate.instant('milk.editQty'), icon: 'create-outline', handler: () => void this.editQuantity(slot, state) },
+        ...(state.status === 'Missed' && this.contact()
+          ? [{ text: this.translate.instant('milk.notify'), icon: 'logo-whatsapp', handler: () => this.notifyMissed(slot) }]
+          : []),
+        { text: this.translate.instant('common.cancel'), role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  // "Resume Now" ends the pause as of today: if it started today (or later), there's nothing to
+  // shrink, so it's just cancelled outright; otherwise its end date moves to yesterday.
+  protected async resumeNow(pause: MilkPause): Promise<void> {
+    const todayStr = toDateOnlyString(new Date());
+    if (pause.startDate >= todayStr) {
+      await firstValueFrom(this.milk.deletePause(pause.id));
+    } else {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      await firstValueFrom(
+        this.milk.updatePause(pause.id, { startDate: pause.startDate, endDate: toDateOnlyString(yesterday), reason: pause.reason }),
+      );
+    }
+    await this.toast(this.translate.instant('milk.pauseCancelled'));
+    await this.load();
+  }
+
+  protected async openPauseEditor(pause?: MilkPause, initialDate?: string): Promise<void> {
     const modal = await this.modals.create({
       component: MilkPauseEditorComponent,
-      componentProps: { pause },
+      componentProps: { pause, initialDate },
       breakpoints: [0, 0.75, 1],
       initialBreakpoint: 0.75,
     });
@@ -754,10 +791,10 @@ export class MilkPage implements ViewWillEnter {
     await this.load();
   }
 
-  protected async openQuantityChangeEditor(change?: MilkQuantityChange): Promise<void> {
+  protected async openQuantityChangeEditor(change?: MilkQuantityChange, initialDate?: string): Promise<void> {
     const modal = await this.modals.create({
       component: MilkQuantityChangeEditorComponent,
-      componentProps: { change, subscription: this.subscription() },
+      componentProps: { change, subscription: this.subscription(), initialDate },
       breakpoints: [0, 0.75, 1],
       initialBreakpoint: 0.75,
     });

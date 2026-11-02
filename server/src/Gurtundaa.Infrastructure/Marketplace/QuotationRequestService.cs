@@ -140,6 +140,41 @@ public class QuotationRequestService(AppDbContext db, ICurrentUser currentUser, 
             .ToList();
     }
 
+    public async Task<ShopDetailDto?> GetShopAsync(Guid shopUserId, CancellationToken ct)
+    {
+        var profile = await db.ShopProfiles.AsNoTracking().SingleOrDefaultAsync(p => p.UserId == shopUserId, ct);
+        if (profile is null)
+        {
+            return null;
+        }
+
+        return new ShopDetailDto(
+            profile.UserId,
+            profile.ShopName,
+            profile.City,
+            profile.Address,
+            MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ServedCategoryKeysJson),
+            profile.Latitude,
+            profile.Longitude,
+            profile.ImageUrl,
+            profile.OwnerPhotoUrl,
+            MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ContactPhonesJson),
+            profile.OpensAt,
+            profile.ClosesAt,
+            DeserializeOpenDays(profile.OpenDaysJson));
+    }
+
+    private static List<DayOfWeek> DeserializeOpenDays(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        var ints = JsonSerializer.Deserialize<List<int>>(json) ?? [];
+        return ints.Select(i => (DayOfWeek)i).ToList();
+    }
+
     // Targets that haven't produced a quote yet — surfaced to the customer as "waiting to confirm".
     private async Task<IReadOnlyList<PendingShopDto>> PendingShopsAsync(Guid requestId, CancellationToken ct)
     {

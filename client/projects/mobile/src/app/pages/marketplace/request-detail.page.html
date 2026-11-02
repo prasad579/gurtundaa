@@ -105,7 +105,7 @@
 
         @for (q of d.quotes; track q.id) {
           <div class="quote" [class.accepted]="q.status === 'Accepted'" [class.rejected]="q.status === 'Rejected'">
-            <div class="head">
+            <div class="head" (click)="openShop(q.shopUserId)">
               <span class="shop">{{ q.shopName }}</span>
               <span class="amount">{{ rupeeLabel(q.totalAmount) }}</span>
             </div>

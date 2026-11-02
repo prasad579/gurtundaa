@@ -68,6 +68,32 @@ public class ShopProfileService(AppDbContext db, ICurrentUser currentUser, TimeP
         return new UploadShopImageResponse(profile.ImageUrl);
     }
 
+    public async Task<UploadShopOwnerPhotoResponse> UploadOwnerPhotoAsync(Stream content, string extension, CancellationToken ct)
+    {
+        var profile = await Mine().SingleOrDefaultAsync(ct);
+        if (profile is null)
+        {
+            profile = new ShopProfile { UserId = currentUser.UserId };
+            db.ShopProfiles.Add(profile);
+        }
+
+        var uploadsDir = Path.Combine(env.ContentRootPath, "wwwroot", "uploads", "shop-owners");
+        Directory.CreateDirectory(uploadsDir);
+
+        var fileName = $"{currentUser.UserId}{extension}";
+        var fullPath = Path.Combine(uploadsDir, fileName);
+        await using (var fileStream = new FileStream(fullPath, FileMode.Create))
+        {
+            await content.CopyToAsync(fileStream, ct);
+        }
+
+        profile.OwnerPhotoUrl = $"/uploads/shop-owners/{fileName}";
+        profile.UpdatedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+
+        return new UploadShopOwnerPhotoResponse(profile.OwnerPhotoUrl);
+    }
+
     private IQueryable<ShopProfile> Mine() => db.ShopProfiles.Where(p => p.UserId == currentUser.UserId);
 
     private static ShopProfileDto ToDto(ShopProfile profile) => new(
@@ -76,6 +102,7 @@ public class ShopProfileService(AppDbContext db, ICurrentUser currentUser, TimeP
         profile.Address,
         MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ServedCategoryKeysJson),
         profile.ImageUrl,
+        profile.OwnerPhotoUrl,
         MarketplaceCategoryHelper.DeserializeCategoryKeys(profile.ContactPhonesJson),
         profile.OpensAt,
         profile.ClosesAt,

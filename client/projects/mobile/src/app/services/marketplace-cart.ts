@@ -9,6 +9,8 @@ interface CartEntry {
   qty: number;
   pack: string;
   brand: string | null;
+  /** Set only for ad-hoc (non-catalog) items — catalog items get their name from ITEMS_BY_KEY instead. */
+  name?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,9 +23,9 @@ export class MarketplaceCart {
   readonly lines = computed<QuotationItemLine[]>(() =>
     [...this.entries().entries()]
       .map((entry): QuotationItemLine | null => {
-        const [key, { qty, pack, brand }] = entry;
-        const item = ITEMS_BY_KEY.get(key);
-        return item ? { itemKey: item.key, name: item.name, qty, pack, brand } : null;
+        const [key, { qty, pack, brand, name }] = entry;
+        const resolvedName = ITEMS_BY_KEY.get(key)?.name ?? name;
+        return resolvedName ? { itemKey: key, name: resolvedName, qty, pack, brand } : null;
       })
       .filter((line): line is QuotationItemLine => line !== null),
   );
@@ -72,7 +74,12 @@ export class MarketplaceCart {
 
   setQuantity(itemKey: string, qty: number): void {
     const entry = this.entries().get(itemKey);
-    this.setEntry(itemKey, qty, entry?.pack ?? ITEMS_BY_KEY.get(itemKey)?.pack ?? '', entry?.brand ?? null);
+    this.setEntry(itemKey, qty, entry?.pack ?? ITEMS_BY_KEY.get(itemKey)?.pack ?? '', entry?.brand ?? null, entry?.name);
+  }
+
+  /** Adds a one-off item that isn't in the static catalog (e.g. a specific medicine from Health). */
+  addAdHocItem(itemKey: string, name: string, qty: number, pack: string): void {
+    this.setEntry(itemKey, qty, pack, null, name);
   }
 
   /** Picks an absolute size (e.g. "1 kg") for a scalable item — tapping the already-selected size removes it. */
@@ -81,13 +88,14 @@ export class MarketplaceCart {
     if (current && current.pack === pack) {
       this.setEntry(itemKey, 0, '', null);
     } else {
-      this.setEntry(itemKey, 1, pack, current?.brand ?? null);
+      this.setEntry(itemKey, 1, pack, current?.brand ?? null, current?.name);
     }
   }
 
   /** Sets a user-typed custom quantity (e.g. "1.5 kg") — always applies, no toggle-off like `selectPack`. */
   setCustomPack(itemKey: string, pack: string): void {
-    this.setEntry(itemKey, 1, pack, this.entries().get(itemKey)?.brand ?? null);
+    const current = this.entries().get(itemKey);
+    this.setEntry(itemKey, 1, pack, current?.brand ?? null, current?.name);
   }
 
   remove(itemKey: string): void {
@@ -95,15 +103,16 @@ export class MarketplaceCart {
   }
 
   /** Reorder: adds a past request's items to whatever's already in the cart (summing qty on overlap),
-   * so the customer can freely tweak quantities/items before sending it out again. Unknown/discontinued
-   * catalog items are silently skipped since there'd be nothing to look up pack options etc. for. */
+   * so the customer can freely tweak quantities/items before sending it out again. Items no longer in
+   * the static catalog (e.g. a past pharmacy request's medicine) are kept as ad-hoc lines via `line.name`
+   * rather than being dropped. */
   addFromLines(lines: QuotationItemLine[]): void {
     this.entries.update((current) => {
       const next = new Map(current);
       for (const line of lines) {
-        if (!ITEMS_BY_KEY.has(line.itemKey)) continue;
         const existing = next.get(line.itemKey);
-        next.set(line.itemKey, { qty: (existing?.qty ?? 0) + line.qty, pack: line.pack, brand: existing?.brand ?? line.brand ?? null });
+        const name = ITEMS_BY_KEY.has(line.itemKey) ? undefined : (existing?.name ?? line.name);
+        next.set(line.itemKey, { qty: (existing?.qty ?? 0) + line.qty, pack: line.pack, brand: existing?.brand ?? line.brand ?? null, name });
       }
       return next;
     });
@@ -113,13 +122,13 @@ export class MarketplaceCart {
     this.entries.set(new Map());
   }
 
-  private setEntry(itemKey: string, qty: number, pack: string, brand: string | null): void {
+  private setEntry(itemKey: string, qty: number, pack: string, brand: string | null, name?: string): void {
     this.entries.update((current) => {
       const next = new Map(current);
       if (qty <= 0) {
         next.delete(itemKey);
       } else {
-        next.set(itemKey, { qty, pack, brand });
+        next.set(itemKey, { qty, pack, brand, name: name ?? current.get(itemKey)?.name });
       }
       return next;
     });

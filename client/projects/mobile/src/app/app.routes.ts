@@ -88,6 +88,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/marketplace/request-detail.page').then((m) => m.RequestDetailPage),
   },
   {
+    path: 'marketplace/shop/:shopUserId',
+    canActivate: [signedInGuard, customerGuard],
+    loadComponent: () => import('./pages/marketplace/shop-detail.page').then((m) => m.ShopDetailPage),
+  },
+  {
     path: 'welcome',
     canActivate: [signedOutGuard],
     loadComponent: () => import('./pages/welcome/welcome.page').then((m) => m.WelcomePage),

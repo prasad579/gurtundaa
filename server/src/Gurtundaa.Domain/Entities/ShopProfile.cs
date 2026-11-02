@@ -21,6 +21,9 @@ public class ShopProfile
     /// <summary>Relative URL under wwwroot (e.g. "/uploads/shops/{userId}.jpg") — null until the shop uploads a photo.</summary>
     public string? ImageUrl { get; set; }
 
+    /// <summary>Relative URL under wwwroot (e.g. "/uploads/shop-owners/{userId}.jpg") — optional, null until the shop uploads an owner photo.</summary>
+    public string? OwnerPhotoUrl { get; set; }
+
     /// <summary>System.Text.Json-serialized <c>List&lt;string&gt;</c> of customer-facing contact numbers (may differ from the shop's login phone).</summary>
     public string ContactPhonesJson { get; set; } = "[]";
 

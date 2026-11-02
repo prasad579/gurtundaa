@@ -1,0 +1,42 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/marketplace/requests" /></ion-buttons>
+    <ion-title>Shop Detail</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && !shop()) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 160px; border-radius: 14px" />
+    </div>
+  } @else if (shop(); as s) {
+    @if (fullImageUrl(); as url) {
+      <img class="hero" [src]="url" alt="{{ s.shopName }}" />
+    } @else {
+      <div class="hero placeholder">🏪</div>
+    }
+
+    <section class="card ion-margin">
+      <h2 class="shop-name">{{ s.shopName }}</h2>
+      @if (s.address || s.city) {
+        <p class="address">{{ s.address }}{{ s.address && s.city ? ', ' : '' }}{{ s.city }}</p>
+      }
+      <p class="hours">{{ hoursLabel(s) }}</p>
+      @if (s.openDays.length > 0) {
+        <div class="day-chips">
+          @for (d of s.openDays; track d) {
+            <span class="day-chip">{{ dayLabel(d) }}</span>
+          }
+        </div>
+      }
+    </section>
+
+    @if (fullOwnerPhotoUrl(); as ownerUrl) {
+      <section class="card ion-margin owner-card">
+        <div class="owner-label">Meet the shop owner</div>
+        <img class="owner-avatar" [src]="ownerUrl" alt="Shop owner" />
+      </section>
+    }
+  }
+</ion-content>

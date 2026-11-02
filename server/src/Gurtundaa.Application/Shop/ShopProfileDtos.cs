@@ -8,6 +8,7 @@ public sealed record ShopProfileDto(
     string? Address,
     IReadOnlyList<string> ServedCategoryKeys,
     string? ImageUrl,
+    string? OwnerPhotoUrl,
     IReadOnlyList<string> ContactPhones,
     TimeOnly? OpensAt,
     TimeOnly? ClosesAt,
@@ -28,3 +29,5 @@ public sealed record SaveShopProfileRequest(
     [Range(-180, 180)] decimal? Longitude);
 
 public sealed record UploadShopImageResponse(string ImageUrl);
+
+public sealed record UploadShopOwnerPhotoResponse(string OwnerPhotoUrl);

@@ -1,4 +1,4 @@
-import { Bill, BillCategory, BillRecurrence, LaundryServiceType, MilkCalendarStatus, MilkSlot, Reminder, ReminderPriority } from '../api/models';
+import { Bill, BillCategory, BillRecurrence, LaundryServiceType, Medicine, MilkCalendarStatus, MilkSlot, PrescriptionDto, Reminder, ReminderPriority } from '../api/models';
 
 /** Brand copy lives here so the web and mobile apps sound the same. */
 export const BRAND = {
@@ -318,4 +318,66 @@ export function billDueLabel(bill: Pick<Bill, 'dueDate' | 'recurrence'>, now = n
   if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`;
   if (days === 0) return `${verb} today`;
   return `${verb} in ${days} day${days === 1 ? '' : 's'}`;
+}
+
+// ---------- Health: next-visit alerts (doctor checkups and per-medicine reminders) ----------
+
+export type VisitUrgency = 'Overdue' | 'DueSoon' | 'Upcoming';
+
+/** "Due Soon" = within a week — same rule as `billUrgency`. */
+export function visitUrgency(dateOnly: string, now = new Date()): VisitUrgency {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = parseDateOnly(dateOnly);
+  const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+  if (days < 0) return 'Overdue';
+  if (days <= 7) return 'DueSoon';
+  return 'Upcoming';
+}
+
+/** "Overdue by 2 days", "Due today", "Due in 3 days". */
+export function visitDueLabel(dateOnly: string, now = new Date()): string {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = parseDateOnly(dateOnly);
+  const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+  if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`;
+  if (days === 0) return `Due today`;
+  return `Due in ${days} day${days === 1 ? '' : 's'}`;
+}
+
+export interface NextVisitAlert {
+  key: string;
+  date: string;
+  title: string;
+  memberName: string;
+  memberAvatarEmoji: string;
+  urgency: VisitUrgency;
+}
+
+/** Merges medicines' `nextVisitDate` and prescriptions' `revisitDate` into one due-or-overdue list. */
+export function nextVisitAlerts(medicines: Medicine[], prescriptions: PrescriptionDto[], now = new Date()): NextVisitAlert[] {
+  const fromMedicines: NextVisitAlert[] = medicines
+    .filter((m): m is Medicine & { nextVisitDate: string } => m.isActive && !!m.nextVisitDate)
+    .map((m) => ({
+      key: `medicine:${m.id}`,
+      date: m.nextVisitDate,
+      title: m.name,
+      memberName: m.memberName,
+      memberAvatarEmoji: m.memberAvatarEmoji,
+      urgency: visitUrgency(m.nextVisitDate, now),
+    }));
+
+  const fromPrescriptions: NextVisitAlert[] = prescriptions
+    .filter((p): p is PrescriptionDto & { revisitDate: string } => !!p.revisitDate)
+    .map((p) => ({
+      key: `prescription:${p.id}`,
+      date: p.revisitDate,
+      title: p.doctorName,
+      memberName: p.memberName,
+      memberAvatarEmoji: p.memberAvatarEmoji,
+      urgency: visitUrgency(p.revisitDate, now),
+    }));
+
+  return [...fromMedicines, ...fromPrescriptions]
+    .filter((v) => v.urgency !== 'Upcoming')
+    .sort((a, b) => a.date.localeCompare(b.date));
 }

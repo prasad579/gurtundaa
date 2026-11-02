@@ -1,0 +1,76 @@
+.hero {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+
+  &.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ion-color-step-50, #f7f8fb);
+    font-size: 48px;
+  }
+}
+
+.card {
+  background: var(--ion-color-light, #fff);
+  border: 1px solid var(--ion-color-step-100, #ece7f6);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.shop-name {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.address {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  color: var(--ion-color-medium);
+}
+
+.hours {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.day-chip {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--ion-color-step-50, #f7f8fb);
+  border: 1.3px solid var(--ion-color-step-150, #ddd);
+  color: var(--ion-color-dark, #333);
+}
+
+.owner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-label {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ion-color-medium);
+}
+
+.owner-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}

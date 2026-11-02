@@ -29,4 +29,8 @@ public class MarketplaceController(IQuotationRequestService requests) : Controll
 
     [HttpGet("shops")]
     public async Task<IReadOnlyList<ShopSummaryDto>> ListShops(CancellationToken ct) => await requests.ListShopsAsync(ct);
+
+    [HttpGet("shops/{shopUserId:guid}")]
+    public async Task<ActionResult<ShopDetailDto>> GetShop(Guid shopUserId, CancellationToken ct) =>
+        await requests.GetShopAsync(shopUserId, ct) is { } shop ? Ok(shop) : NotFound();
 }

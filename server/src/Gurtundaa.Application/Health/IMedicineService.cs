@@ -8,5 +8,7 @@ public interface IMedicineService
 
     Task<MedicineDto?> UpdateAsync(Guid id, SaveMedicineRequest request, CancellationToken ct);
 
+    Task<MedicineDto?> SetActiveAsync(Guid id, bool isActive, CancellationToken ct);
+
     Task<bool> DeleteAsync(Guid id, CancellationToken ct);
 }

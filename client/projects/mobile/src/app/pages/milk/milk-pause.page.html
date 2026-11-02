@@ -73,7 +73,6 @@
             id="pause-from"
             presentation="date"
             [value]="startDate()"
-            [min]="today"
             (ionChange)="onStartDateChange($any($event.detail.value)); fromModal.dismiss()"
           />
         </ng-template>

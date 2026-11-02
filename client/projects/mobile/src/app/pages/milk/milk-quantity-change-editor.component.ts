@@ -59,7 +59,7 @@ import { TranslatePipe } from '@ngx-translate/core';
           </ion-item>
           <ion-modal [keepContentsMounted]="true">
             <ng-template>
-              <ion-datetime id="qc-start" formControlName="startDate" presentation="date" [min]="today" />
+              <ion-datetime id="qc-start" formControlName="startDate" presentation="date" />
             </ng-template>
           </ion-modal>
 
@@ -119,6 +119,7 @@ export class MilkQuantityChangeEditorComponent implements OnInit {
 
   @Input() change?: MilkQuantityChange;
   @Input() subscription?: MilkSubscription | null;
+  @Input() initialDate?: string;
 
   protected readonly today = toDateOnlyString(new Date());
 
@@ -139,11 +140,16 @@ export class MilkQuantityChangeEditorComponent implements OnInit {
         eveningQuantityLtr: this.change.eveningQuantityLtr,
         reason: this.change.reason ?? '',
       });
-    } else if (this.subscription) {
-      this.form.patchValue({
-        morningQuantityLtr: this.subscription.morningEnabled ? this.subscription.morningQuantityLtr : 0,
-        eveningQuantityLtr: this.subscription.eveningEnabled ? this.subscription.eveningQuantityLtr : 0,
-      });
+    } else {
+      if (this.subscription) {
+        this.form.patchValue({
+          morningQuantityLtr: this.subscription.morningEnabled ? this.subscription.morningQuantityLtr : 0,
+          eveningQuantityLtr: this.subscription.eveningEnabled ? this.subscription.eveningQuantityLtr : 0,
+        });
+      }
+      if (this.initialDate) {
+        this.form.patchValue({ startDate: this.initialDate, endDate: this.initialDate });
+      }
     }
   }
 

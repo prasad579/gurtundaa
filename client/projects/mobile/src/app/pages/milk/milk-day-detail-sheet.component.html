@@ -1,0 +1,69 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title size="small">
+      {{ dateLabel }}
+      <div class="status-chip">{{ statusLabel }}</div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()"><ion-icon name="close" /></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="slot-list">
+    @for (line of slotLines; track line.slot) {
+      <div class="slot-row">
+        @if (line.canToggle) {
+          <button
+            class="slot-circle"
+            [class.missed]="line.status === 'Missed'"
+            [class.delivered]="line.status !== 'Missed'"
+            [attr.aria-label]="line.toggleLabel"
+            (click)="act({ kind: 'toggleSlot', slot: line.slot })"
+          >
+            <ion-icon [name]="line.status === 'Missed' ? 'close' : 'checkmark'" />
+          </button>
+        } @else {
+          <div class="slot-circle static" [class.paused]="line.status === 'Paused'">
+            <ion-icon [name]="line.status === 'Paused' ? 'pause-outline' : line.status === 'Missed' ? 'close' : 'checkmark'" />
+          </div>
+        }
+        <div class="slot-text">{{ line.text }}</div>
+        @if (line.canNotify) {
+          <button class="icon-btn wa" [attr.aria-label]="line.notifyLabel" (click)="act({ kind: 'notifySlot', slot: line.slot })">
+            <ion-icon name="logo-whatsapp" />
+          </button>
+        }
+      </div>
+    }
+
+    @for (extra of extras; track extra.id) {
+      <div class="slot-row extra">
+        <div class="slot-circle static extra"><ion-icon name="add-outline" /></div>
+        <div class="slot-text">{{ extraLine(extra) }}</div>
+        <button class="icon-btn" [attr.aria-label]="removeExtraLabel(extra)" (click)="act({ kind: 'removeExtra', extraId: extra.id })">
+          <ion-icon name="trash" />
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="act-grid">
+    <button class="act-pill" (click)="act({ kind: 'changeQuantity' })">
+      <ion-icon name="create-outline" />{{ 'milk.changeQuantityForDay' | translate }}
+    </button>
+    @if (isPaused) {
+      <button class="act-pill" (click)="act({ kind: 'editPause' })">
+        <ion-icon name="pause-outline" />{{ 'milk.editThisPause' | translate }}
+      </button>
+    } @else {
+      <button class="act-pill" (click)="act({ kind: 'pauseFromHere' })">
+        <ion-icon name="pause-outline" />{{ 'milk.pauseFromThisDay' | translate }}
+      </button>
+    }
+    <button class="act-pill wide" (click)="act({ kind: 'addExtra' })">
+      <ion-icon name="add-outline" />{{ 'milk.addExtra' | translate }}
+    </button>
+  </div>
+</ion-content>

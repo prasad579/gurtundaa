@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { GURTUNDAA_API_URL } from './api-config';
-import { SaveShopProfileRequest, ShopProfile, UploadShopImageResponse } from './models';
+import { SaveShopProfileRequest, ShopProfile, UploadShopImageResponse, UploadShopOwnerPhotoResponse } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ShopProfileApi {
@@ -24,5 +24,11 @@ export class ShopProfileApi {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<UploadShopImageResponse>(`${this.url}/image`, formData);
+  }
+
+  uploadOwnerPhoto(file: File): Observable<UploadShopOwnerPhotoResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<UploadShopOwnerPhotoResponse>(`${this.url}/owner-photo`, formData);
   }
 }

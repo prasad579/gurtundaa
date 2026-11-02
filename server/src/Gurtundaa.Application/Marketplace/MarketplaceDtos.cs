@@ -87,6 +87,21 @@ public sealed record AcceptQuoteRequest(Guid QuoteId);
 
 public sealed record ShopSummaryDto(Guid UserId, string ShopName, string? City, IReadOnlyList<string> ServedCategoryKeys, decimal? Latitude, decimal? Longitude, string? ImageUrl);
 
+public sealed record ShopDetailDto(
+    Guid UserId,
+    string ShopName,
+    string? City,
+    string? Address,
+    IReadOnlyList<string> ServedCategoryKeys,
+    decimal? Latitude,
+    decimal? Longitude,
+    string? ImageUrl,
+    string? OwnerPhotoUrl,
+    IReadOnlyList<string> ContactPhones,
+    TimeOnly? OpensAt,
+    TimeOnly? ClosesAt,
+    IReadOnlyList<DayOfWeek> OpenDays);
+
 public sealed record SubmitQuoteItemLine([Required, MaxLength(50)] string ItemKey, [Range(0.01, 10_000_000)] decimal UnitPrice);
 
 public sealed record SubmitQuoteRequest(

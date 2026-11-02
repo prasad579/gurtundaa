@@ -55,7 +55,7 @@
     </a>
   }
 
-  @if (healthPendingCount() > 0 || healthLowStock().length > 0) {
+  @if (healthPendingCount() > 0 || healthLowStock().length > 0 || healthUpcomingVisits().length > 0) {
     <a routerLink="/health" class="attn-card health">
       <span class="ic">💊</span>
       <div class="txt">
@@ -64,6 +64,9 @@
         }
         @if (healthLowStock().length > 0) {
           <div class="s">{{ (healthLowStock().length === 1 ? 'home.lowStockOne' : 'home.lowStockMany') | translate: { count: healthLowStock().length } }}</div>
+        }
+        @if (healthUpcomingVisits().length > 0) {
+          <div class="s">{{ (healthUpcomingVisits().length === 1 ? 'home.visitOne' : 'home.visitMany') | translate: { count: healthUpcomingVisits().length } }}</div>
         }
       </div>
     </a>
