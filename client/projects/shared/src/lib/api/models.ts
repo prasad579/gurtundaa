@@ -4,6 +4,8 @@ export type ReminderPriority = 'Chill' | 'Normal' | 'Urgent';
 
 export type ReminderFilter = 'All' | 'Upcoming' | 'Overdue' | 'Done';
 
+export type ReminderRecurrence = 'None' | 'Daily' | 'Weekly';
+
 export interface Reminder {
   id: string;
   title: string;
@@ -14,6 +16,11 @@ export interface Reminder {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  memberId: string | null;
+  memberName: string | null;
+  memberAvatarEmoji: string | null;
+  recurrence: ReminderRecurrence;
+  recurrenceDayOfWeek: DayOfWeekName | null;
 }
 
 export interface SaveReminderRequest {
@@ -21,6 +28,9 @@ export interface SaveReminderRequest {
   notes?: string | null;
   dueAt?: string | null;
   priority: ReminderPriority;
+  memberId?: string | null;
+  recurrence?: ReminderRecurrence;
+  recurrenceDayOfWeek?: DayOfWeekName | null;
 }
 
 export interface ReminderStats {
@@ -971,4 +981,26 @@ export interface CreatePickupRequestRequest {
   serviceContactId: string;
   requestedDate: string;
   note?: string | null;
+}
+
+// ---------- Grocery list ----------
+
+export interface GroceryItem {
+  id: string;
+  name: string;
+  isChecked: boolean;
+  recurringWeekday: DayOfWeekName | null;
+  createdAt: string;
+}
+
+export interface SaveGroceryItemRequest {
+  name: string;
+  recurringWeekday?: DayOfWeekName | null;
+}
+
+// ---------- AI Assistant (rule-based, no LLM yet) ----------
+
+export interface AssistantReply {
+  reply: string;
+  understood: boolean;
 }

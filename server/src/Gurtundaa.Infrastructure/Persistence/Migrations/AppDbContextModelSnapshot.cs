@@ -187,6 +187,36 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.ToTable("DoseLogs", (string)null);
                 });
 
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.GroceryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte?>("RecurringWeekday")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsChecked");
+
+                    b.ToTable("GroceryItems", (string)null);
+                });
+
             modelBuilder.Entity("Gurtundaa.Domain.Entities.HouseholdMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1162,11 +1192,20 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("MemberId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<byte>("Priority")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("Recurrence")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte?>("RecurrenceDayOfWeek")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Title")
@@ -1181,6 +1220,8 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
 
                     b.HasIndex("UserId", "IsDone", "DueAt");
 
@@ -1450,6 +1491,17 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Medicine");
+                });
+
+            modelBuilder.Entity("Gurtundaa.Domain.Entities.GroceryItem", b =>
+                {
+                    b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Gurtundaa.Domain.Entities.HouseholdMember", b =>
@@ -1789,11 +1841,18 @@ namespace Gurtundaa.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Gurtundaa.Domain.Entities.Reminder", b =>
                 {
+                    b.HasOne("Gurtundaa.Domain.Entities.HouseholdMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Gurtundaa.Domain.Entities.AppUser", "User")
                         .WithMany("Reminders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Member");
 
                     b.Navigation("User");
                 });

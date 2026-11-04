@@ -123,6 +123,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/contacts/contacts.page').then((m) => m.ContactsPage),
   },
   {
+    path: 'assistant',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/assistant/assistant.page').then((m) => m.AssistantPage),
+  },
+  {
+    path: 'grocery',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/grocery/grocery.page').then((m) => m.GroceryPage),
+  },
+  {
     path: 'milk-pause',
     canActivate: [signedInGuard],
     loadComponent: () => import('./pages/milk/milk-pause.page').then((m) => m.MilkPausePage),

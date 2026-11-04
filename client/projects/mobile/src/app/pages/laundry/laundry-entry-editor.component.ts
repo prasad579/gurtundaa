@@ -262,14 +262,17 @@ export class LaundryEntryEditorComponent implements OnInit {
 
     if (!this.batch && v.notifyDhobi) {
       const contact = this.contacts.find((c) => c.id === v.contactId);
-      if (contact) this.notifyDhobiOfItems(contact, items);
+      if (contact) this.notifyDhobiOfItems(contact, items, request.expectedReturn);
     }
 
     const result: LaundryEntryEditorResult = { request, photoFile: this.photoFile() };
     return this.modalCtrl.dismiss(result, 'save');
   }
 
-  private notifyDhobiOfItems(contact: ServiceContact, items: LaundryItemLine[]): void {
+  // The dhobi is almost always a phone/WhatsApp-only contact, not an app user — this message is
+  // the only place they'll ever see the deadline, so the overall "needed by" date and any
+  // per-item earlier date have to be spelled out here, not just saved silently in the app.
+  private notifyDhobiOfItems(contact: ServiceContact, items: LaundryItemLine[], expectedReturn: string | null | undefined): void {
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
     const bill: BillData = {
       icon: '🧺',
@@ -277,8 +280,12 @@ export class LaundryEntryEditorComponent implements OnInit {
       subtitleLines: [
         `📅 ${shortDateLabel(this.form.controls.givenOn.value)}`,
         LAUNDRY_SERVICE_TYPE_LABELS[this.serviceType()],
+        ...(expectedReturn ? [`⏰ Needed by: ${shortDateLabel(expectedReturn)}`] : []),
       ],
-      items: items.map((i) => ({ label: i.itemType, qty: String(i.quantity) })),
+      items: items.map((i) => ({
+        label: i.itemType,
+        qty: i.neededBy ? `${i.quantity} (needed by ${shortDateLabel(i.neededBy)})` : String(i.quantity),
+      })),
       quantitySummary: { label: 'Total Items', value: String(totalItems) },
       closingLine: 'Thank you! 🙏',
     };

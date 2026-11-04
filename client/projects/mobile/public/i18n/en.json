@@ -548,6 +548,8 @@
     "title": "More",
     "householdProfile": "Household Profile",
     "contacts": "Contacts",
+    "assistant": "AI Assistant",
+    "grocery": "Grocery List",
     "logout": "Log out",
     "linkProvider": {
       "row": "Link to a Provider",
@@ -564,6 +566,20 @@
       "english": "English",
       "telugu": "తెలుగు"
     }
+  },
+  "assistant": {
+    "title": "AI Assistant",
+    "greeting": "Hi! Tell me what to set up — type one of the examples below or describe it in your own words.",
+    "thinking": "…",
+    "tryLabel": "Try saying:",
+    "inputPlaceholder": "Type a command…",
+    "error": "Something went wrong — please try again."
+  },
+  "grocery": {
+    "title": "Grocery List",
+    "emptyText": "Nothing on the list yet — add something below, or ask the AI Assistant to add it for you.",
+    "boughtSection": "Bought",
+    "addPlaceholder": "Add an item…"
   },
   "welcome": {
     "heading": "welcome to",

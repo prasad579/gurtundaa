@@ -23,14 +23,43 @@ public class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
         builder.Property(r => r.Title).HasMaxLength(200).IsRequired();
         builder.Property(r => r.Notes).HasMaxLength(2000);
         builder.Property(r => r.Priority).HasConversion<byte>();
+        builder.Property(r => r.Recurrence).HasConversion<byte>();
+        builder.Property(r => r.RecurrenceDayOfWeek).HasConversion<byte?>();
 
         builder.HasOne(r => r.User)
             .WithMany(u => u.Reminders)
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // NoAction: AppUser already cascades to Reminder via UserId above, so the Member leg must
+        // avoid the same multi-cascade-path issue as Medicine/Prescription -> HouseholdMember.
+        // Deleting a member just leaves their reminders assigned to no one (MemberId -> null),
+        // rather than deleting the reminders outright.
+        builder.HasOne(r => r.Member)
+            .WithMany()
+            .HasForeignKey(r => r.MemberId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         // Every list query filters by user, then by done/due date.
         builder.HasIndex(r => new { r.UserId, r.IsDone, r.DueAt });
+    }
+}
+
+public class GroceryItemConfiguration : IEntityTypeConfiguration<GroceryItem>
+{
+    public void Configure(EntityTypeBuilder<GroceryItem> builder)
+    {
+        builder.ToTable("GroceryItems");
+        builder.HasKey(g => g.Id);
+        builder.Property(g => g.Name).HasMaxLength(100).IsRequired();
+        builder.Property(g => g.RecurringWeekday).HasConversion<byte?>();
+
+        builder.HasOne(g => g.User)
+            .WithMany()
+            .HasForeignKey(g => g.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(g => new { g.UserId, g.IsChecked });
     }
 }
 

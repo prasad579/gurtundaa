@@ -1,5 +1,7 @@
+using Gurtundaa.Application.Assistant;
 using Gurtundaa.Application.Auth;
 using Gurtundaa.Application.Bills;
+using Gurtundaa.Application.Grocery;
 using Gurtundaa.Application.Health;
 using Gurtundaa.Application.Household;
 using Gurtundaa.Application.Laundry;
@@ -10,8 +12,10 @@ using Gurtundaa.Application.Reminders;
 using Gurtundaa.Application.ServiceContacts;
 using Gurtundaa.Application.Shop;
 using Gurtundaa.Domain.Entities;
+using Gurtundaa.Infrastructure.Assistant;
 using Gurtundaa.Infrastructure.Auth;
 using Gurtundaa.Infrastructure.Bills;
+using Gurtundaa.Infrastructure.Grocery;
 using Gurtundaa.Infrastructure.Health;
 using Gurtundaa.Infrastructure.Household;
 using Gurtundaa.Infrastructure.Laundry;
@@ -86,6 +90,8 @@ public static class DependencyInjection
         services.AddScoped<IManualLaundryService, ManualLaundryService>();
         services.AddScoped<ILaundryPickupRequestService, LaundryPickupRequestService>();
         services.AddScoped<IProviderPaymentSettingsService, ProviderPaymentSettingsService>();
+        services.AddScoped<IGroceryService, GroceryService>();
+        services.AddScoped<IAssistantService, AssistantService>();
 
         return services;
     }

@@ -15,7 +15,7 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { homeOutline, languageOutline, linkOutline, logOutOutline, peopleOutline } from 'ionicons/icons';
+import { cartOutline, chatbubbleEllipsesOutline, homeOutline, languageOutline, linkOutline, logOutOutline, peopleOutline } from 'ionicons/icons';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { LanguagePreferenceStore } from '../../services/language-preference-store';
@@ -40,7 +40,7 @@ export class MorePage {
   }
 
   constructor() {
-    addIcons({ homeOutline, logOutOutline, peopleOutline, linkOutline, languageOutline });
+    addIcons({ homeOutline, logOutOutline, peopleOutline, linkOutline, languageOutline, chatbubbleEllipsesOutline, cartOutline });
   }
 
   protected async linkToProvider(): Promise<void> {
@@ -100,6 +100,14 @@ export class MorePage {
 
   protected async openContacts(): Promise<void> {
     await this.router.navigateByUrl('/contacts');
+  }
+
+  protected async openAssistant(): Promise<void> {
+    await this.router.navigateByUrl('/assistant');
+  }
+
+  protected async openGrocery(): Promise<void> {
+    await this.router.navigateByUrl('/grocery');
   }
 
   protected async logout(): Promise<void> {

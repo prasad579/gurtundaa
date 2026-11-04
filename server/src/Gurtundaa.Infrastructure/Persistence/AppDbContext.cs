@@ -62,6 +62,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<LaundryPickupRequest> LaundryPickupRequests => Set<LaundryPickupRequest>();
 
+    public DbSet<GroceryItem> GroceryItems => Set<GroceryItem>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

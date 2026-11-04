@@ -21,6 +21,16 @@
       <ion-label>{{ 'more.contacts' | translate }}</ion-label>
     </ion-item>
 
+    <ion-item [button]="true" [detail]="true" (click)="openAssistant()">
+      <ion-icon slot="start" name="chatbubble-ellipses-outline" />
+      <ion-label>{{ 'more.assistant' | translate }}</ion-label>
+    </ion-item>
+
+    <ion-item [button]="true" [detail]="true" (click)="openGrocery()">
+      <ion-icon slot="start" name="cart-outline" />
+      <ion-label>{{ 'more.grocery' | translate }}</ion-label>
+    </ion-item>
+
     <ion-item [button]="true" [detail]="false" (click)="linkToProvider()">
       <ion-icon slot="start" name="link-outline" />
       <ion-label>

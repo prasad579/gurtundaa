@@ -1,0 +1,55 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/more" />
+    </ion-buttons>
+    <ion-title>{{ 'assistant.title' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="chat">
+    @for (m of messages(); track $index) {
+      <div
+        class="bubble"
+        [class.user]="m.role === 'user'"
+        [class.confirmed]="m.role === 'assistant' && m.understood === true"
+        [class.unrecognized]="m.understood === false"
+      >
+        @if (m.role === 'assistant' && m.understood === true) {
+          <ion-icon name="checkmark-circle" />
+        }
+        {{ m.text }}
+      </div>
+    }
+    @if (sending()) {
+      <div class="bubble thinking">{{ 'assistant.thinking' | translate }}</div>
+    }
+  </div>
+
+  @if (messages().length <= 1) {
+    <div class="examples">
+      <div class="examples-label">{{ 'assistant.tryLabel' | translate }}</div>
+      @for (e of examples; track e) {
+        <button type="button" class="example-chip" (click)="useExample(e)">{{ e }}</button>
+      }
+    </div>
+  }
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="input-row">
+      <ion-input
+        [ngModel]="input()"
+        (ngModelChange)="input.set($event)"
+        [placeholder]="'assistant.inputPlaceholder' | translate"
+        (keyup.enter)="send()"
+        [disabled]="sending()"
+      />
+      <ion-button fill="solid" shape="round" [disabled]="sending()" (click)="send()">
+        <ion-icon slot="icon-only" name="send-outline" />
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

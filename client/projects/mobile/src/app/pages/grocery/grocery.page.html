@@ -1,0 +1,73 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/more" />
+    </ion-buttons>
+    <ion-title>{{ 'grocery.title' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading() && items().length === 0) {
+    <div class="ion-padding">
+      <ion-skeleton-text [animated]="true" style="height: 60px; border-radius: 12px" />
+    </div>
+  } @else if (items().length === 0) {
+    <div class="empty ion-padding">
+      <span aria-hidden="true">🛒</span>
+      <p>{{ 'grocery.emptyText' | translate }}</p>
+    </div>
+  } @else {
+    <ion-list [inset]="true">
+      @for (item of pending(); track item.id) {
+        <ion-item-sliding #sliding>
+          <ion-item>
+            <ion-checkbox slot="start" [checked]="item.isChecked" (ionChange)="toggle(item)" />
+            <ion-label>
+              {{ item.name }}
+              @if (item.recurringWeekday) {
+                <p>{{ weekdayLabel(item.recurringWeekday) }}</p>
+              }
+            </ion-label>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option color="danger" (click)="remove(item, sliding)"><ion-icon name="trash" /></ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      }
+    </ion-list>
+
+    @if (checked().length > 0) {
+      <h3 class="section-title">{{ 'grocery.boughtSection' | translate }}</h3>
+      <ion-list [inset]="true">
+        @for (item of checked(); track item.id) {
+          <ion-item-sliding #sliding>
+            <ion-item>
+              <ion-checkbox slot="start" [checked]="item.isChecked" (ionChange)="toggle(item)" />
+              <ion-label class="done">{{ item.name }}</ion-label>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option color="danger" (click)="remove(item, sliding)"><ion-icon name="trash" /></ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        }
+      </ion-list>
+    }
+  }
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="add-row">
+      <ion-input
+        [ngModel]="newItemName()"
+        (ngModelChange)="newItemName.set($event)"
+        [placeholder]="'grocery.addPlaceholder' | translate"
+        (keyup.enter)="addItem()"
+      />
+      <ion-button fill="solid" shape="round" (click)="addItem()">
+        <ion-icon slot="icon-only" name="add-outline" />
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

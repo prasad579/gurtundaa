@@ -26,6 +26,8 @@ export * from './lib/api/household-members-api';
 export * from './lib/api/medicines-api';
 export * from './lib/api/dose-log-api';
 export * from './lib/api/prescriptions-api';
+export * from './lib/api/grocery-api';
+export * from './lib/api/assistant-api';
 export * from './lib/auth/token-store';
 export * from './lib/auth/auth.service';
 export * from './lib/auth/auth.interceptor';
