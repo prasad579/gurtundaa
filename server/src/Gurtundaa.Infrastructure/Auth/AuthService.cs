@@ -215,6 +215,5 @@ public class AuthService(
     private static string Hash(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 
-    private static string NormalizePhone(string phoneNumber) =>
-        new([.. phoneNumber.Where(c => char.IsDigit(c) || c == '+')]);
+    private static string NormalizePhone(string phoneNumber) => PhoneNumberRules.Normalize(phoneNumber);
 }

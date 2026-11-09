@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start SQL Server (Docker)",
+      "type": "shell",
+      "command": "docker start gurtundaa-sql",
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start API",
+      "type": "shell",
+      "command": "dotnet watch run --project src/Gurtundaa.Api --launch-profile http",
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "dependsOn": "Start SQL Server (Docker)",
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "problemMatcher": {
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": {
+          "activeBegins": "dotnet watch",
+          "endsPattern": "Now listening on"
+        }
+      }
+    },
+    {
+      "label": "Start Web",
+      "type": "shell",
+      "command": "npm run start:web",
+      "options": { "cwd": "${workspaceFolder}/client" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "problemMatcher": {
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": {
+          "activeBegins": "Building|Initial chunk",
+          "endsPattern": "Local:|Application bundle generation complete"
+        }
+      }
+    },
+    {
+      "label": "Start All (API + Web)",
+      "dependsOn": ["Start API", "Start Web"],
+      "dependsOrder": "parallel",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}
